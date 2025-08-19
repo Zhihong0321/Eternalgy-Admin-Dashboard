@@ -1,20 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm-9_x"]
+nixPkgs = ["nodejs-20_x", "npm-9_x"]
 
 [phases.install]
-cmds = [
-  "npm ci --production=false",
-  "cd backend && npm install",
-  "cd frontend && rm -rf node_modules package-lock.json",
-  "cd frontend && npm install --no-optional"
-]
+cmds = ["echo 'Skipping install phase - using custom build script'"]
 
 [phases.build]
-cmds = [
-  "cd backend && npm run build",
-  "cd frontend && npm install @rollup/rollup-linux-x64-gnu --save-dev",
-  "cd frontend && npm run build"
-]
+cmds = ["chmod +x railway-build.sh && ./railway-build.sh"]
 
 [start]
 cmd = "npm start"
