@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// READ-ONLY: Business data from Bubble.io sync system
+model synced_records {
+  id             String   @id
+  bubble_id      String   @unique
+  data_type      String   // Customer, Order, Product, etc.
+  raw_data       Json     // Complete business data from Bubble
+  processed_data Json?    // Cleaned/structured data
+  synced_at      DateTime @default(now())
+  updated_at     DateTime
+
+  @@index([bubble_id])
+  @@index([data_type])
+  @@index([synced_at])
+}
+
+// READ-ONLY: Sync system monitoring (optional)
+model sync_status {
+  id           String    @id
+  running      Boolean   @default(false)
+  progress     Int       @default(0)
+  currentTable String?
+  lastSync     DateTime?
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+}
+
+// ADMIN DASHBOARD: New tables for ERP operations
+model admin_users {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String
+  role       String   @default("viewer") // viewer, admin, super_admin
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  last_login DateTime?
+}
+
+model dashboard_settings {
+  id         String   @id @default(cuid())
+  user_id    String
+  settings   Json     // Dashboard preferences, filters, etc.
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model activity_logs {
+  id          String   @id @default(cuid())
+  user_id     String?
+  action      String   // "view_data", "export_report", "create_filter"
+  entity_type String?  // "customer", "order", "product"
+  entity_id   String?
+  details     Json?    // Additional context
+  timestamp   DateTime @default(now())
+
+  @@index([user_id])
+  @@index([timestamp])
+  @@index([entity_type])
+}

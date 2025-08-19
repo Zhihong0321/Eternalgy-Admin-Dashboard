@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(railway --version)",
+      "Bash(railway whoami:*)",
+      "Bash(railway status:*)",
+      "Bash(railway login:*)",
+      "Bash(railway init:*)",
+      "Bash(railway link:*)",
+      "Bash(railway projects:*)",
+      "Bash(gh:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
