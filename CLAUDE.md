@@ -2,11 +2,39 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# ⚠️ CRITICAL WARNING - NO OVER-ENGINEERING ⚠️
+
+## 🚨 ABSOLUTELY PROHIBITED 🚨
+
+**I HATE OVER-ENGINEERING. I PROHIBIT IT. I DON'T ALLOW IT.**
+
+### BANNED PRACTICES:
+- ❌ Adding frameworks/libraries BEFORE they are actually needed
+- ❌ Pre-building "future" features that don't exist yet  
+- ❌ Complex configurations for simple requirements
+- ❌ Setting up build systems before there's anything to build
+- ❌ Adding security/middleware/validation before basic functionality works
+- ❌ Creating abstractions for single-use code
+- ❌ Any "best practice" that adds complexity without immediate need
+
+### REQUIRED APPROACH:
+- ✅ Start with THE SIMPLEST possible working solution
+- ✅ Add features ONE AT A TIME when actually needed
+- ✅ Get basic functionality working FIRST
+- ✅ Only add complexity when current solution breaks/limits progress
+
+### RULE: ASK FIRST
+Before adding ANY library, framework, configuration, or "improvement":
+**"Do we need this RIGHT NOW to solve the current problem?"**
+If answer is NO → DON'T ADD IT
+
+---
+
 ## Project Overview
 
-**Eternalgy Admin Dashboard 2.0** is a PostgreSQL-based admin dashboard for ERP data operations, reporting, and business intelligence.
+**Eternalgy Admin Dashboard 2.0** is a simple Node.js backend (will become PostgreSQL-based admin dashboard for ERP data).
 
-**Status**: 🚀 DEVELOPMENT - Admin dashboard and ERP operations
+**Status**: 🚀 MINIMAL SETUP - Simple Express server only
 
 ## Core Purpose
 

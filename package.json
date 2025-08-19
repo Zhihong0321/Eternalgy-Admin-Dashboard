@@ -1,7 +1,7 @@
 {
   "name": "eternalgy-admin-dashboard-2.0",
   "version": "1.0.0",
-  "description": "Eternalgy Admin Dashboard 2.0 - PostgreSQL-based ERP admin dashboard",
+  "description": "Eternalgy Admin Dashboard 2.0 - Simple Node.js Backend",
   "main": "backend/src/server.js",
   "type": "module",
   "engines": {
@@ -9,19 +9,8 @@
   },
   "scripts": {
     "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev",
-    "build": "cd backend && npm run build",
-    "db:studio": "cd backend && npm run db:studio",
-    "db:push": "cd backend && npm run db:push"
+    "dev": "cd backend && npm run dev"
   },
-  "keywords": [
-    "eternalgy",
-    "admin",
-    "dashboard",
-    "erp",
-    "postgresql",
-    "railway"
-  ],
   "author": "Eternalgy Team",
   "license": "MIT",
   "repository": {
