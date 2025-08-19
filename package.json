@@ -5,19 +5,12 @@
   "main": "backend/src/server.js",
   "type": "module",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "start": "cd backend && npm start",
-    "dev": "npm run dev:backend & npm run dev:frontend",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "./railway-build.sh",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "npm run clean:frontend && cd frontend && npm install && npm run build",
-    "clean:frontend": "cd frontend && rm -rf package-lock.json node_modules",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
+    "dev": "cd backend && npm run dev",
+    "build": "cd backend && npm run build",
     "db:studio": "cd backend && npm run db:studio",
     "db:push": "cd backend && npm run db:push"
   },
@@ -27,18 +20,12 @@
     "dashboard",
     "erp",
     "postgresql",
-    "react",
-    "typescript",
     "railway"
   ],
   "author": "Eternalgy Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/Eternalgy-Admin-Dashboard-2.0.git"
-  },
-  "workspaces": [
-    "backend",
-    "frontend"
-  ]
+    "url": "https://github.com/Zhihong0321/Eternalgy-Admin-Dashboard.git"
+  }
 }
