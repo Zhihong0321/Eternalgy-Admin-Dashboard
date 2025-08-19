@@ -2,19 +2,22 @@
   "name": "eternalgy-admin-dashboard-2.0",
   "version": "1.0.0",
   "description": "Eternalgy Admin Dashboard 2.0 - Simple Node.js Backend",
-  "main": "backend/src/server.js",
+  "main": "server.js",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "cd backend && npm start",
-    "dev": "cd backend && npm run dev"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "author": "Eternalgy Team",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Zhihong0321/Eternalgy-Admin-Dashboard.git"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
