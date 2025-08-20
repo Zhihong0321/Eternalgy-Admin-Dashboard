@@ -1135,7 +1135,45 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
   }
 });
 
-// Simple API to check payment table directly
+// Simple API to check any table directly
+app.get('/api/table/check/:tableName', async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    console.log(`[DEBUG] Checking table ${tableName} directly`);
+    
+    // Get first 5 records to see the structure
+    const records = await prisma.$queryRawUnsafe(`
+      SELECT * FROM "${tableName}" 
+      ORDER BY id DESC 
+      LIMIT 5
+    `);
+    
+    console.log(`[DEBUG] Found ${records.length} records in ${tableName}`);
+    console.log(`[DEBUG] Sample ${tableName} structure:`, JSON.stringify(records[0], (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value, 2));
+    
+    // Get count of all records
+    const totalCount = await prisma.$queryRawUnsafe(`
+      SELECT COUNT(*) as count FROM "${tableName}"
+    `);
+    
+    res.json({
+      tableName,
+      totalRecords: totalCount[0].count.toString(),
+      sampleRecords: records.map(r => 
+        JSON.parse(JSON.stringify(r, (key, value) =>
+          typeof value === 'bigint' ? value.toString() : value
+        ))
+      )
+    });
+    
+  } catch (error) {
+    console.log(`[DEBUG] Error checking table ${req.params.tableName}:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Simple API to check payment table directly (keep for backward compatibility)
 app.get('/api/payments/check', async (req, res) => {
   try {
     console.log('[DEBUG] Checking payment table directly');

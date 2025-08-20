@@ -251,6 +251,20 @@ export function FullPaymentInvoiceView() {
     }
   }
 
+  const checkTableStructure = async (tableName: string) => {
+    try {
+      console.log(`[DEBUG] Checking ${tableName} table structure`)
+      const response = await fetch(`/api/table/check/${tableName}`)
+      const data = await response.json()
+      
+      console.log(`[DEBUG] ${tableName} table check response:`, JSON.stringify(data, null, 2))
+      alert(`${tableName} table info logged to console. Found ${data.totalRecords} total records. Check browser console.`)
+    } catch (error) {
+      console.error(`[DEBUG] Error checking ${tableName} table:`, error)
+      alert(`${tableName} table check error - check console`)
+    }
+  }
+
   const handleViewPayments = async (invoice: Invoice) => {
     setSelectedPaymentInvoice(invoice)
     setShowPaymentModal(true)
@@ -320,7 +334,21 @@ export function FullPaymentInvoiceView() {
             variant="outline"
             className="bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20 flex items-center gap-2"
           >
-            Check Payment Table
+            Check Payment
+          </Button>
+          <Button
+            onClick={() => checkTableStructure('user')}
+            variant="outline"
+            className="bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 flex items-center gap-2"
+          >
+            Check User
+          </Button>
+          <Button
+            onClick={() => checkTableStructure('agent_profile')}
+            variant="outline"
+            className="bg-purple-500/10 text-purple-600 border border-purple-500/20 hover:bg-purple-500/20 flex items-center gap-2"
+          >
+            Check Agent Profile
           </Button>
           <Button 
             onClick={handleRescanPayments} 
