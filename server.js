@@ -21,22 +21,53 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
-// Debug route to check files
+// Debug route to check files and paths
 app.get('/api/debug/files', (req, res) => {
   const fs = require('fs');
-  const assetsPath = path.join(__dirname, 'frontend', 'dist', 'assets');
   
+  const debugInfo = {
+    __dirname,
+    process_cwd: process.cwd(),
+    node_env: process.env.NODE_ENV,
+  };
+  
+  // Check multiple possible paths
+  const possiblePaths = [
+    path.join(__dirname, 'frontend', 'dist', 'assets'),
+    path.join(__dirname, 'frontend', 'dist'),
+    path.join(__dirname, 'dist', 'assets'),
+    path.join(__dirname, 'dist'),
+    path.join(process.cwd(), 'frontend', 'dist', 'assets'),
+    path.join(process.cwd(), 'frontend', 'dist'),
+    path.join(process.cwd(), 'dist', 'assets'),
+    path.join(process.cwd(), 'dist'),
+  ];
+  
+  debugInfo.pathChecks = {};
+  
+  possiblePaths.forEach(checkPath => {
+    try {
+      const exists = fs.existsSync(checkPath);
+      debugInfo.pathChecks[checkPath] = {
+        exists,
+        files: exists ? fs.readdirSync(checkPath) : null
+      };
+    } catch (error) {
+      debugInfo.pathChecks[checkPath] = {
+        exists: false,
+        error: error.message
+      };
+    }
+  });
+  
+  // Also check root directory contents
   try {
-    const files = fs.readdirSync(assetsPath);
-    res.json({ 
-      assetsPath,
-      files,
-      __dirname,
-      exists: fs.existsSync(assetsPath)
-    });
+    debugInfo.rootFiles = fs.readdirSync(__dirname);
   } catch (error) {
-    res.json({ error: error.message, assetsPath });
+    debugInfo.rootFiles = `Error: ${error.message}`;
   }
+  
+  res.json(debugInfo);
 });
 
 app.get('/api/db-status', async (req, res) => {
@@ -224,6 +255,38 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`__dirname: ${__dirname}`);
+  console.log(`process.cwd(): ${process.cwd()}`);
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  
+  // Log directory contents on startup
+  const fs = require('fs');
+  try {
+    console.log(`Root directory contents:`, fs.readdirSync(__dirname));
+    
+    const frontendPath = path.join(__dirname, 'frontend');
+    if (fs.existsSync(frontendPath)) {
+      console.log(`Frontend directory exists, contents:`, fs.readdirSync(frontendPath));
+      
+      const distPath = path.join(frontendPath, 'dist');
+      if (fs.existsSync(distPath)) {
+        console.log(`Dist directory exists, contents:`, fs.readdirSync(distPath));
+        
+        const assetsPath = path.join(distPath, 'assets');
+        if (fs.existsSync(assetsPath)) {
+          console.log(`Assets directory exists, contents:`, fs.readdirSync(assetsPath));
+        } else {
+          console.log(`Assets directory does NOT exist at: ${assetsPath}`);
+        }
+      } else {
+        console.log(`Dist directory does NOT exist at: ${distPath}`);
+      }
+    } else {
+      console.log(`Frontend directory does NOT exist at: ${frontendPath}`);
+    }
+  } catch (error) {
+    console.log(`Error checking directories:`, error.message);
+  }
 });
 
 export default app;
