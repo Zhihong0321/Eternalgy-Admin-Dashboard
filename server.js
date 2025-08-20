@@ -22,6 +22,85 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
+// Debug route to get actual table schemas
+app.get('/api/debug/schemas', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Getting table schemas`);
+    
+    // Get invoice table structure
+    const invoiceSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'invoice' 
+      ORDER BY ordinal_position
+    `;
+    
+    // Get customer table structure (check both customer and customer_profile)
+    const customerSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'customer' 
+      ORDER BY ordinal_position
+    `;
+    
+    const customerProfileSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'customer_profile' 
+      ORDER BY ordinal_position
+    `;
+    
+    // Get agent table structure
+    const agentSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'agent' 
+      ORDER BY ordinal_position
+    `;
+    
+    // Get payment table structure
+    const paymentSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'payment' 
+      ORDER BY ordinal_position
+    `;
+    
+    // Get sample data to understand field values
+    const sampleInvoice = await prisma.$queryRaw`
+      SELECT * FROM invoice WHERE paid_ = true LIMIT 1
+    `;
+    
+    console.log(`[DEBUG] Invoice columns:`, invoiceSchema.length);
+    console.log(`[DEBUG] Customer columns:`, customerSchema.length);
+    console.log(`[DEBUG] Customer Profile columns:`, customerProfileSchema.length);
+    console.log(`[DEBUG] Agent columns:`, agentSchema.length);
+    console.log(`[DEBUG] Payment columns:`, paymentSchema.length);
+    
+    res.json({
+      invoice: {
+        schema: invoiceSchema,
+        sample: sampleInvoice[0]
+      },
+      customer: {
+        schema: customerSchema
+      },
+      customer_profile: {
+        schema: customerProfileSchema
+      },
+      agent: {
+        schema: agentSchema
+      },
+      payment: {
+        schema: paymentSchema
+      }
+    });
+  } catch (error) {
+    console.log(`[ERROR] Schema debug error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Debug route to check paid invoices directly
 app.get('/api/debug/paid-invoices', async (req, res) => {
   try {
