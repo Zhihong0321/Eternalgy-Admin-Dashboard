@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model sync_status {
+  id           String    @id
+  running      Boolean   @default(false)
+  progress     Int       @default(0)
+  currentTable String?
+  lastSync     DateTime?
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+}
+
+model synced_records {
+  id             String   @id
+  bubble_id      String   @unique
+  data_type      String
+  raw_data       Json
+  processed_data Json?
+  synced_at      DateTime @default(now())
+  updated_at     DateTime
+
+  @@index([bubble_id])
+  @@index([data_type])
+}
+
+model pending_schema_patches {
+  id                  Int       @id @default(autoincrement())
+  table_name          String
+  field_name          String
+  original_field_name String?
+  suggested_type      String
+  error_message       String?
+  status              String    @default("pending")
+  created_at          DateTime  @default(now())
+  approved_at         DateTime?
+  approved_by         String?
+  executed_at         DateTime?
+  execution_result    String?
+  sync_run_id         String?
+
+  @@unique([table_name, field_name])
+}
+
+model sync_cursors {
+  id            Int       @id @default(autoincrement())
+  table_name    String    @unique
+  last_cursor   Int       @default(0)
+  last_sync_at  DateTime  @default(now())
+  sync_run_id   String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now())
+}
+
+model relationship_discovery_status {
+  id           Int       @id @default(autoincrement())
+  source_table String
+  source_field String
+  field_type   String    // 'RELATIONAL_CONFIRMED', 'TEXT_ONLY'
+  link_status  String?   // 'LINKED', 'PENDING_LINK'
+  target_table String?
+  last_checked DateTime  @default(now())
+  created_at   DateTime  @default(now())
+
+  @@unique([source_table, source_field])
+}
+
+model discovery_logs {
+  id             Int       @id @default(autoincrement())
+  run_id         String
+  table_name     String
+  field_name     String
+  field_type     String    // 'RELATIONAL_CONFIRMED', 'TEXT_ONLY'
+  link_status    String?   // 'LINKED', 'PENDING_LINK', 'NOT_FOUND'
+  target_table   String?
+  sample_value   String?   // Sample field value for debugging
+  reason         String?   // Detailed reason why field is pending/failed
+  bubble_id_count Int?     // How many bubble IDs found in this field
+  discovered_at  DateTime  @default(now())
+
+  @@index([run_id])
+  @@index([table_name])
+  @@index([discovered_at])
+}
