@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3001;
 
 // Serve static files from frontend/dist
 app.use(express.static(path.join(__dirname, 'frontend/dist')));
+// Also serve assets from the correct path
+app.use('/assets', express.static(path.join(__dirname, 'frontend/dist/assets')));
 
 // API routes
 app.get('/api/health', (req, res) => {
