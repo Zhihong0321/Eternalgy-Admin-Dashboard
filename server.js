@@ -936,6 +936,66 @@ app.get('/api/commission/report', async (req, res) => {
   }
 });
 
+// Get payment details for a specific invoice
+app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log(`[DEBUG] Getting payment details for invoice: ${invoiceId}`);
+    
+    // First get the invoice to find linked payments
+    const invoice = await prisma.$queryRaw`
+      SELECT linked_payment
+      FROM invoice 
+      WHERE bubble_id = ${invoiceId}
+    `;
+    
+    if (invoice.length === 0 || !invoice[0].linked_payment) {
+      return res.json({ payments: [] });
+    }
+
+    const linkedPaymentIds = invoice[0].linked_payment;
+    console.log(`[DEBUG] Found ${linkedPaymentIds.length} linked payment IDs`);
+
+    // Get payment details with verification information
+    // Following the path: payment.verified_by -> user -> linked_agent_profile -> name
+    const payments = await prisma.$queryRaw`
+      SELECT 
+        p.bubble_id,
+        p.amount,
+        p.payment_method,
+        p.payment_date,
+        p.verified_by,
+        ap.name as verified_by_name
+      FROM payment p
+      LEFT JOIN "user" u ON p.verified_by = u.bubble_id
+      LEFT JOIN agent_profile ap ON u.linked_agent_profile = ap.bubble_id
+      WHERE p.bubble_id = ANY(${linkedPaymentIds})
+      ORDER BY p.payment_date ASC
+    `;
+
+    console.log(`[DEBUG] Retrieved ${payments.length} payment records`);
+
+    const formattedPayments = payments.map(payment => ({
+      bubble_id: payment.bubble_id,
+      amount: payment.amount,
+      payment_method: payment.payment_method,
+      payment_date: payment.payment_date,
+      verified_by_name: payment.verified_by_name
+    }));
+
+    res.json({ 
+      payments: formattedPayments
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Payment details API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // =====================
 // STATIC FILE SERVING
 // =====================

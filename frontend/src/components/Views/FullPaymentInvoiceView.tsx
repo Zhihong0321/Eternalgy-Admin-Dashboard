@@ -40,6 +40,14 @@ interface ANPInvoice {
   first_payment_amount: number | null
 }
 
+interface PaymentDetail {
+  bubble_id: string
+  amount: string
+  payment_method: string | null
+  payment_date: string | null
+  verified_by_name: string | null
+}
+
 export function FullPaymentInvoiceView() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,6 +63,12 @@ export function FullPaymentInvoiceView() {
   const [anpLoading, setAnpLoading] = useState(false)
   const [anpInvoices, setAnpInvoices] = useState<ANPInvoice[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+  
+  // Payment Details Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([])
+  const [selectedPaymentInvoice, setSelectedPaymentInvoice] = useState<Invoice | null>(null)
 
   const fetchFullyPaidInvoices = async () => {
     try {
@@ -183,6 +197,32 @@ export function FullPaymentInvoiceView() {
     setSelectedInvoice(invoice)
     setShowANPModal(true)
     await fetchANPRelatedInvoices(invoice)
+  }
+
+  const fetchPaymentDetails = async (invoice: Invoice) => {
+    try {
+      setPaymentLoading(true)
+      const response = await fetch(`/api/payments/invoice/${invoice.bubble_id}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setPaymentDetails(data.payments || [])
+      } else {
+        console.error('Failed to fetch payment details:', data.message)
+        setPaymentDetails([])
+      }
+    } catch (error) {
+      console.error('Error fetching payment details:', error)
+      setPaymentDetails([])
+    } finally {
+      setPaymentLoading(false)
+    }
+  }
+
+  const handleViewPayments = async (invoice: Invoice) => {
+    setSelectedPaymentInvoice(invoice)
+    setShowPaymentModal(true)
+    await fetchPaymentDetails(invoice)
   }
 
   const getTotalAmount = () => {
@@ -396,9 +436,16 @@ export function FullPaymentInvoiceView() {
                       {/* Payment Count */}
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20 hover:bg-blue-500/20"
+                            onClick={() => handleViewPayments(invoice)}
+                            disabled={!invoice.payment_count || invoice.payment_count === 0}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
                             {invoice.payment_count || 0} payments
-                          </span>
+                          </Button>
                         </div>
                       </td>
                       
@@ -446,6 +493,108 @@ export function FullPaymentInvoiceView() {
           )}
         </CardContent>
       </Card>
+
+      {/* Payment Details Modal */}
+      {showPaymentModal && selectedPaymentInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Payment Details</h2>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
+                  Invoice {selectedPaymentInvoice.invoice_id} - {selectedPaymentInvoice.customer_name}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPaymentModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              {paymentLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin" />
+                  <span className="ml-3 text-gray-900 dark:text-white">Loading payment details...</span>
+                </div>
+              ) : paymentDetails.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  No payment details found for this invoice
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    All payments that contribute to completing this invoice total amount.
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Payment Amount</th>
+                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Payment Method</th>
+                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Payment Date</th>
+                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Verified By</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800">
+                        {paymentDetails.map((payment) => (
+                          <tr key={payment.bubble_id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-green-500" />
+                                {formatCurrency(payment.amount)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 text-gray-900 dark:text-white">
+                              {payment.payment_method || 'N/A'}
+                            </td>
+                            <td className="py-3 px-2 text-gray-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-blue-500" />
+                                {formatDate(payment.payment_date)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 text-gray-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-purple-500" />
+                                {payment.verified_by_name || 'N/A'}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-gray-300 bg-gray-50 dark:bg-gray-700">
+                          <td className="py-3 px-2 font-bold text-gray-900 dark:text-white">
+                            <div className="flex items-center gap-2 text-lg">
+                              <DollarSign className="h-5 w-5 text-green-600" />
+                              {formatCurrency(paymentDetails.reduce((sum, payment) => sum + parseFloat(payment.amount || '0'), 0).toString())}
+                            </div>
+                          </td>
+                          <td colSpan={2} className="py-3 px-2 font-bold text-right text-gray-900 dark:text-white">
+                            Total Payments:
+                          </td>
+                          <td className="py-3 px-2 text-gray-900 dark:text-white">
+                            <span className="text-sm text-gray-500">
+                              {paymentDetails.length} payment(s)
+                            </span>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ANP Modal */}
       {showANPModal && selectedInvoice && (
