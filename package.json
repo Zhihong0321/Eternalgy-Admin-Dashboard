@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Eternalgy Admin Dashboard 2.0 - Simple Node.js Backend",
   "main": "server.js",
+  "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },

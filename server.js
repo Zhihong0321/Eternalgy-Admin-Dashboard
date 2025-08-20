@@ -1,11 +1,14 @@
-const express = require('express');
+import express from 'express';
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.get('/', (req, res) => {
-  res.send('<h1>Hello Railway - Working!</h1>');
+  res.json({ message: 'Eternalgy Admin Dashboard - Server Working!', status: 'success' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+export default app;
