@@ -519,10 +519,10 @@ app.post('/api/invoices/update-anp', async (req, res) => {
     
     // Get all invoices with 1st_payment_date that is not null/empty
     const invoicesWithPaymentDate = await prisma.$queryRaw`
-      SELECT i.bubble_id, i.amount, i.full_payment_date, i.linked_agent, i.1st_payment_date
+      SELECT i.bubble_id, i.amount, i.full_payment_date, i.linked_agent, i."1st_payment_date"
       FROM invoice i
-      WHERE i.1st_payment_date IS NOT NULL 
-        AND i.1st_payment_date != ''
+      WHERE i."1st_payment_date" IS NOT NULL 
+        AND i."1st_payment_date" != ''
         AND i.full_payment_date IS NOT NULL
         AND i.linked_agent IS NOT NULL
     `;
