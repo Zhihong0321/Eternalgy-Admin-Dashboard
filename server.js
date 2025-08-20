@@ -42,7 +42,6 @@ app.get('/api/records/:table', async (req, res) => {
     // Query the table directly using raw SQL since we don't know the schema
     const records = await prisma.$queryRaw`
       SELECT * FROM ${Prisma.raw(table)} 
-      ORDER BY created_at DESC NULLS LAST
       LIMIT ${parseInt(limit)}
     `;
     
