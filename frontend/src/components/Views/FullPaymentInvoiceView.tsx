@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, CheckCircle, DollarSign, Calendar, User } from 'lucide-react'
+import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Filter } from 'lucide-react'
 
 interface Invoice {
   bubble_id: string
@@ -24,17 +24,37 @@ interface RescanResult {
   errors: Array<{ invoice_id: string; error: string }>
 }
 
+interface Agent {
+  bubble_id: string
+  name: string
+}
+
 export function FullPaymentInvoiceView() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [rescanLoading, setRescanLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [lastRescanResult, setLastRescanResult] = useState<RescanResult | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [selectedMonth, setSelectedMonth] = useState<string>('all')
+  const [selectedAgent, setSelectedAgent] = useState<string>('all')
 
   const fetchFullyPaidInvoices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/invoices/fully-paid?limit=100')
+      const params = new URLSearchParams({
+        limit: '100'
+      })
+      
+      if (selectedMonth !== 'all') {
+        params.append('month', selectedMonth)
+      }
+      
+      if (selectedAgent !== 'all') {
+        params.append('agent', selectedAgent)
+      }
+      
+      const response = await fetch(`/api/invoices/fully-paid?${params.toString()}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -48,6 +68,41 @@ export function FullPaymentInvoiceView() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('/api/agents/list')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAgents(data.agents || [])
+      } else {
+        console.error('Failed to fetch agents:', data.message)
+      }
+    } catch (error) {
+      console.error('Error fetching agents:', error)
+    }
+  }
+
+  const generateMonthOptions = () => {
+    const options = [{ value: 'all', label: 'All Months' }]
+    const now = new Date()
+    
+    // Current month
+    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
+    const currentMonthLabel = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+    options.push({ value: currentMonth, label: currentMonthLabel })
+    
+    // Last 12 months
+    for (let i = 1; i <= 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const value = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0')
+      const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+      options.push({ value, label })
+    }
+    
+    return options
   }
 
   const handleRescanPayments = async () => {
@@ -88,9 +143,9 @@ export function FullPaymentInvoiceView() {
   }
 
   const formatCurrency = (amount: string | null) => {
-    if (!amount) return '$0.00'
+    if (!amount) return 'RM 0.00'
     const num = parseFloat(amount)
-    return isNaN(num) ? amount : `$${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+    return isNaN(num) ? amount : `RM ${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
   }
 
   const formatDate = (dateString: string | null) => {
@@ -107,8 +162,12 @@ export function FullPaymentInvoiceView() {
   }
 
   useEffect(() => {
-    fetchFullyPaidInvoices()
+    fetchAgents()
   }, [])
+
+  useEffect(() => {
+    fetchFullyPaidInvoices()
+  }, [selectedMonth, selectedAgent])
 
   return (
     <div className="space-y-6">
@@ -129,6 +188,54 @@ export function FullPaymentInvoiceView() {
           {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
         </Button>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Month Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Month</label>
+              <select 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {generateMonthOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Agent Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Agent</label>
+              <select 
+                value={selectedAgent} 
+                onChange={(e) => setSelectedAgent(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Agents</option>
+                {agents
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((agent) => (
+                    <option key={agent.bubble_id} value={agent.bubble_id}>
+                      {agent.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Rescan Result */}
       {lastRescanResult && (

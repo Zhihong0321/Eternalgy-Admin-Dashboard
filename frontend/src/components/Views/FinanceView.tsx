@@ -37,7 +37,7 @@ export function FinanceView() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financialSummary.totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">RM {financialSummary.totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
@@ -48,7 +48,7 @@ export function FinanceView() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financialSummary.pendingPayments.toLocaleString()}</div>
+            <div className="text-2xl font-bold">RM {financialSummary.pendingPayments.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">2 invoices pending</p>
           </CardContent>
         </Card>
@@ -59,7 +59,7 @@ export function FinanceView() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financialSummary.totalCommissions.toLocaleString()}</div>
+            <div className="text-2xl font-bold">RM {financialSummary.totalCommissions.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">5 agents active</p>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export function FinanceView() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${financialSummary.netProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold">RM {financialSummary.netProfit.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ export function FinanceView() {
                   <tr key={invoice.id} className="border-b">
                     <td className="py-3 font-medium">{invoice.id}</td>
                     <td className="py-3">{invoice.client}</td>
-                    <td className="py-3">${invoice.amount.toLocaleString()}</td>
+                    <td className="py-3">RM {invoice.amount.toLocaleString()}</td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         invoice.status === 'Paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
@@ -156,7 +156,7 @@ export function FinanceView() {
                   <tr key={agent.agent} className="border-b">
                     <td className="py-3 font-medium">{agent.agent}</td>
                     <td className="py-3">{agent.deals}</td>
-                    <td className="py-3 font-medium">${agent.commission.toLocaleString()}</td>
+                    <td className="py-3 font-medium">RM {agent.commission.toLocaleString()}</td>
                     <td className="py-3">{agent.period}</td>
                   </tr>
                 ))}

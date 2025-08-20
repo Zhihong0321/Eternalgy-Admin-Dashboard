@@ -102,7 +102,7 @@ export function ProjectView() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${projectSummary.totalBudget.toLocaleString()}</div>
+            <div className="text-2xl font-bold">RM {projectSummary.totalBudget.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Allocated budget</p>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ export function ProjectView() {
                   
                   <div>
                     <p className="text-muted-foreground">Budget</p>
-                    <p className="font-medium">${project.budget.toLocaleString()}</p>
+                    <p className="font-medium">RM {project.budget.toLocaleString()}</p>
                   </div>
                 </div>
               </div>

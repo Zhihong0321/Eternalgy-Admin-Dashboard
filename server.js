@@ -236,11 +236,29 @@ app.get('/api/records/:table', async (req, res) => {
 
 app.get('/api/invoices/fully-paid', async (req, res) => {
   try {
-    const { limit = 100, offset = 0 } = req.query;
-    console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}`);
+    const { limit = 100, offset = 0, month, agent } = req.query;
+    console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}, month: ${month}, agent: ${agent}`);
     
-    // Get paid invoices with all required fields using correct schema
-    const paidInvoices = await prisma.$queryRaw`
+    // Build dynamic WHERE clause for filters
+    let whereConditions = ['i.paid_ = true'];
+    let queryParams = [];
+    
+    // Add month filter if provided (format: "2025-07" for Jul, 2025)
+    if (month && month !== 'all') {
+      whereConditions.push(`DATE_TRUNC('month', i.full_payment_date) = DATE_TRUNC('month', $${queryParams.length + 1}::date)`);
+      queryParams.push(`${month}-01`); // Convert "2025-07" to "2025-07-01"
+    }
+    
+    // Add agent filter if provided
+    if (agent && agent !== 'all') {
+      whereConditions.push(`a.bubble_id = $${queryParams.length + 1}`);
+      queryParams.push(agent);
+    }
+    
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Build the query string
+    const queryText = `
       SELECT 
         i.invoice_id,
         i.bubble_id,
@@ -249,15 +267,23 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
         i.linked_payment,
         array_length(i.linked_payment, 1) as payment_count,
         a.name as agent_name,
+        a.bubble_id as agent_bubble_id,
         cp.name as customer_name
       FROM invoice i
       LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
       LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
-      WHERE i.paid_ = true
+      WHERE ${whereClause}
       ORDER BY i.invoice_id ASC
-      LIMIT ${parseInt(limit)}
-      OFFSET ${parseInt(offset)}
+      LIMIT $${queryParams.length + 1}
+      OFFSET $${queryParams.length + 2}
     `;
+    
+    queryParams.push(parseInt(limit), parseInt(offset));
+    
+    console.log(`[DEBUG] Query:`, queryText);
+    console.log(`[DEBUG] Params:`, queryParams);
+    
+    const paidInvoices = await prisma.$queryRawUnsafe(queryText, ...queryParams);
     
     console.log(`[DEBUG] Paid invoices query result - count: ${paidInvoices.length}`);
     console.log(`[DEBUG] First 3 invoices:`, paidInvoices.slice(0, 3).map(inv => ({
@@ -287,9 +313,15 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
       }
     }
     
-    const totalResult = await prisma.$queryRaw`
-      SELECT COUNT(*) as count FROM invoice WHERE paid_ = true
+    // Build count query with same filters
+    const countQueryText = `
+      SELECT COUNT(*) as count 
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
+      WHERE ${whereClause}
     `;
+    
+    const totalResult = await prisma.$queryRawUnsafe(countQueryText, ...queryParams.slice(0, -2)); // Remove limit/offset params
     
     console.log(`[DEBUG] Total count query result:`, totalResult[0]);
     
@@ -303,6 +335,32 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
     res.json(response);
   } catch (error) {
     console.log(`[ERROR] Fully-paid invoices API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
+// Get all agents for filter dropdown
+app.get('/api/agents/list', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Getting agents list for filter dropdown`);
+    
+    const agents = await prisma.$queryRaw`
+      SELECT bubble_id, name 
+      FROM agent 
+      WHERE name IS NOT NULL AND name != ''
+      ORDER BY name ASC
+    `;
+    
+    console.log(`[DEBUG] Found ${agents.length} agents`);
+    
+    res.json({ 
+      agents: agents
+    });
+  } catch (error) {
+    console.log(`[ERROR] Agents list error:`, error.message);
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
