@@ -1153,6 +1153,42 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
   }
 });
 
+// Simple API to check payment table directly
+app.get('/api/payments/check', async (req, res) => {
+  try {
+    console.log('[DEBUG] Checking payment table directly');
+    
+    // Get first 5 payment records to see the structure
+    const payments = await prisma.$queryRaw`
+      SELECT * FROM payment 
+      ORDER BY payment_date DESC 
+      LIMIT 5
+    `;
+    
+    console.log(`[DEBUG] Found ${payments.length} payment records`);
+    console.log('[DEBUG] Sample payment structure:', JSON.stringify(payments[0], (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value, 2));
+    
+    // Get count of all payments
+    const totalCount = await prisma.$queryRaw`
+      SELECT COUNT(*) as count FROM payment
+    `;
+    
+    res.json({
+      totalPayments: totalCount[0].count.toString(),
+      samplePayments: payments.map(p => 
+        JSON.parse(JSON.stringify(p, (key, value) =>
+          typeof value === 'bigint' ? value.toString() : value
+        ))
+      )
+    });
+    
+  } catch (error) {
+    console.log('[DEBUG] Error checking payment table:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // =====================
 // STATIC FILE SERVING
 // =====================

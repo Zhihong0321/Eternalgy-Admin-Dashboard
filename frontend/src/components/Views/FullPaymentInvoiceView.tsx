@@ -237,6 +237,20 @@ export function FullPaymentInvoiceView() {
     }
   }
 
+  const checkPaymentTable = async () => {
+    try {
+      console.log('[DEBUG] Checking payment table directly')
+      const response = await fetch('/api/payments/check')
+      const data = await response.json()
+      
+      console.log('[DEBUG] Payment table check response:', JSON.stringify(data, null, 2))
+      alert(`Payment table info logged to console. Found ${data.totalPayments} total payments. Check browser console.`)
+    } catch (error) {
+      console.error('[DEBUG] Error checking payment table:', error)
+      alert('Payment table check error - check console')
+    }
+  }
+
   const handleViewPayments = async (invoice: Invoice) => {
     setSelectedPaymentInvoice(invoice)
     setShowPaymentModal(true)
@@ -300,14 +314,23 @@ export function FullPaymentInvoiceView() {
             List of invoices where payment has been completed ({totalCount} total)
           </p>
         </div>
-        <Button 
-          onClick={handleRescanPayments} 
-          disabled={rescanLoading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
-          {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={checkPaymentTable}
+            variant="outline"
+            className="bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20 flex items-center gap-2"
+          >
+            Check Payment Table
+          </Button>
+          <Button 
+            onClick={handleRescanPayments} 
+            disabled={rescanLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
+            {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
