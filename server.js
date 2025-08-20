@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,21 +39,21 @@ app.get('/api/records/:table', async (req, res) => {
     const { table } = req.params;
     const { limit = 50 } = req.query;
     
-    // Get real data from synced_records table filtered by data_type
-    const records = await prisma.synced_records.findMany({
-      where: { data_type: table },
-      take: parseInt(limit),
-      orderBy: { synced_at: 'desc' }
-    });
+    // Query the table directly using raw SQL since we don't know the schema
+    const records = await prisma.$queryRaw`
+      SELECT * FROM ${Prisma.raw(table)} 
+      ORDER BY created_at DESC NULLS LAST
+      LIMIT ${parseInt(limit)}
+    `;
     
-    const total = await prisma.synced_records.count({
-      where: { data_type: table }
-    });
+    const totalResult = await prisma.$queryRaw`
+      SELECT COUNT(*) as count FROM ${Prisma.raw(table)}
+    `;
     
     res.json({ 
       table: table,
       records: records,
-      total: total
+      total: parseInt(totalResult[0].count)
     });
   } catch (error) {
     res.status(500).json({ 
