@@ -223,47 +223,6 @@ export function FullPaymentInvoiceView() {
     }
   }
 
-  const debugInvoiceStructure = async (invoice: Invoice) => {
-    try {
-      console.log('[DEBUG] Calling debug endpoint for invoice:', invoice.bubble_id)
-      const response = await fetch(`/api/debug/invoice/${invoice.bubble_id}`)
-      const data = await response.json()
-      
-      console.log('[DEBUG] Database structure debug response:', JSON.stringify(data, null, 2))
-      alert(`Debug info logged to console for invoice ${invoice.invoice_id}. Check browser console.`)
-    } catch (error) {
-      console.error('[DEBUG] Error calling debug endpoint:', error)
-      alert('Debug endpoint error - check console')
-    }
-  }
-
-  const checkPaymentTable = async () => {
-    try {
-      console.log('[DEBUG] Checking payment table directly')
-      const response = await fetch('/api/payments/check')
-      const data = await response.json()
-      
-      console.log('[DEBUG] Payment table check response:', JSON.stringify(data, null, 2))
-      alert(`Payment table info logged to console. Found ${data.totalPayments} total payments. Check browser console.`)
-    } catch (error) {
-      console.error('[DEBUG] Error checking payment table:', error)
-      alert('Payment table check error - check console')
-    }
-  }
-
-  const checkTableStructure = async (tableName: string) => {
-    try {
-      console.log(`[DEBUG] Checking ${tableName} table structure`)
-      const response = await fetch(`/api/table/check/${tableName}`)
-      const data = await response.json()
-      
-      console.log(`[DEBUG] ${tableName} table check response:`, JSON.stringify(data, null, 2))
-      alert(`${tableName} table info logged to console. Found ${data.totalRecords} total records. Check browser console.`)
-    } catch (error) {
-      console.error(`[DEBUG] Error checking ${tableName} table:`, error)
-      alert(`${tableName} table check error - check console`)
-    }
-  }
 
   const handleViewPayments = async (invoice: Invoice) => {
     setSelectedPaymentInvoice(invoice)
@@ -328,37 +287,14 @@ export function FullPaymentInvoiceView() {
             List of invoices where payment has been completed ({totalCount} total)
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={checkPaymentTable}
-            variant="outline"
-            className="bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20 flex items-center gap-2"
-          >
-            Check Payment
-          </Button>
-          <Button
-            onClick={() => checkTableStructure('user')}
-            variant="outline"
-            className="bg-blue-500/10 text-blue-600 border border-blue-500/20 hover:bg-blue-500/20 flex items-center gap-2"
-          >
-            Check User
-          </Button>
-          <Button
-            onClick={() => checkTableStructure('agent_profile')}
-            variant="outline"
-            className="bg-purple-500/10 text-purple-600 border border-purple-500/20 hover:bg-purple-500/20 flex items-center gap-2"
-          >
-            Check Agent Profile
-          </Button>
-          <Button 
-            onClick={handleRescanPayments} 
-            disabled={rescanLoading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
-            {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
-          </Button>
-        </div>
+        <Button 
+          onClick={handleRescanPayments} 
+          disabled={rescanLoading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
+          {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
+        </Button>
       </div>
 
       {/* Filters */}
@@ -514,14 +450,6 @@ export function FullPaymentInvoiceView() {
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             {invoice.payment_count || 0} payments
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="px-2 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 hover:bg-yellow-500/20"
-                            onClick={() => debugInvoiceStructure(invoice)}
-                          >
-                            DEBUG
                           </Button>
                         </div>
                       </td>
