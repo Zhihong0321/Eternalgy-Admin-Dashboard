@@ -497,6 +497,7 @@ app.get('/api/invoices/anp-related', async (req, res) => {
         i."1st_payment_date",
         i.achieved_monthly_anp,
         i.amount,
+        i.linked_payment,
         a.name as agent_name
       FROM invoice i
       LEFT JOIN agent a ON i.linked_agent = a.bubble_id
@@ -509,14 +510,41 @@ app.get('/api/invoices/anp-related', async (req, res) => {
     
     console.log(`[DEBUG] Found ${relatedInvoices.length} related invoices for ANP calculation`);
     
-    const responseInvoices = relatedInvoices.map(invoice => ({
-      bubble_id: invoice.bubble_id,
-      invoice_id: invoice.invoice_id,
-      first_payment_date: invoice['1st_payment_date'],
-      achieved_monthly_anp: invoice.achieved_monthly_anp,
-      amount: invoice.amount,
-      agent_name: invoice.agent_name
-    }));
+    // Calculate first payment amount for each invoice
+    const responseInvoices = [];
+    
+    for (const invoice of relatedInvoices) {
+      let firstPaymentAmount = 0;
+      
+      try {
+        if (invoice.linked_payment && invoice.linked_payment.length > 0) {
+          // Get the earliest payment amount
+          const firstPaymentResult = await prisma.$queryRaw`
+            SELECT CAST(amount AS DECIMAL) as amount, payment_date
+            FROM payment 
+            WHERE bubble_id = ANY(${invoice.linked_payment})
+            ORDER BY payment_date ASC
+            LIMIT 1
+          `;
+          
+          if (firstPaymentResult.length > 0) {
+            firstPaymentAmount = parseFloat(firstPaymentResult[0].amount || 0);
+          }
+        }
+      } catch (paymentError) {
+        console.log(`[DEBUG] Error getting first payment for invoice ${invoice.invoice_id}:`, paymentError.message);
+      }
+      
+      responseInvoices.push({
+        bubble_id: invoice.bubble_id,
+        invoice_id: invoice.invoice_id,
+        first_payment_date: invoice['1st_payment_date'],
+        achieved_monthly_anp: invoice.achieved_monthly_anp,
+        amount: invoice.amount,
+        agent_name: invoice.agent_name,
+        first_payment_amount: firstPaymentAmount
+      });
+    }
     
     res.json({ 
       invoices: responseInvoices,
@@ -665,14 +693,16 @@ app.post('/api/invoices/update-anp', async (req, res) => {
     console.log('[DEBUG] Starting Update ANP calculation');
     
     // Get all invoices with 1st_payment_date that is not null/empty
+    // Note: We only need 1st_payment_date, not full_payment_date (ANP is for first payment month)
     const invoicesWithPaymentDate = await prisma.$queryRaw`
       SELECT i.bubble_id, i.amount, i.full_payment_date, i.linked_agent, i."1st_payment_date"
       FROM invoice i
       WHERE i."1st_payment_date" IS NOT NULL 
         AND CAST(i."1st_payment_date" AS TEXT) != ''
         AND CAST(i."1st_payment_date" AS TEXT) != 'null'
-        AND i.full_payment_date IS NOT NULL
         AND i.linked_agent IS NOT NULL
+        AND i.amount IS NOT NULL
+        AND CAST(i.amount AS DECIMAL) > 0
     `;
     
     console.log(`[DEBUG] Found ${invoicesWithPaymentDate.length} invoices with payment dates`);

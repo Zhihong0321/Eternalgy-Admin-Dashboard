@@ -37,6 +37,7 @@ interface ANPInvoice {
   first_payment_date: string
   amount: string
   achieved_monthly_anp: string | null
+  first_payment_amount: number | null
 }
 
 export function FullPaymentInvoiceView() {
@@ -503,7 +504,8 @@ export function FullPaymentInvoiceView() {
                           <th className="text-left py-3 px-2 font-medium">Invoice ID</th>
                           <th className="text-left py-3 px-2 font-medium">Agent Name</th>
                           <th className="text-left py-3 px-2 font-medium">1st Payment Date</th>
-                          <th className="text-left py-3 px-2 font-medium">Amount</th>
+                          <th className="text-left py-3 px-2 font-medium">1st Payment Amount</th>
+                          <th className="text-left py-3 px-2 font-medium">Invoice Amount</th>
                           <th className="text-left py-3 px-2 font-medium">Achieved Monthly ANP</th>
                         </tr>
                       </thead>
@@ -527,6 +529,12 @@ export function FullPaymentInvoiceView() {
                             </td>
                             <td className="py-3 px-2 font-medium">
                               <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-orange-500" />
+                                {formatCurrency(invoice.first_payment_amount?.toString() || '0')}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 font-medium">
+                              <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-green-500" />
                                 {formatCurrency(invoice.amount)}
                               </div>
@@ -542,8 +550,8 @@ export function FullPaymentInvoiceView() {
                       </tbody>
                       <tfoot>
                         <tr className="border-t-2 border-gray-300 bg-muted/30">
-                          <td colSpan={3} className="py-3 px-2 font-bold text-right">
-                            Total Amount:
+                          <td colSpan={4} className="py-3 px-2 font-bold text-right">
+                            Total Invoice Amount:
                           </td>
                           <td className="py-3 px-2 font-bold">
                             <div className="flex items-center gap-2 text-lg">
