@@ -806,6 +806,136 @@ app.post('/api/invoices/update-anp', async (req, res) => {
   }
 });
 
+// Get commission report for agent
+app.get('/api/commission/report', async (req, res) => {
+  try {
+    const { agent, month, agent_type } = req.query;
+    console.log(`[DEBUG] Commission report request - agent: ${agent}, month: ${month}, type: ${agent_type}`);
+    
+    if (!agent || !month || !agent_type) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters', 
+        message: 'agent, month, and agent_type parameters are required' 
+      });
+    }
+
+    if (agent_type !== 'internal') {
+      return res.status(400).json({ 
+        error: 'Unsupported agent type', 
+        message: 'Only internal agent commission calculation is currently supported' 
+      });
+    }
+
+    // Get agent details
+    const agentDetails = await prisma.$queryRaw`
+      SELECT name, agent_type 
+      FROM agent 
+      WHERE bubble_id = ${agent}
+    `;
+    
+    if (agentDetails.length === 0) {
+      return res.status(404).json({ 
+        error: 'Agent not found', 
+        message: `Agent with ID ${agent} not found` 
+      });
+    }
+
+    const agentData = agentDetails[0];
+    
+    // Verify agent type matches request
+    if (agentData.agent_type !== agent_type) {
+      return res.status(400).json({ 
+        error: 'Agent type mismatch', 
+        message: `Agent is not of type ${agent_type}` 
+      });
+    }
+
+    // Get invoices for this agent with full payment date in the selected month
+    const [year, monthNum] = month.split('-');
+    const invoices = await prisma.$queryRaw`
+      SELECT 
+        i.bubble_id,
+        i.invoice_id,
+        i.amount,
+        i.amount_eligible_for_comm,
+        i.full_payment_date,
+        i.achieved_monthly_anp,
+        cp.name as customer_name
+      FROM invoice i
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE i.linked_agent = ${agent}
+        AND i.paid_ = true
+        AND i.full_payment_date IS NOT NULL
+        AND EXTRACT(YEAR FROM i.full_payment_date) = ${parseInt(year)}
+        AND EXTRACT(MONTH FROM i.full_payment_date) = ${parseInt(monthNum)}
+      ORDER BY i.full_payment_date ASC
+    `;
+
+    console.log(`[DEBUG] Found ${invoices.length} invoices for commission calculation`);
+
+    let totalBasicCommission = 0;
+    let totalBonusCommission = 0;
+    const processedInvoices = [];
+
+    // Calculate commission for each invoice
+    for (const invoice of invoices) {
+      // Basic commission = 3% of amount_eligible_for_comm
+      const eligibleAmount = parseFloat(invoice.amount_eligible_for_comm || 0);
+      const basicCommission = eligibleAmount * 0.03;
+      
+      // Bonus commission based on achieved_monthly_anp
+      const monthlyANP = parseFloat(invoice.achieved_monthly_anp || 0);
+      let bonusCommission = 0;
+      
+      if (monthlyANP >= 60000 && monthlyANP <= 179999) {
+        bonusCommission = 500;
+      } else if (monthlyANP >= 180000 && monthlyANP <= 359999) {
+        bonusCommission = 1000;
+      } else if (monthlyANP >= 360000) {
+        bonusCommission = 1500;
+      }
+
+      const totalCommission = basicCommission + bonusCommission;
+
+      totalBasicCommission += basicCommission;
+      totalBonusCommission += bonusCommission;
+
+      processedInvoices.push({
+        bubble_id: invoice.bubble_id,
+        invoice_id: invoice.invoice_id,
+        customer_name: invoice.customer_name || 'Unknown Customer',
+        full_payment_date: invoice.full_payment_date,
+        amount: parseFloat(invoice.amount || 0),
+        amount_eligible_for_comm: eligibleAmount,
+        achieved_monthly_anp: monthlyANP,
+        basic_commission: basicCommission,
+        bonus_commission: bonusCommission,
+        total_commission: totalCommission
+      });
+    }
+
+    const totalCommission = totalBasicCommission + totalBonusCommission;
+
+    console.log(`[DEBUG] Commission calculation completed - Basic: ${totalBasicCommission}, Bonus: ${totalBonusCommission}, Total: ${totalCommission}`);
+
+    res.json({
+      invoices: processedInvoices,
+      total_basic_commission: totalBasicCommission,
+      total_bonus_commission: totalBonusCommission,
+      total_commission: totalCommission,
+      agent_name: agentData.name,
+      selected_month: month
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Commission report API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // =====================
 // STATIC FILE SERVING
 // =====================

@@ -6,8 +6,9 @@ import { AdminView } from '../Views/AdminView'
 import { FullPaymentInvoiceView } from '../Views/FullPaymentInvoiceView'
 import { ANPCalculatorView } from '../Views/ANPCalculatorView'
 import { ManageAgentView } from '../Views/ManageAgentView'
+import { AgentCommissionReportView } from '../Views/AgentCommissionReportView'
 
-type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices' | 'finance/anp-calculator' | 'hr/manage-agent'
+type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices' | 'finance/anp-calculator' | 'finance/commissions' | 'hr/manage-agent'
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<ActiveView>('finance')
@@ -19,6 +20,9 @@ export function Dashboard() {
         break
       case '/finance/anp-calculator':
         setActiveView('finance/anp-calculator')
+        break
+      case '/finance/commissions':
+        setActiveView('finance/commissions')
         break
       case '/hr/manage-agent':
         setActiveView('hr/manage-agent')
@@ -42,6 +46,8 @@ export function Dashboard() {
         return <FullPaymentInvoiceView />
       case 'finance/anp-calculator':
         return <ANPCalculatorView />
+      case 'finance/commissions':
+        return <AgentCommissionReportView />
       case 'hr/manage-agent':
         return <ManageAgentView />
       case 'project':
