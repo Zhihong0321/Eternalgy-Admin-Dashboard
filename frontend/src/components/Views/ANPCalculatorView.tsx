@@ -41,8 +41,9 @@ export function ANPCalculatorView() {
   
   // Filter State
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
-  const [selectedAgent, setSelectedAgent] = useState<string>('all')
-  const [agents, setAgents] = useState<{bubble_id: string, name: string}[]>([])
+  const [selectedInternalAgent, setSelectedInternalAgent] = useState<string>('all')
+  const [selectedOutsourceAgent, setSelectedOutsourceAgent] = useState<string>('all')
+  const [agents, setAgents] = useState<{bubble_id: string, name: string, agent_type: string}[]>([])
   
   // ANP Modal State
   const [showANPModal, setShowANPModal] = useState(false)
@@ -61,8 +62,11 @@ export function ANPCalculatorView() {
         params.append('month', selectedMonth)
       }
       
-      if (selectedAgent !== 'all') {
-        params.append('agent', selectedAgent)
+      // Use internal agent if selected, otherwise use outsource agent if selected
+      if (selectedInternalAgent !== 'all') {
+        params.append('agent', selectedInternalAgent)
+      } else if (selectedOutsourceAgent !== 'all') {
+        params.append('agent', selectedOutsourceAgent)
       }
       
       const response = await fetch(`/api/invoices/anp-calculator?${params}`)
@@ -201,6 +205,20 @@ export function ANPCalculatorView() {
     return options
   }
 
+  const handleInternalAgentChange = (agentId: string) => {
+    setSelectedInternalAgent(agentId)
+    if (agentId !== 'all') {
+      setSelectedOutsourceAgent('all') // Cancel outsource selection
+    }
+  }
+
+  const handleOutsourceAgentChange = (agentId: string) => {
+    setSelectedOutsourceAgent(agentId)
+    if (agentId !== 'all') {
+      setSelectedInternalAgent('all') // Cancel internal selection
+    }
+  }
+
   const formatCurrency = (amount: string | number | null) => {
     if (!amount) return 'RM 0.00'
     const num = typeof amount === 'string' ? parseFloat(amount) : amount
@@ -227,7 +245,7 @@ export function ANPCalculatorView() {
 
   useEffect(() => {
     fetchANPInvoices()
-  }, [selectedMonth, selectedAgent])
+  }, [selectedMonth, selectedInternalAgent, selectedOutsourceAgent])
 
   return (
     <div className="space-y-6">
@@ -295,7 +313,7 @@ export function ANPCalculatorView() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Month Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Month (1st Payment Date)</label>
@@ -313,17 +331,39 @@ export function ANPCalculatorView() {
               </select>
             </div>
 
-            {/* Agent Filter */}
+            {/* Internal Agent Filter */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Filter by Agent</label>
+              <label className="text-sm font-medium">Filter by Internal Agent</label>
               <select 
-                value={selectedAgent} 
-                onChange={(e) => setSelectedAgent(e.target.value)}
+                value={selectedInternalAgent} 
+                onChange={(e) => handleInternalAgentChange(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{ color: '#000000', backgroundColor: '#ffffff' }}
               >
-                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Agents</option>
+                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Internal Agents</option>
                 {agents
+                  .filter(agent => agent.agent_type === 'internal')
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((agent) => (
+                    <option key={agent.bubble_id} value={agent.bubble_id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
+                      {agent.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Outsource Agent Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Outsource Agent</label>
+              <select 
+                value={selectedOutsourceAgent} 
+                onChange={(e) => handleOutsourceAgentChange(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ color: '#000000', backgroundColor: '#ffffff' }}
+              >
+                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Outsource Agents</option>
+                {agents
+                  .filter(agent => agent.agent_type === 'outsource')
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((agent) => (
                     <option key={agent.bubble_id} value={agent.bubble_id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
