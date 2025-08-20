@@ -1100,11 +1100,11 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
           if (hasInvoiceId[0].count > 0) {
             console.log(`[DEBUG] Table ${table.table_name} might contain invoice data`);
             // Try to find our invoice in this table
-            const sampleData = await prisma.$queryRaw`
-              SELECT * FROM ${prisma.$queryRawUnsafe(`"${table.table_name}"`)} 
-              WHERE bubble_id = ${invoiceId} OR invoice_id = ${invoiceId}
+            const sampleData = await prisma.$queryRawUnsafe(`
+              SELECT * FROM "${table.table_name}" 
+              WHERE bubble_id = '${invoiceId}' OR invoice_id = '${invoiceId}'
               LIMIT 1
-            `;
+            `);
             if (sampleData.length > 0) {
               alternativeInvoiceData = {
                 tableName: table.table_name,
@@ -1121,7 +1121,14 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
       }
     }
     
-    res.json({
+    // Helper function to convert BigInt to string for JSON serialization
+    const sanitizeForJson = (obj) => {
+      return JSON.parse(JSON.stringify(obj, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    };
+
+    const response = {
       invoiceId,
       allTables: allTables.map(t => t.table_name),
       tableExists: {
@@ -1133,10 +1140,12 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
         found: true,
         columns: Object.keys(invoiceFromTable[0]),
         linkedPayment: invoiceFromTable[0]?.linked_payment,
-        paymentCount: paymentSample?.[0]?.payment_count
+        paymentCount: paymentSample?.[0]?.payment_count?.toString()
       } : { found: false },
-      alternativeInvoiceData: alternativeInvoiceData || null
-    });
+      alternativeInvoiceData: alternativeInvoiceData ? sanitizeForJson(alternativeInvoiceData) : null
+    };
+
+    res.json(sanitizeForJson(response));
     
   } catch (error) {
     console.log(`[DEBUG] Debug endpoint error:`, error.message);
