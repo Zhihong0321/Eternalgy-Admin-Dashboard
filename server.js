@@ -1,7 +1,7 @@
 import express from 'express';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard - Server Working!', status: 'success' });
