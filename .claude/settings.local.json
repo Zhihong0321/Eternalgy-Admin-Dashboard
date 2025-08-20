@@ -24,7 +24,8 @@
       "Bash(railway:*)",
       "Bash(npx prisma:*)",
       "Bash(node:*)",
-      "WebFetch(domain:eternalgyadmindashboard-production.up.railway.app)"
+      "WebFetch(domain:eternalgyadmindashboard-production.up.railway.app)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
