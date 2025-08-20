@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Filter } from 'lucide-react'
+import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Filter, Eye, X } from 'lucide-react'
 
 interface Invoice {
   bubble_id: string
@@ -30,6 +30,15 @@ interface Agent {
   name: string
 }
 
+interface ANPInvoice {
+  bubble_id: string
+  invoice_id: number
+  agent_name: string
+  first_payment_date: string
+  amount: string
+  achieved_monthly_anp: string | null
+}
+
 export function FullPaymentInvoiceView() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +48,12 @@ export function FullPaymentInvoiceView() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
   const [selectedAgent, setSelectedAgent] = useState<string>('all')
+  
+  // ANP Modal State
+  const [showANPModal, setShowANPModal] = useState(false)
+  const [anpLoading, setAnpLoading] = useState(false)
+  const [anpInvoices, setAnpInvoices] = useState<ANPInvoice[]>([])
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
 
   const fetchFullyPaidInvoices = async () => {
     try {
@@ -143,6 +158,35 @@ export function FullPaymentInvoiceView() {
     }
   }
 
+  const fetchANPRelatedInvoices = async (invoice: Invoice) => {
+    try {
+      setAnpLoading(true)
+      const response = await fetch(`/api/invoices/anp-related?invoice_id=${invoice.bubble_id}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAnpInvoices(data.invoices || [])
+      } else {
+        console.error('Failed to fetch ANP related invoices:', data.message)
+        setAnpInvoices([])
+      }
+    } catch (error) {
+      console.error('Error fetching ANP related invoices:', error)
+      setAnpInvoices([])
+    } finally {
+      setAnpLoading(false)
+    }
+  }
+
+  const handleViewANP = async (invoice: Invoice) => {
+    setSelectedInvoice(invoice)
+    setShowANPModal(true)
+    await fetchANPRelatedInvoices(invoice)
+  }
+
+  const getTotalAmount = () => {
+    return anpInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0)
+  }
 
   const formatCurrency = (amount: string | null) => {
     if (!amount) return 'RM 0.00'
@@ -303,6 +347,7 @@ export function FullPaymentInvoiceView() {
                     <th className="text-left py-3 px-2">Invoice Amount</th>
                     <th className="text-left py-3 px-2">Payments Sum</th>
                     <th className="text-left py-3 px-2">Full Payment Date</th>
+                    <th className="text-left py-3 px-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,6 +408,19 @@ export function FullPaymentInvoiceView() {
                           {formatDate(invoice.full_payment_date)}
                         </div>
                       </td>
+                      
+                      {/* Actions */}
+                      <td className="py-3 px-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex items-center gap-1 text-xs"
+                          onClick={() => handleViewANP(invoice)}
+                        >
+                          <Eye className="h-3 w-3" />
+                          VIEW ANP
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -371,6 +429,111 @@ export function FullPaymentInvoiceView() {
           )}
         </CardContent>
       </Card>
+
+      {/* ANP Modal */}
+      {showANPModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-xl font-bold">ANP Calculation Details</h2>
+                <p className="text-muted-foreground mt-1">
+                  Invoice {selectedInvoice.invoice_id} - Agent: {selectedInvoice.agent_name}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowANPModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              {anpLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin" />
+                  <span className="ml-3">Loading ANP details...</span>
+                </div>
+              ) : anpInvoices.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  No related ANP invoices found
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground mb-4">
+                    All invoices from <strong>{selectedInvoice.agent_name}</strong> that received 1st payment in the same month.
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-2 font-medium">Invoice ID</th>
+                          <th className="text-left py-3 px-2 font-medium">Agent Name</th>
+                          <th className="text-left py-3 px-2 font-medium">1st Payment Date</th>
+                          <th className="text-left py-3 px-2 font-medium">Amount</th>
+                          <th className="text-left py-3 px-2 font-medium">Achieved Monthly ANP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {anpInvoices.map((invoice) => (
+                          <tr key={invoice.bubble_id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-2 font-medium">
+                              {invoice.invoice_id}
+                            </td>
+                            <td className="py-3 px-2">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-blue-500" />
+                                {invoice.agent_name}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-green-500" />
+                                {formatDate(invoice.first_payment_date)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 font-medium">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-green-500" />
+                                {formatCurrency(invoice.amount)}
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 font-medium">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-purple-500" />
+                                {formatCurrency(invoice.achieved_monthly_anp)}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-gray-300 bg-muted/30">
+                          <td colSpan={3} className="py-3 px-2 font-bold text-right">
+                            Total Amount:
+                          </td>
+                          <td className="py-3 px-2 font-bold">
+                            <div className="flex items-center gap-2 text-lg">
+                              <DollarSign className="h-5 w-5 text-green-600" />
+                              {formatCurrency(getTotalAmount().toString())}
+                            </div>
+                          </td>
+                          <td className="py-3 px-2"></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -429,6 +429,91 @@ app.get('/api/invoices/anp-calculator', async (req, res) => {
   }
 });
 
+// Get ANP related invoices - same agent and month from 1st payment date
+app.get('/api/invoices/anp-related', async (req, res) => {
+  try {
+    const { invoice_id } = req.query;
+    console.log(`[DEBUG] Getting ANP related invoices for invoice: ${invoice_id}`);
+    
+    if (!invoice_id) {
+      return res.status(400).json({ error: 'invoice_id parameter is required' });
+    }
+    
+    // First, get the target invoice details
+    const targetInvoice = await prisma.$queryRaw`
+      SELECT 
+        i.linked_agent,
+        i."1st_payment_date",
+        a.name as agent_name
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id
+      WHERE i.bubble_id = ${invoice_id}
+    `;
+    
+    if (targetInvoice.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+    
+    const target = targetInvoice[0];
+    const linkedAgent = target.linked_agent;
+    const firstPaymentDate = target['1st_payment_date'];
+    
+    console.log(`[DEBUG] Target invoice - Agent: ${linkedAgent}, 1st Payment Date: ${firstPaymentDate}`);
+    
+    if (!linkedAgent || !firstPaymentDate) {
+      return res.json({ invoices: [], message: 'Invoice missing agent or 1st payment date' });
+    }
+    
+    // Extract month and year from 1st payment date
+    const targetDate = new Date(firstPaymentDate);
+    const targetYear = targetDate.getFullYear();
+    const targetMonth = targetDate.getMonth() + 1; // JavaScript months are 0-based
+    
+    console.log(`[DEBUG] Target month: ${targetYear}-${String(targetMonth).padStart(2, '0')}`);
+    
+    // Get all invoices from same agent with 1st payment in same month
+    const relatedInvoices = await prisma.$queryRaw`
+      SELECT 
+        i.bubble_id,
+        i.invoice_id,
+        i."1st_payment_date",
+        i.achieved_monthly_anp,
+        i.amount,
+        a.name as agent_name
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id
+      WHERE i.linked_agent = ${linkedAgent}
+        AND i."1st_payment_date" IS NOT NULL
+        AND EXTRACT(YEAR FROM i."1st_payment_date") = ${targetYear}
+        AND EXTRACT(MONTH FROM i."1st_payment_date") = ${targetMonth}
+      ORDER BY i.invoice_id ASC
+    `;
+    
+    console.log(`[DEBUG] Found ${relatedInvoices.length} related invoices for ANP calculation`);
+    
+    const responseInvoices = relatedInvoices.map(invoice => ({
+      bubble_id: invoice.bubble_id,
+      invoice_id: invoice.invoice_id,
+      first_payment_date: invoice['1st_payment_date'],
+      achieved_monthly_anp: invoice.achieved_monthly_anp,
+      amount: invoice.amount,
+      agent_name: invoice.agent_name
+    }));
+    
+    res.json({ 
+      invoices: responseInvoices,
+      agent_name: target.agent_name,
+      target_month: `${targetYear}-${String(targetMonth).padStart(2, '0')}`
+    });
+  } catch (error) {
+    console.log(`[ERROR] ANP Related invoices API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Get all agents for filter dropdown
 app.get('/api/agents/list', async (req, res) => {
   try {
