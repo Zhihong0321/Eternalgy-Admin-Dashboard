@@ -1031,6 +1031,79 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
   }
 });
 
+// Debug endpoint to understand database structure  
+app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log(`[DEBUG] Debug endpoint for invoice: ${invoiceId}`);
+    
+    // Check if invoice exists in synced_records table
+    const syncedInvoice = await prisma.synced_records.findUnique({
+      where: { bubble_id: invoiceId }
+    });
+    
+    console.log(`[DEBUG] Synced invoice record:`, JSON.stringify(syncedInvoice, null, 2));
+    
+    // Check if invoice table/view exists
+    let invoiceTableExists = false;
+    try {
+      const testQuery = await prisma.$queryRaw`
+        SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'invoice')
+      `;
+      invoiceTableExists = testQuery[0].exists;
+      console.log(`[DEBUG] Invoice table exists: ${invoiceTableExists}`);
+    } catch (error) {
+      console.log(`[DEBUG] Error checking invoice table: ${error.message}`);
+    }
+    
+    // If invoice table exists, query it
+    let invoiceFromTable = null;
+    if (invoiceTableExists) {
+      try {
+        invoiceFromTable = await prisma.$queryRaw`
+          SELECT * FROM invoice WHERE bubble_id = ${invoiceId} LIMIT 1
+        `;
+        console.log(`[DEBUG] Invoice from table:`, JSON.stringify(invoiceFromTable, null, 2));
+      } catch (error) {
+        console.log(`[DEBUG] Error querying invoice table: ${error.message}`);
+      }
+    }
+    
+    // Check if payment table exists
+    let paymentTableExists = false;
+    try {
+      const testQuery = await prisma.$queryRaw`
+        SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'payment')
+      `;
+      paymentTableExists = testQuery[0].exists;
+      console.log(`[DEBUG] Payment table exists: ${paymentTableExists}`);
+    } catch (error) {
+      console.log(`[DEBUG] Error checking payment table: ${error.message}`);
+    }
+    
+    res.json({
+      invoiceId,
+      syncedInvoice: syncedInvoice ? {
+        exists: true,
+        dataType: syncedInvoice.data_type,
+        rawDataKeys: Object.keys(syncedInvoice.raw_data || {}),
+        processedDataKeys: Object.keys(syncedInvoice.processed_data || {})
+      } : { exists: false },
+      invoiceTableExists,
+      paymentTableExists,
+      invoiceFromTable: invoiceFromTable && invoiceFromTable.length > 0 ? {
+        exists: true,
+        columns: Object.keys(invoiceFromTable[0] || {}),
+        linkedPayment: invoiceFromTable[0]?.linked_payment
+      } : { exists: false }
+    });
+    
+  } catch (error) {
+    console.log(`[DEBUG] Debug endpoint error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // =====================
 // STATIC FILE SERVING
 // =====================

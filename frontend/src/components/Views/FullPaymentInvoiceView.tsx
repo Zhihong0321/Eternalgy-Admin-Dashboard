@@ -223,6 +223,20 @@ export function FullPaymentInvoiceView() {
     }
   }
 
+  const debugInvoiceStructure = async (invoice: Invoice) => {
+    try {
+      console.log('[DEBUG] Calling debug endpoint for invoice:', invoice.bubble_id)
+      const response = await fetch(`/api/debug/invoice/${invoice.bubble_id}`)
+      const data = await response.json()
+      
+      console.log('[DEBUG] Database structure debug response:', JSON.stringify(data, null, 2))
+      alert(`Debug info logged to console for invoice ${invoice.invoice_id}. Check browser console.`)
+    } catch (error) {
+      console.error('[DEBUG] Error calling debug endpoint:', error)
+      alert('Debug endpoint error - check console')
+    }
+  }
+
   const handleViewPayments = async (invoice: Invoice) => {
     setSelectedPaymentInvoice(invoice)
     setShowPaymentModal(true)
@@ -449,6 +463,14 @@ export function FullPaymentInvoiceView() {
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             {invoice.payment_count || 0} payments
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="px-2 py-1 text-xs font-medium bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 hover:bg-yellow-500/20"
+                            onClick={() => debugInvoiceStructure(invoice)}
+                          >
+                            DEBUG
                           </Button>
                         </div>
                       </td>
