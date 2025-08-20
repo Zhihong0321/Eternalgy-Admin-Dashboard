@@ -239,39 +239,51 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
     const { limit = 100, offset = 0 } = req.query;
     console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}`);
     
-    // Test query without JOIN first to isolate the issue
+    // Get paid invoices with all required fields using correct schema
     const paidInvoices = await prisma.$queryRaw`
-      SELECT i.bubble_id, i.amount, i.paid_, i.full_payment_date, i.created_date, 
-             i.linked_customer, i.invoice_id, i.invoice_date
+      SELECT 
+        i.invoice_id,
+        i.bubble_id,
+        i.amount,
+        i.full_payment_date,
+        i.linked_payment,
+        array_length(i.linked_payment, 1) as payment_count,
+        a.name as agent_name,
+        cp.name as customer_name
       FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
       WHERE i.paid_ = true
-      ORDER BY i.full_payment_date DESC NULLS LAST, i.created_date DESC
+      ORDER BY i.invoice_id ASC
       LIMIT ${parseInt(limit)}
       OFFSET ${parseInt(offset)}
     `;
     
     console.log(`[DEBUG] Paid invoices query result - count: ${paidInvoices.length}`);
     console.log(`[DEBUG] First 3 invoices:`, paidInvoices.slice(0, 3).map(inv => ({
-      bubble_id: inv.bubble_id,
-      paid_: inv.paid_,
+      invoice_id: inv.invoice_id,
       amount: inv.amount,
-      linked_customer: inv.linked_customer
+      payment_count: inv.payment_count,
+      agent_name: inv.agent_name,
+      customer_name: inv.customer_name
     })));
     
-    // Add customer names separately to avoid JOIN issues
+    // Calculate payment sums for each invoice
     for (const invoice of paidInvoices) {
-      if (invoice.linked_customer) {
+      if (invoice.linked_payment && invoice.linked_payment.length > 0) {
         try {
-          const customer = await prisma.$queryRaw`
-            SELECT name FROM customer WHERE bubble_id = ${invoice.linked_customer} LIMIT 1
+          const paymentSumResult = await prisma.$queryRaw`
+            SELECT COALESCE(SUM(CAST(amount AS DECIMAL)), 0) as total_payments
+            FROM payment 
+            WHERE bubble_id = ANY(${invoice.linked_payment})
           `;
-          invoice.customer_name = customer[0]?.name || null;
-        } catch (customerError) {
-          console.log(`[DEBUG] Customer lookup failed for ${invoice.linked_customer}: ${customerError.message}`);
-          invoice.customer_name = null;
+          invoice.payment_sum = parseFloat(paymentSumResult[0]?.total_payments || 0);
+        } catch (paymentError) {
+          console.log(`[DEBUG] Payment sum calculation failed: ${paymentError.message}`);
+          invoice.payment_sum = 0;
         }
       } else {
-        invoice.customer_name = null;
+        invoice.payment_sum = 0;
       }
     }
     

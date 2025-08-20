@@ -10,8 +10,11 @@ interface Invoice {
   full_payment_date: string | null
   created_date: string
   customer_name: string | null
+  agent_name: string | null
   linked_customer: string | null
   invoice_date: string | null
+  payment_count: number | null
+  payment_sum: number | null
 }
 
 interface RescanResult {
@@ -184,50 +187,71 @@ export function FullPaymentInvoiceView() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-3 px-2">Invoice ID</th>
+                    <th className="text-left py-3 px-2">Agent</th>
                     <th className="text-left py-3 px-2">Customer</th>
-                    <th className="text-left py-3 px-2">Amount</th>
-                    <th className="text-left py-3 px-2">Invoice Date</th>
+                    <th className="text-left py-3 px-2">Payment Count</th>
+                    <th className="text-left py-3 px-2">Invoice Amount</th>
+                    <th className="text-left py-3 px-2">Payments Sum</th>
                     <th className="text-left py-3 px-2">Full Payment Date</th>
-                    <th className="text-left py-3 px-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {invoices.map((invoice) => (
                     <tr key={invoice.bubble_id} className="border-b hover:bg-muted/50">
+                      {/* Invoice ID */}
                       <td className="py-3 px-2">
                         <div className="font-medium">
-                          {invoice.invoice_id || invoice.bubble_id}
+                          {invoice.invoice_id || 'N/A'}
                         </div>
                       </td>
+                      
+                      {/* Agent Name */}
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-blue-500" />
+                          {invoice.agent_name || 'N/A'}
+                        </div>
+                      </td>
+                      
+                      {/* Customer Name */}
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          {invoice.customer_name || invoice.linked_customer || 'N/A'}
+                          {invoice.customer_name || 'N/A'}
                         </div>
                       </td>
+                      
+                      {/* Payment Count */}
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                            {invoice.payment_count || 0} payments
+                          </span>
+                        </div>
+                      </td>
+                      
+                      {/* Invoice Amount */}
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2 font-medium">
                           <DollarSign className="h-4 w-4 text-green-500" />
                           {formatCurrency(invoice.amount)}
                         </div>
                       </td>
+                      
+                      {/* Payment Sum */}
                       <td className="py-3 px-2">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(invoice.invoice_date)}
+                        <div className="flex items-center gap-2 font-medium">
+                          <DollarSign className="h-4 w-4 text-purple-500" />
+                          {formatCurrency(invoice.payment_sum?.toString() || null)}
                         </div>
                       </td>
+                      
+                      {/* Full Payment Date */}
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-green-500" />
                           {formatDate(invoice.full_payment_date)}
                         </div>
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1 w-fit">
-                          <CheckCircle className="h-3 w-3" />
-                          Fully Paid
-                        </span>
                       </td>
                     </tr>
                   ))}
