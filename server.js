@@ -1037,65 +1037,105 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
     const { invoiceId } = req.params;
     console.log(`[DEBUG] Debug endpoint for invoice: ${invoiceId}`);
     
-    // Check if invoice exists in synced_records table
-    const syncedInvoice = await prisma.synced_records.findUnique({
-      where: { bubble_id: invoiceId }
-    });
+    // First, discover what tables actually exist in the database
+    const allTables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `;
     
-    console.log(`[DEBUG] Synced invoice record:`, JSON.stringify(syncedInvoice, null, 2));
+    console.log(`[DEBUG] All tables in database:`, allTables.map(t => t.table_name));
     
-    // Check if invoice table/view exists
-    let invoiceTableExists = false;
-    try {
-      const testQuery = await prisma.$queryRaw`
-        SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'invoice')
-      `;
-      invoiceTableExists = testQuery[0].exists;
-      console.log(`[DEBUG] Invoice table exists: ${invoiceTableExists}`);
-    } catch (error) {
-      console.log(`[DEBUG] Error checking invoice table: ${error.message}`);
-    }
+    // Check if specific tables exist
+    const invoiceTableExists = allTables.some(t => t.table_name === 'invoice');
+    const paymentTableExists = allTables.some(t => t.table_name === 'payment');
+    const syncedRecordsExists = allTables.some(t => t.table_name === 'synced_records');
     
-    // If invoice table exists, query it
+    console.log(`[DEBUG] Table existence - invoice: ${invoiceTableExists}, payment: ${paymentTableExists}, synced_records: ${syncedRecordsExists}`);
+    
     let invoiceFromTable = null;
+    let paymentSample = null;
+    
+    // If invoice table exists, try to find the specific invoice
     if (invoiceTableExists) {
       try {
         invoiceFromTable = await prisma.$queryRaw`
           SELECT * FROM invoice WHERE bubble_id = ${invoiceId} LIMIT 1
         `;
         console.log(`[DEBUG] Invoice from table:`, JSON.stringify(invoiceFromTable, null, 2));
+        
+        // If found, also get a sample of payments for this invoice
+        if (invoiceFromTable.length > 0 && paymentTableExists && invoiceFromTable[0].linked_payment) {
+          try {
+            paymentSample = await prisma.$queryRaw`
+              SELECT COUNT(*) as payment_count 
+              FROM payment 
+              WHERE bubble_id = ANY(${invoiceFromTable[0].linked_payment})
+            `;
+            console.log(`[DEBUG] Payment count for this invoice:`, paymentSample[0]?.payment_count);
+          } catch (payError) {
+            console.log(`[DEBUG] Error checking payment count: ${payError.message}`);
+          }
+        }
       } catch (error) {
         console.log(`[DEBUG] Error querying invoice table: ${error.message}`);
       }
     }
     
-    // Check if payment table exists
-    let paymentTableExists = false;
-    try {
-      const testQuery = await prisma.$queryRaw`
-        SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'payment')
-      `;
-      paymentTableExists = testQuery[0].exists;
-      console.log(`[DEBUG] Payment table exists: ${paymentTableExists}`);
-    } catch (error) {
-      console.log(`[DEBUG] Error checking payment table: ${error.message}`);
+    // If no specific tables exist, check for any table containing invoice data
+    let alternativeInvoiceData = null;
+    if (!invoiceTableExists) {
+      // Look for tables that might contain invoice data
+      for (const table of allTables) {
+        try {
+          const hasInvoiceId = await prisma.$queryRaw`
+            SELECT COUNT(*) as count 
+            FROM information_schema.columns 
+            WHERE table_name = ${table.table_name} 
+            AND (column_name ILIKE '%invoice%' OR column_name ILIKE '%bubble_id%')
+          `;
+          
+          if (hasInvoiceId[0].count > 0) {
+            console.log(`[DEBUG] Table ${table.table_name} might contain invoice data`);
+            // Try to find our invoice in this table
+            const sampleData = await prisma.$queryRaw`
+              SELECT * FROM ${prisma.$queryRawUnsafe(`"${table.table_name}"`)} 
+              WHERE bubble_id = ${invoiceId} OR invoice_id = ${invoiceId}
+              LIMIT 1
+            `;
+            if (sampleData.length > 0) {
+              alternativeInvoiceData = {
+                tableName: table.table_name,
+                data: sampleData[0],
+                columns: Object.keys(sampleData[0])
+              };
+              break;
+            }
+          }
+        } catch (error) {
+          // Skip tables that can't be queried
+          console.log(`[DEBUG] Could not check table ${table.table_name}: ${error.message}`);
+        }
+      }
     }
     
     res.json({
       invoiceId,
-      syncedInvoice: syncedInvoice ? {
-        exists: true,
-        dataType: syncedInvoice.data_type,
-        rawDataKeys: Object.keys(syncedInvoice.raw_data || {}),
-        processedDataKeys: Object.keys(syncedInvoice.processed_data || {})
-      } : { exists: false },
-      invoiceTableExists,
-      paymentTableExists,
-      invoiceFromTable: invoiceFromTable && invoiceFromTable.length > 0 ? {
-        exists: true,
-        columns: Object.keys(invoiceFromTable[0] || {}),
-        linkedPayment: invoiceFromTable[0]?.linked_payment
-      } : { exists: false }
+      allTables: allTables.map(t => t.table_name),
+      tableExists: {
+        invoice: invoiceTableExists,
+        payment: paymentTableExists,
+        synced_records: syncedRecordsExists
+      },
+      invoiceData: invoiceFromTable && invoiceFromTable.length > 0 ? {
+        found: true,
+        columns: Object.keys(invoiceFromTable[0]),
+        linkedPayment: invoiceFromTable[0]?.linked_payment,
+        paymentCount: paymentSample?.[0]?.payment_count
+      } : { found: false },
+      alternativeInvoiceData: alternativeInvoiceData || null
     });
     
   } catch (error) {
