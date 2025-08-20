@@ -944,20 +944,52 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
     
     // First get the invoice to find linked payments
     const invoice = await prisma.$queryRaw`
-      SELECT linked_payment
+      SELECT linked_payment, invoice_id
       FROM invoice 
       WHERE bubble_id = ${invoiceId}
     `;
     
-    if (invoice.length === 0 || !invoice[0].linked_payment) {
-      return res.json({ payments: [] });
+    console.log(`[DEBUG] Invoice query result:`, JSON.stringify(invoice, null, 2));
+    
+    if (invoice.length === 0) {
+      console.log(`[DEBUG] No invoice found with bubble_id: ${invoiceId}`);
+      return res.json({ payments: [], message: 'Invoice not found' });
+    }
+    
+    if (!invoice[0].linked_payment) {
+      console.log(`[DEBUG] Invoice has no linked_payment field`);
+      return res.json({ payments: [], message: 'No linked payments' });
     }
 
     const linkedPaymentIds = invoice[0].linked_payment;
-    console.log(`[DEBUG] Found ${linkedPaymentIds.length} linked payment IDs`);
+    console.log(`[DEBUG] Found ${linkedPaymentIds.length} linked payment IDs:`, linkedPaymentIds);
+
+    // Check if payments exist first
+    const paymentCheck = await prisma.$queryRaw`
+      SELECT COUNT(*) as count
+      FROM payment p
+      WHERE p.bubble_id = ANY(${linkedPaymentIds})
+    `;
+    
+    console.log(`[DEBUG] Payment count check:`, paymentCheck[0].count);
 
     // Get payment details with verification information
-    // Following the path: payment.verified_by -> user -> linked_agent_profile -> name
+    // First try simple query without joins to see if payments exist
+    const paymentsSimple = await prisma.$queryRaw`
+      SELECT 
+        p.bubble_id,
+        p.amount,
+        p.payment_method,
+        p.payment_date,
+        p.verified_by
+      FROM payment p
+      WHERE p.bubble_id = ANY(${linkedPaymentIds})
+      ORDER BY p.payment_date ASC
+    `;
+
+    console.log(`[DEBUG] Simple payments query result:`, JSON.stringify(paymentsSimple, null, 2));
+
+    // Now try with joins for verification info
     const payments = await prisma.$queryRaw`
       SELECT 
         p.bubble_id,
@@ -973,7 +1005,7 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
       ORDER BY p.payment_date ASC
     `;
 
-    console.log(`[DEBUG] Retrieved ${payments.length} payment records`);
+    console.log(`[DEBUG] Retrieved ${payments.length} payment records with joins`);
 
     const formattedPayments = payments.map(payment => ({
       bubble_id: payment.bubble_id,
@@ -983,12 +1015,15 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
       verified_by_name: payment.verified_by_name
     }));
 
+    console.log(`[DEBUG] Formatted payments:`, JSON.stringify(formattedPayments, null, 2));
+
     res.json({ 
       payments: formattedPayments
     });
 
   } catch (error) {
     console.log(`[ERROR] Payment details API error:`, error.message);
+    console.log(`[ERROR] Full error:`, error);
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 

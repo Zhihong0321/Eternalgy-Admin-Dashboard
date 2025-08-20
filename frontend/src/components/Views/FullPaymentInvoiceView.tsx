@@ -202,11 +202,15 @@ export function FullPaymentInvoiceView() {
   const fetchPaymentDetails = async (invoice: Invoice) => {
     try {
       setPaymentLoading(true)
+      console.log('[DEBUG] Fetching payment details for invoice:', invoice.bubble_id)
       const response = await fetch(`/api/payments/invoice/${invoice.bubble_id}`)
       const data = await response.json()
       
+      console.log('[DEBUG] Payment details API response:', data)
+      
       if (response.ok) {
         setPaymentDetails(data.payments || [])
+        console.log('[DEBUG] Set payment details:', data.payments || [])
       } else {
         console.error('Failed to fetch payment details:', data.message)
         setPaymentDetails([])
