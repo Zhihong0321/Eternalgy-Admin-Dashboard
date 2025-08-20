@@ -12,7 +12,7 @@ yarn-error.log*
 .env.production.local
 
 # Build outputs
-dist/
+# dist/
 build/
 *.tsbuildinfo
 
@@ -65,10 +65,10 @@ jspm_packages/
 .nuxt
 
 # Vite build output
-dist
+# dist
 
 # Rollup build output
-dist
+# dist
 
 # Storybook build outputs
 .out
