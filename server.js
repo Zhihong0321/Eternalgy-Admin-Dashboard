@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { PrismaClient, Prisma } from '@prisma/client';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +24,6 @@ app.get('/api/health', (req, res) => {
 
 // Debug route to check files and paths
 app.get('/api/debug/files', (req, res) => {
-  const fs = require('fs');
   
   const debugInfo = {
     __dirname,
@@ -260,7 +260,6 @@ app.listen(PORT, () => {
   console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
   
   // Log directory contents on startup
-  const fs = require('fs');
   try {
     console.log(`Root directory contents:`, fs.readdirSync(__dirname));
     
