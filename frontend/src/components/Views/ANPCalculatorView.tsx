@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Eye, X } from 'lucide-react'
+import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Eye, X, Filter } from 'lucide-react'
 
 interface ANPInvoice {
   bubble_id: string
@@ -38,6 +38,11 @@ export function ANPCalculatorView() {
   const [totalCount, setTotalCount] = useState(0)
   const [lastAnpResult, setLastAnpResult] = useState<ANPResult | null>(null)
   
+  // Filter State
+  const [selectedMonth, setSelectedMonth] = useState<string>('all')
+  const [selectedAgent, setSelectedAgent] = useState<string>('all')
+  const [agents, setAgents] = useState<{bubble_id: string, name: string}[]>([])
+  
   // ANP Modal State
   const [showANPModal, setShowANPModal] = useState(false)
   const [anpModalLoading, setAnpModalLoading] = useState(false)
@@ -47,7 +52,19 @@ export function ANPCalculatorView() {
   const fetchANPInvoices = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/invoices/anp-calculator?limit=100')
+      const params = new URLSearchParams({
+        limit: '100'
+      })
+      
+      if (selectedMonth !== 'all') {
+        params.append('month', selectedMonth)
+      }
+      
+      if (selectedAgent !== 'all') {
+        params.append('agent', selectedAgent)
+      }
+      
+      const response = await fetch(`/api/invoices/anp-calculator?${params}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -60,6 +77,21 @@ export function ANPCalculatorView() {
       console.error('Error fetching ANP invoices:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('/api/agents/list')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAgents(data.agents || [])
+      } else {
+        console.error('Failed to fetch agents:', data.message)
+      }
+    } catch (error) {
+      console.error('Error fetching agents:', error)
     }
   }
 
@@ -150,6 +182,24 @@ export function ANPCalculatorView() {
     return allSameANP && anpMatchesTotal && firstANP > 0
   }
 
+  const generateMonthOptions = () => {
+    const options = [{ value: 'all', label: 'All Months' }]
+    const currentDate = new Date()
+    
+    // Generate last 24 months
+    for (let i = 0; i < 24; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const monthLabel = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short' 
+      })
+      options.push({ value: monthKey, label: monthLabel })
+    }
+    
+    return options
+  }
+
   const formatCurrency = (amount: string | number | null) => {
     if (!amount) return 'RM 0.00'
     const num = typeof amount === 'string' ? parseFloat(amount) : amount
@@ -170,8 +220,13 @@ export function ANPCalculatorView() {
   }
 
   useEffect(() => {
+    fetchAgents()
     fetchANPInvoices()
   }, [])
+
+  useEffect(() => {
+    fetchANPInvoices()
+  }, [selectedMonth, selectedAgent])
 
   return (
     <div className="space-y-6">
@@ -229,6 +284,56 @@ export function ANPCalculatorView() {
           </CardContent>
         </Card>
       )}
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-blue-500" />
+            Filter Invoices
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Month Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Month (1st Payment Date)</label>
+              <select 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ color: '#000000', backgroundColor: '#ffffff' }}
+              >
+                {generateMonthOptions().map((option) => (
+                  <option key={option.value} value={option.value} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Agent Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Agent</label>
+              <select 
+                value={selectedAgent} 
+                onChange={(e) => setSelectedAgent(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ color: '#000000', backgroundColor: '#ffffff' }}
+              >
+                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Agents</option>
+                {agents
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((agent) => (
+                    <option key={agent.bubble_id} value={agent.bubble_id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
+                      {agent.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ANP Invoices Table */}
       <Card>

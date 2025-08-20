@@ -345,11 +345,31 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
 // Get invoices for ANP Calculator - where payment received > 0
 app.get('/api/invoices/anp-calculator', async (req, res) => {
   try {
-    const { limit = 100, offset = 0 } = req.query;
-    console.log(`[DEBUG] ANP Calculator invoices request - limit: ${limit}, offset: ${offset}`);
+    const { limit = 100, offset = 0, month, agent } = req.query;
+    console.log(`[DEBUG] ANP Calculator invoices request - limit: ${limit}, offset: ${offset}, month: ${month}, agent: ${agent}`);
+    
+    // Build dynamic WHERE conditions
+    let whereConditions = `
+      i.linked_payment IS NOT NULL 
+      AND array_length(i.linked_payment, 1) > 0
+    `;
+    
+    // Add month filter
+    if (month && month !== 'all') {
+      const [year, monthNum] = month.split('-');
+      whereConditions += `
+        AND EXTRACT(YEAR FROM i."1st_payment_date") = ${parseInt(year)}
+        AND EXTRACT(MONTH FROM i."1st_payment_date") = ${parseInt(monthNum)}
+      `;
+    }
+    
+    // Add agent filter
+    if (agent && agent !== 'all') {
+      whereConditions += ` AND i.linked_agent = '${agent}'`;
+    }
     
     // Get invoices where linked_payment sum > 0
-    const anpInvoices = await prisma.$queryRaw`
+    const anpInvoices = await prisma.$queryRawUnsafe(`
       SELECT 
         i.invoice_id,
         i.bubble_id,
@@ -361,12 +381,11 @@ app.get('/api/invoices/anp-calculator', async (req, res) => {
       FROM invoice i
       LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
       LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
-      WHERE i.linked_payment IS NOT NULL 
-        AND array_length(i.linked_payment, 1) > 0
+      WHERE ${whereConditions}
       ORDER BY i.invoice_id ASC
       LIMIT ${parseInt(limit)}
       OFFSET ${parseInt(offset)}
-    `;
+    `);
     
     console.log(`[DEBUG] ANP invoices query result - count: ${anpInvoices.length}`);
     
@@ -401,18 +420,17 @@ app.get('/api/invoices/anp-calculator', async (req, res) => {
       }
     }
     
-    // Get total count of invoices with payments > 0
-    const totalCountResult = await prisma.$queryRaw`
+    // Get total count of invoices with payments > 0 using same filters
+    const totalCountResult = await prisma.$queryRawUnsafe(`
       SELECT COUNT(DISTINCT i.bubble_id) as count
       FROM invoice i
-      WHERE i.linked_payment IS NOT NULL 
-        AND array_length(i.linked_payment, 1) > 0
+      WHERE ${whereConditions}
         AND EXISTS (
           SELECT 1 FROM payment p 
           WHERE p.bubble_id = ANY(i.linked_payment) 
             AND CAST(p.amount AS DECIMAL) > 0
         )
-    `;
+    `);
     
     console.log(`[DEBUG] ANP Calculator API response summary - filtered invoices: ${filteredInvoices.length}`);
     
