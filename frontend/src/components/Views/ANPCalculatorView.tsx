@@ -134,6 +134,22 @@ export function ANPCalculatorView() {
     return anpRelatedInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0)
   }
 
+  const checkANPCalculation = () => {
+    if (anpRelatedInvoices.length === 0) return false
+    
+    const totalAmount = getTotalAmount()
+    
+    // Check if all invoices have the same achieved_monthly_anp and it equals the total
+    const firstANP = parseFloat(anpRelatedInvoices[0]?.achieved_monthly_anp || '0')
+    const allSameANP = anpRelatedInvoices.every(invoice => 
+      Math.abs(parseFloat(invoice.achieved_monthly_anp || '0') - firstANP) < 0.01
+    )
+    
+    const anpMatchesTotal = Math.abs(totalAmount - firstANP) < 0.01
+    
+    return allSameANP && anpMatchesTotal && firstANP > 0
+  }
+
   const formatCurrency = (amount: string | number | null) => {
     if (!amount) return 'RM 0.00'
     const num = typeof amount === 'string' ? parseFloat(amount) : amount
@@ -344,6 +360,18 @@ export function ANPCalculatorView() {
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground mb-4">
                     All invoices from <strong>{selectedInvoice.agent_name}</strong> that received 1st payment in the same month.
+                  </div>
+
+                  {/* ANP Validation Highlight Box */}
+                  <div className={`p-4 rounded-lg border-2 text-center font-bold text-lg ${
+                    checkANPCalculation() 
+                      ? 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400' 
+                      : 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'
+                  } animate-pulse`}>
+                    {checkANPCalculation() 
+                      ? '✓ ANP CALCULATION CHECKED' 
+                      : '⚠ PLEASE RERUN ANP UPDATE'
+                    }
                   </div>
                   
                   <div className="overflow-x-auto">
