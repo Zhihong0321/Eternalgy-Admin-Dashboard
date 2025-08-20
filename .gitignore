@@ -101,3 +101,4 @@ Thumbs.db
 
 # Prisma
 prisma/dev.db*
+/generated/prisma

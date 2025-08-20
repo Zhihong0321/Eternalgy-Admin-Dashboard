@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// READ-ONLY: Bubble.io Synced Data
+model synced_records {
+  id              String   @id @default(cuid())
+  bubble_id       String   @unique
+  data_type       String
+  raw_data        Json
+  processed_data  Json?
+  synced_at       DateTime @default(now())
+  
+  @@map("synced_records")
+}
+
+model sync_status {
+  id            String   @id @default(cuid())
+  last_sync     DateTime?
+  status        String
+  error_message String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  
+  @@map("sync_status")
+}
+
+// ADMIN DASHBOARD: New Tables
+model admin_users {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String
+  role       String   @default("admin")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  
+  @@map("admin_users")
+}
+
+model dashboard_settings {
+  id         String   @id @default(cuid())
+  user_id    String?
+  key        String
+  value      Json
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  
+  @@unique([user_id, key])
+  @@map("dashboard_settings")
+}
+
+model activity_logs {
+  id          String   @id @default(cuid())
+  user_id     String?
+  action      String
+  description String?
+  metadata    Json?
+  created_at  DateTime @default(now())
+  
+  @@map("activity_logs")
+}

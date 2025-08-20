@@ -18,7 +18,12 @@
       "Bash(mv:*)",
       "Bash(npm create:*)",
       "Bash(npx tailwindcss init:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(railway variables:*)",
+      "Bash(railway:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
