@@ -160,10 +160,11 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
     const { limit = 100, offset = 0 } = req.query;
     console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}`);
     
+    // Test query without JOIN first to isolate the issue
     const paidInvoices = await prisma.$queryRaw`
-      SELECT i.*, c.name as customer_name
+      SELECT i.bubble_id, i.amount, i.paid_, i.full_payment_date, i.created_date, 
+             i.linked_customer, i.invoice_id, i.invoice_date
       FROM invoice i
-      LEFT JOIN customer c ON i.linked_customer = c.bubble_id
       WHERE i.paid_ = true
       ORDER BY i.full_payment_date DESC NULLS LAST, i.created_date DESC
       LIMIT ${parseInt(limit)}
@@ -175,8 +176,25 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
       bubble_id: inv.bubble_id,
       paid_: inv.paid_,
       amount: inv.amount,
-      customer: inv.customer_name
+      linked_customer: inv.linked_customer
     })));
+    
+    // Add customer names separately to avoid JOIN issues
+    for (const invoice of paidInvoices) {
+      if (invoice.linked_customer) {
+        try {
+          const customer = await prisma.$queryRaw`
+            SELECT name FROM customer WHERE bubble_id = ${invoice.linked_customer} LIMIT 1
+          `;
+          invoice.customer_name = customer[0]?.name || null;
+        } catch (customerError) {
+          console.log(`[DEBUG] Customer lookup failed for ${invoice.linked_customer}: ${customerError.message}`);
+          invoice.customer_name = null;
+        }
+      } else {
+        invoice.customer_name = null;
+      }
+    }
     
     const totalResult = await prisma.$queryRaw`
       SELECT COUNT(*) as count FROM invoice WHERE paid_ = true
