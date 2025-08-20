@@ -353,7 +353,7 @@ app.get('/api/invoices/anp-calculator', async (req, res) => {
       SELECT 
         i.invoice_id,
         i.bubble_id,
-        i.1st_payment_date,
+        i."1st_payment_date",
         i.achieved_monthly_anp,
         i.linked_payment,
         a.name as agent_name,
