@@ -8,7 +8,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "cd frontend && npm run build && cd .. && node server.js",
+    "start": "cd frontend && npm install && npm run build && cd .. && node server.js",
     "dev": "node --watch server.js"
   },
   "author": "Eternalgy Team",
