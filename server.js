@@ -159,11 +159,38 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
   }
 });
 
-// Serve static files from frontend/dist
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+// Custom middleware to set correct MIME types for static files
+app.use('/assets', express.static(path.join(__dirname, 'frontend', 'dist', 'assets'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    }
+  }
+}));
 
-// Serve React app for all other routes
+// Serve other static files (favicon, etc.)
+app.use(express.static(path.join(__dirname, 'frontend', 'dist'), {
+  index: false, // Don't serve index.html for directory requests
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (filePath.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml');
+    }
+  }
+}));
+
+// Serve React app for all non-API routes (SPA fallback)
 app.get('*', (req, res) => {
+  // Only serve HTML for non-API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
