@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { RefreshCw, DollarSign, Calendar, User, Eye, X } from 'lucide-react'
 
 interface Agent {
@@ -214,63 +215,73 @@ export function AgentCommissionReportView() {
           {/* Agent Type Filter */}
           <div>
             <label className="block text-sm font-medium mb-2">Agent Type</label>
-            <select
+            <Select
               value={agentFilter}
-              onChange={(e) => {
-                setAgentFilter(e.target.value as 'internal' | 'outsource')
+              onValueChange={(value) => {
+                setAgentFilter(value as 'internal' | 'outsource')
                 setSelectedAgent('') // Reset selected agent when type changes
                 setReportData(null) // Clear report data
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
-              <option value="internal" className="bg-white text-gray-900">Internal Agent</option>
-              <option value="outsource" className="bg-white text-gray-900">Outsource Agent</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select agent type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="internal">Internal Agent</SelectItem>
+                <SelectItem value="outsource">Outsource Agent</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Agent Selector */}
           <div>
             <label className="block text-sm font-medium mb-2">Select Agent</label>
-            <select
+            <Select
               value={selectedAgent}
-              onChange={(e) => {
-                setSelectedAgent(e.target.value)
+              onValueChange={(value) => {
+                setSelectedAgent(value)
                 setReportData(null) // Clear report data when agent changes
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               disabled={filteredAgents.length === 0}
             >
-              <option value="" className="bg-white text-gray-900">
-                {filteredAgents.length === 0 
-                  ? `No ${agentFilter} agents available` 
-                  : 'Choose an agent'
-                }
-              </option>
-              {filteredAgents.map((agent) => (
-                <option key={agent.bubble_id} value={agent.bubble_id} className="bg-white text-gray-900">
-                  {agent.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={
+                  filteredAgents.length === 0 
+                    ? `No ${agentFilter} agents available` 
+                    : 'Choose an agent'
+                } />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredAgents.map((agent) => (
+                  <SelectItem key={agent.bubble_id} value={agent.bubble_id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Month Selector */}
           <div>
             <label className="block text-sm font-medium mb-2">Select Month</label>
-            <select
+            <Select
               value={selectedMonth}
-              onChange={(e) => {
-                setSelectedMonth(e.target.value)
+              onValueChange={(value) => {
+                setSelectedMonth(value)
                 setReportData(null) // Clear report data when month changes
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
-              {monthOptions.map((month) => (
-                <option key={month.value} value={month.value} className="bg-white text-gray-900">
-                  {month.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select month" />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Generate Button */}

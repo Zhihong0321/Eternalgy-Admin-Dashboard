@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Filter, Eye, X } from 'lucide-react'
 
 interface Invoice {
@@ -310,36 +311,38 @@ export function FullPaymentInvoiceView() {
             {/* Month Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Month</label>
-              <select 
-                value={selectedMonth} 
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {generateMonthOptions().map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateMonthOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Agent Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Agent</label>
-              <select 
-                value={selectedAgent} 
-                onChange={(e) => setSelectedAgent(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Agents</option>
-                {agents
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((agent) => (
-                    <option key={agent.bubble_id} value={agent.bubble_id}>
-                      {agent.name}
-                    </option>
-                  ))}
-              </select>
+              <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Agents</SelectItem>
+                  {agents
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((agent) => (
+                      <SelectItem key={agent.bubble_id} value={agent.bubble_id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

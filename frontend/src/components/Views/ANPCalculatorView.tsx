@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { RefreshCw, CheckCircle, DollarSign, Calendar, User, Eye, X, Filter } from 'lucide-react'
 
 interface ANPInvoice {
@@ -317,60 +318,60 @@ export function ANPCalculatorView() {
             {/* Month Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Month (1st Payment Date)</label>
-              <select 
-                value={selectedMonth} 
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ color: '#000000', backgroundColor: '#ffffff' }}
-              >
-                {generateMonthOptions().map((option) => (
-                  <option key={option.value} value={option.value} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateMonthOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Internal Agent Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Internal Agent</label>
-              <select 
-                value={selectedInternalAgent} 
-                onChange={(e) => handleInternalAgentChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ color: '#000000', backgroundColor: '#ffffff' }}
-              >
-                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Internal Agents</option>
-                {agents
-                  .filter(agent => agent.agent_type === 'internal')
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((agent) => (
-                    <option key={agent.bubble_id} value={agent.bubble_id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
-                      {agent.name}
-                    </option>
-                  ))}
-              </select>
+              <Select value={selectedInternalAgent} onValueChange={handleInternalAgentChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select internal agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Internal Agents</SelectItem>
+                  {agents
+                    .filter(agent => agent.agent_type === 'internal')
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((agent) => (
+                      <SelectItem key={agent.bubble_id} value={agent.bubble_id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Outsource Agent Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Filter by Outsource Agent</label>
-              <select 
-                value={selectedOutsourceAgent} 
-                onChange={(e) => handleOutsourceAgentChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ color: '#000000', backgroundColor: '#ffffff' }}
-              >
-                <option value="all" style={{ color: '#000000', backgroundColor: '#ffffff' }}>All Outsource Agents</option>
-                {agents
-                  .filter(agent => agent.agent_type === 'outsource')
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((agent) => (
-                    <option key={agent.bubble_id} value={agent.bubble_id} style={{ color: '#000000', backgroundColor: '#ffffff' }}>
-                      {agent.name}
-                    </option>
-                  ))}
-              </select>
+              <Select value={selectedOutsourceAgent} onValueChange={handleOutsourceAgentChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select outsource agent" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Outsource Agents</SelectItem>
+                  {agents
+                    .filter(agent => agent.agent_type === 'outsource')
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((agent) => (
+                      <SelectItem key={agent.bubble_id} value={agent.bubble_id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
