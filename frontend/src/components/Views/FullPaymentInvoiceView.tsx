@@ -132,7 +132,7 @@ export function FullPaymentInvoiceView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-500" />
               Rescan Results
             </CardTitle>
           </CardHeader>
@@ -143,12 +143,12 @@ export function FullPaymentInvoiceView() {
               <p><strong>Total Checked:</strong> {lastRescanResult.total_checked}</p>
               {lastRescanResult.errors.length > 0 && (
                 <details className="mt-2">
-                  <summary className="cursor-pointer font-medium text-red-600">
+                  <summary className="cursor-pointer font-medium text-red-500">
                     Errors ({lastRescanResult.errors.length})
                   </summary>
                   <div className="mt-2 space-y-1">
                     {lastRescanResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm text-red-600">
+                      <div key={index} className="text-sm text-red-500">
                         Invoice {error.invoice_id}: {error.error}
                       </div>
                     ))}
@@ -207,7 +207,7 @@ export function FullPaymentInvoiceView() {
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2 font-medium">
-                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <DollarSign className="h-4 w-4 text-green-500" />
                           {formatCurrency(invoice.amount)}
                         </div>
                       </td>
@@ -219,12 +219,12 @@ export function FullPaymentInvoiceView() {
                       </td>
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-green-600" />
+                          <Calendar className="h-4 w-4 text-green-500" />
                           {formatDate(invoice.full_payment_date)}
                         </div>
                       </td>
                       <td className="py-3 px-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex items-center gap-1 w-fit">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1 w-fit">
                           <CheckCircle className="h-3 w-3" />
                           Fully Paid
                         </span>

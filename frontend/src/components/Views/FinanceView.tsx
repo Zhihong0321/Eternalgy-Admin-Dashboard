@@ -110,9 +110,9 @@ export function FinanceView() {
                     <td className="py-3">${invoice.amount.toLocaleString()}</td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        invoice.status === 'Paid' ? 'bg-green-100 text-green-800' :
-                        invoice.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                        invoice.status === 'Paid' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                        invoice.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                        'bg-red-500/10 text-red-500 border border-red-500/20'
                       }`}>
                         {invoice.status}
                       </span>
