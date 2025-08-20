@@ -22,6 +22,47 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
+// Debug route to check paid invoices directly
+app.get('/api/debug/paid-invoices', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Direct paid invoices check started`);
+    
+    // Check total invoices
+    const totalInvoices = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice`;
+    console.log(`[DEBUG] Total invoices in database:`, totalInvoices[0].count);
+    
+    // Check paid invoices with different queries
+    const paidTrue = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ = true`;
+    const paidFalse = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ = false`;
+    const paidNull = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ IS NULL`;
+    
+    console.log(`[DEBUG] Paid = true:`, paidTrue[0].count);
+    console.log(`[DEBUG] Paid = false:`, paidFalse[0].count);
+    console.log(`[DEBUG] Paid = null:`, paidNull[0].count);
+    
+    // Get sample of paid invoices
+    const samplePaid = await prisma.$queryRaw`
+      SELECT bubble_id, paid_, amount, full_payment_date 
+      FROM invoice 
+      WHERE paid_ = true 
+      LIMIT 5
+    `;
+    
+    console.log(`[DEBUG] Sample paid invoices:`, samplePaid);
+    
+    res.json({
+      totalInvoices: parseInt(totalInvoices[0].count),
+      paidTrue: parseInt(paidTrue[0].count),
+      paidFalse: parseInt(paidFalse[0].count), 
+      paidNull: parseInt(paidNull[0].count),
+      samplePaid: samplePaid
+    });
+  } catch (error) {
+    console.log(`[ERROR] Debug paid invoices error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Debug route to check files and paths
 app.get('/api/debug/files', (req, res) => {
   
@@ -117,6 +158,7 @@ app.get('/api/records/:table', async (req, res) => {
 app.get('/api/invoices/fully-paid', async (req, res) => {
   try {
     const { limit = 100, offset = 0 } = req.query;
+    console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}`);
     
     const paidInvoices = await prisma.$queryRaw`
       SELECT i.*, c.name as customer_name
@@ -128,15 +170,30 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
       OFFSET ${parseInt(offset)}
     `;
     
+    console.log(`[DEBUG] Paid invoices query result - count: ${paidInvoices.length}`);
+    console.log(`[DEBUG] First 3 invoices:`, paidInvoices.slice(0, 3).map(inv => ({
+      bubble_id: inv.bubble_id,
+      paid_: inv.paid_,
+      amount: inv.amount,
+      customer: inv.customer_name
+    })));
+    
     const totalResult = await prisma.$queryRaw`
       SELECT COUNT(*) as count FROM invoice WHERE paid_ = true
     `;
     
-    res.json({ 
+    console.log(`[DEBUG] Total count query result:`, totalResult[0]);
+    
+    const response = { 
       invoices: paidInvoices,
       total: parseInt(totalResult[0].count)
-    });
+    };
+    
+    console.log(`[DEBUG] API response summary - invoices: ${response.invoices.length}, total: ${response.total}`);
+    
+    res.json(response);
   } catch (error) {
+    console.log(`[ERROR] Fully-paid invoices API error:`, error.message);
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
