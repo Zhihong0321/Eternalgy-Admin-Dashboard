@@ -974,10 +974,10 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
             p.verified_by,
             p.created_date,
             p.remark,
-            ap.name as verified_by_name
+            a.name as verified_by_name
           FROM payment p
           LEFT JOIN "user" u ON p.verified_by = u.bubble_id
-          LEFT JOIN agent_profile ap ON u.linked_agent_profile = ap.bubble_id
+          LEFT JOIN agent a ON u.linked_agent_profile = a.bubble_id
           WHERE p.linked_invoice = ${invoiceId}
           ORDER BY COALESCE(p.payment_date, p.created_date) ASC
         `;
