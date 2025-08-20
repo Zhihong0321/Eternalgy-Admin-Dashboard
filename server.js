@@ -607,7 +607,8 @@ app.post('/api/invoices/update-anp', async (req, res) => {
       SELECT i.bubble_id, i.amount, i.full_payment_date, i.linked_agent, i."1st_payment_date"
       FROM invoice i
       WHERE i."1st_payment_date" IS NOT NULL 
-        AND i."1st_payment_date" != ''
+        AND CAST(i."1st_payment_date" AS TEXT) != ''
+        AND CAST(i."1st_payment_date" AS TEXT) != 'null'
         AND i.full_payment_date IS NOT NULL
         AND i.linked_agent IS NOT NULL
     `;
@@ -624,8 +625,21 @@ app.post('/api/invoices/update-anp', async (req, res) => {
     for (const invoice of invoicesWithPaymentDate) {
       try {
         const agentId = invoice.linked_agent;
-        const fullPaymentDate = new Date(invoice.full_payment_date);
-        const monthKey = `${fullPaymentDate.getFullYear()}-${String(fullPaymentDate.getMonth() + 1).padStart(2, '0')}`;
+        const firstPaymentDateValue = invoice['1st_payment_date'];
+        
+        // Additional validation for date
+        if (!firstPaymentDateValue || firstPaymentDateValue === '' || firstPaymentDateValue === 'null') {
+          console.log(`[DEBUG] Skipping invoice ${invoice.bubble_id} - invalid 1st_payment_date: ${firstPaymentDateValue}`);
+          continue;
+        }
+        
+        const firstPaymentDate = new Date(firstPaymentDateValue);
+        if (isNaN(firstPaymentDate.getTime())) {
+          console.log(`[DEBUG] Skipping invoice ${invoice.bubble_id} - invalid date format: ${firstPaymentDateValue}`);
+          continue;
+        }
+        
+        const monthKey = `${firstPaymentDate.getFullYear()}-${String(firstPaymentDate.getMonth() + 1).padStart(2, '0')}`;
         const agentMonthKey = `${agentId}_${monthKey}`;
         
         if (!agentMonthlyTotals[agentMonthKey]) {
