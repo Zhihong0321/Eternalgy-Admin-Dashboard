@@ -342,6 +342,93 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
   }
 });
 
+// Get invoices for ANP Calculator - where payment received > 0
+app.get('/api/invoices/anp-calculator', async (req, res) => {
+  try {
+    const { limit = 100, offset = 0 } = req.query;
+    console.log(`[DEBUG] ANP Calculator invoices request - limit: ${limit}, offset: ${offset}`);
+    
+    // Get invoices where linked_payment sum > 0
+    const anpInvoices = await prisma.$queryRaw`
+      SELECT 
+        i.invoice_id,
+        i.bubble_id,
+        i.1st_payment_date,
+        i.achieved_monthly_anp,
+        i.linked_payment,
+        a.name as agent_name,
+        cp.name as customer_name
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE i.linked_payment IS NOT NULL 
+        AND array_length(i.linked_payment, 1) > 0
+      ORDER BY i.invoice_id ASC
+      LIMIT ${parseInt(limit)}
+      OFFSET ${parseInt(offset)}
+    `;
+    
+    console.log(`[DEBUG] ANP invoices query result - count: ${anpInvoices.length}`);
+    
+    // Calculate payment sums for each invoice to filter only those with payments > 0
+    const filteredInvoices = [];
+    
+    for (const invoice of anpInvoices) {
+      try {
+        const paymentSumResult = await prisma.$queryRaw`
+          SELECT COALESCE(SUM(CAST(amount AS DECIMAL)), 0) as total_payments
+          FROM payment 
+          WHERE bubble_id = ANY(${invoice.linked_payment})
+        `;
+        
+        const paymentSum = parseFloat(paymentSumResult[0]?.total_payments || 0);
+        
+        // Only include invoices where payment sum > 0
+        if (paymentSum > 0) {
+          invoice.payment_sum = paymentSum;
+          filteredInvoices.push({
+            bubble_id: invoice.bubble_id,
+            invoice_id: invoice.invoice_id,
+            first_payment_date: invoice['1st_payment_date'], // Handle special column name
+            achieved_monthly_anp: invoice.achieved_monthly_anp,
+            agent_name: invoice.agent_name,
+            customer_name: invoice.customer_name,
+            payment_sum: paymentSum
+          });
+        }
+      } catch (paymentError) {
+        console.log(`[DEBUG] Payment sum calculation failed for invoice ${invoice.invoice_id}: ${paymentError.message}`);
+      }
+    }
+    
+    // Get total count of invoices with payments > 0
+    const totalCountResult = await prisma.$queryRaw`
+      SELECT COUNT(DISTINCT i.bubble_id) as count
+      FROM invoice i
+      WHERE i.linked_payment IS NOT NULL 
+        AND array_length(i.linked_payment, 1) > 0
+        AND EXISTS (
+          SELECT 1 FROM payment p 
+          WHERE p.bubble_id = ANY(i.linked_payment) 
+            AND CAST(p.amount AS DECIMAL) > 0
+        )
+    `;
+    
+    console.log(`[DEBUG] ANP Calculator API response summary - filtered invoices: ${filteredInvoices.length}`);
+    
+    res.json({ 
+      invoices: filteredInvoices,
+      total: parseInt(totalCountResult[0].count)
+    });
+  } catch (error) {
+    console.log(`[ERROR] ANP Calculator API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Get all agents for filter dropdown
 app.get('/api/agents/list', async (req, res) => {
   try {

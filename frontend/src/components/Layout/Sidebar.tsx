@@ -7,6 +7,7 @@ import {
   Settings, 
   FileText, 
   TrendingUp,
+  Calculator,
   ChevronDown,
   ChevronRight
 } from 'lucide-react'
@@ -29,6 +30,7 @@ const navigation: NavItem[] = [
     icon: DollarSign,
     children: [
       { title: 'Full Payment Invoice', icon: FileText, path: '/finance/invoices' },
+      { title: 'ANP Calculator', icon: Calculator, path: '/finance/anp-calculator' },
       { title: 'Agent Commission Report', icon: TrendingUp, path: '/finance/commissions' }
     ]
   },

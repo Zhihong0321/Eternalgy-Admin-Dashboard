@@ -24,14 +24,6 @@ interface RescanResult {
   errors: Array<{ invoice_id: string; error: string }>
 }
 
-interface ANPResult {
-  message: string
-  updated_invoices: number
-  total_checked: number
-  processed_agents: number
-  agent_month_combinations: number
-  errors: Array<{ invoice_id?: string; agent_month?: string; error: string }>
-}
 
 interface Agent {
   bubble_id: string
@@ -42,10 +34,8 @@ export function FullPaymentInvoiceView() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [rescanLoading, setRescanLoading] = useState(false)
-  const [anpLoading, setAnpLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [lastRescanResult, setLastRescanResult] = useState<RescanResult | null>(null)
-  const [lastAnpResult, setLastAnpResult] = useState<ANPResult | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedMonth, setSelectedMonth] = useState<string>('all')
   const [selectedAgent, setSelectedAgent] = useState<string>('all')
@@ -153,46 +143,6 @@ export function FullPaymentInvoiceView() {
     }
   }
 
-  const handleUpdateANP = async () => {
-    try {
-      setAnpLoading(true)
-      const response = await fetch('/api/invoices/update-anp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      const data = await response.json()
-      
-      if (response.ok) {
-        setLastAnpResult(data)
-        // Refresh the invoice list after ANP update
-        await fetchFullyPaidInvoices()
-      } else {
-        console.error('ANP Update failed:', data.message)
-        setLastAnpResult({
-          message: `Error: ${data.message}`,
-          updated_invoices: 0,
-          total_checked: 0,
-          processed_agents: 0,
-          agent_month_combinations: 0,
-          errors: []
-        })
-      }
-    } catch (error) {
-      console.error('Error during ANP update:', error)
-      setLastAnpResult({
-        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        updated_invoices: 0,
-        total_checked: 0,
-        processed_agents: 0,
-        agent_month_combinations: 0,
-        errors: []
-      })
-    } finally {
-      setAnpLoading(false)
-    }
-  }
 
   const formatCurrency = (amount: string | null) => {
     if (!amount) return 'RM 0.00'
@@ -231,26 +181,14 @@ export function FullPaymentInvoiceView() {
             List of invoices where payment has been completed ({totalCount} total)
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={handleRescanPayments} 
-            disabled={rescanLoading || anpLoading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
-            {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
-          </Button>
-          
-          <Button 
-            onClick={handleUpdateANP}
-            disabled={anpLoading || rescanLoading}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <CheckCircle className={`h-4 w-4 ${anpLoading ? 'animate-spin' : ''}`} />
-            {anpLoading ? 'Updating ANP...' : 'Update ANP'}
-          </Button>
-        </div>
+        <Button 
+          onClick={handleRescanPayments} 
+          disabled={rescanLoading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${rescanLoading ? 'animate-spin' : ''}`} />
+          {rescanLoading ? 'Rescanning...' : 'Rescan Full Payments'}
+        </Button>
       </div>
 
       {/* Filters */}
@@ -334,42 +272,6 @@ export function FullPaymentInvoiceView() {
         </Card>
       )}
 
-      {/* ANP Update Result */}
-      {lastAnpResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-blue-500" />
-              ANP Update Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <p><strong>Status:</strong> {lastAnpResult.message}</p>
-              <p><strong>Invoices Updated:</strong> {lastAnpResult.updated_invoices}</p>
-              <p><strong>Total Checked:</strong> {lastAnpResult.total_checked}</p>
-              <p><strong>Agents Processed:</strong> {lastAnpResult.processed_agents}</p>
-              <p><strong>Agent-Month Combinations:</strong> {lastAnpResult.agent_month_combinations}</p>
-              {lastAnpResult.errors.length > 0 && (
-                <details className="mt-2">
-                  <summary className="cursor-pointer font-medium text-red-500">
-                    Errors ({lastAnpResult.errors.length})
-                  </summary>
-                  <div className="mt-2 space-y-1">
-                    {lastAnpResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm text-red-500">
-                        {error.invoice_id && `Invoice ${error.invoice_id}: `}
-                        {error.agent_month && `Agent-Month ${error.agent_month}: `}
-                        {error.error}
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Invoices Table */}
       <Card>
