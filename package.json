@@ -8,15 +8,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node server-simple.js",
-    "dev": "node --watch server.js",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
-    "build": "npx prisma generate",
-    "db:push": "npx prisma db push",
-    "db:studio": "npx prisma studio",
-    "test:db": "node test-db.js",
-    "test:api": "node test-api.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "author": "Eternalgy Team",
   "license": "MIT",
@@ -25,9 +18,6 @@
     "url": "https://github.com/Zhihong0321/Eternalgy-Admin-Dashboard.git"
   },
   "dependencies": {
-    "@prisma/client": "^6.14.0",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "prisma": "^6.14.0"
+    "express": "^5.1.0"
   }
 }
