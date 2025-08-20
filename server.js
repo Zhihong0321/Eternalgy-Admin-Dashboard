@@ -594,10 +594,10 @@ app.put('/api/agents/:agentId/type', async (req, res) => {
     
     console.log(`[DEBUG] Updating agent ${agentId} type to: ${agent_type}`);
     
-    if (!agent_type || !['internal', 'outsource'].includes(agent_type)) {
+    if (!agent_type || !['internal', 'outsource', 'block'].includes(agent_type)) {
       return res.status(400).json({ 
         error: 'Invalid agent type', 
-        message: 'Agent type must be either "internal" or "outsource"' 
+        message: 'Agent type must be either "internal", "outsource", or "block"' 
       });
     }
     

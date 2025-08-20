@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Users, Phone, CheckCircle, X } from 'lucide-react'
+import { RefreshCw, Users, Phone, CheckCircle, X, Ban } from 'lucide-react'
 
 interface Agent {
   bubble_id: string
@@ -22,7 +22,9 @@ export function ManageAgentView() {
       const data = await response.json()
       
       if (response.ok) {
-        setAgents(data.agents || [])
+        // Filter out blocked agents from the main list
+        const activeAgents = (data.agents || []).filter((agent: Agent) => agent.agent_type !== 'block')
+        setAgents(activeAgents)
       } else {
         console.error('Failed to fetch agents:', data.message)
       }
@@ -33,7 +35,7 @@ export function ManageAgentView() {
     }
   }
 
-  const updateAgentType = async (agentId: string, agentType: 'internal' | 'outsource') => {
+  const updateAgentType = async (agentId: string, agentType: 'internal' | 'outsource' | 'block') => {
     try {
       setUpdatingAgent(agentId)
       const response = await fetch(`/api/agents/${agentId}/type`, {
@@ -147,6 +149,8 @@ export function ManageAgentView() {
                             ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
                             : agent.agent_type === 'outsource'
                             ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20'
+                            : agent.agent_type === 'block'
+                            ? 'bg-red-500/10 text-red-500 border border-red-500/20'
                             : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'
                         }`}>
                           {agent.agent_type || 'Unset'}
@@ -184,6 +188,21 @@ export function ManageAgentView() {
                           >
                             {agent.agent_type === 'outsource' && <CheckCircle className="h-3 w-3" />}
                             Outsource
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant={agent.agent_type === 'block' ? 'default' : 'outline'}
+                            className={`flex items-center gap-1 text-xs ${
+                              agent.agent_type === 'block' 
+                                ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                : 'hover:bg-red-50'
+                            }`}
+                            onClick={() => updateAgentType(agent.bubble_id, 'block')}
+                            disabled={updatingAgent === agent.bubble_id}
+                          >
+                            {agent.agent_type === 'block' && <Ban className="h-3 w-3" />}
+                            Block
                           </Button>
                         </div>
                         
