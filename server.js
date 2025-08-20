@@ -8,15 +8,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from frontend/dist
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
-
-// API health check
+// API routes FIRST (before static files)
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
-// Get records from a table
 app.get('/api/records/:table', (req, res) => {
   const { table } = req.params;
   const { limit = 50 } = req.query;
@@ -34,6 +30,9 @@ app.get('/api/records/:table', (req, res) => {
     total: mockRecords.length
   });
 });
+
+// Serve static files from frontend/dist
+app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
