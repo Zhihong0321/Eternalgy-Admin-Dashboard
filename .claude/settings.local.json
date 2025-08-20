@@ -15,7 +15,10 @@
       "Bash(git push:*)",
       "Bash(npm install:*)",
       "Bash(rm:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm create:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
