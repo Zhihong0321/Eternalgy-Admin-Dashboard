@@ -9,7 +9,8 @@ import {
   TrendingUp,
   Calculator,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Users
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -32,6 +33,13 @@ const navigation: NavItem[] = [
       { title: 'Full Payment Invoice', icon: FileText, path: '/finance/invoices' },
       { title: 'ANP Calculator', icon: Calculator, path: '/finance/anp-calculator' },
       { title: 'Agent Commission Report', icon: TrendingUp, path: '/finance/commissions' }
+    ]
+  },
+  {
+    title: 'HR',
+    icon: Users,
+    children: [
+      { title: 'Manage Agent', icon: Users, path: '/hr/manage-agent' }
     ]
   },
   {

@@ -538,7 +538,7 @@ app.get('/api/agents/list', async (req, res) => {
     console.log(`[DEBUG] Getting agents list for filter dropdown`);
     
     const agents = await prisma.$queryRaw`
-      SELECT bubble_id, name 
+      SELECT bubble_id, name, contact, agent_type 
       FROM agent 
       WHERE name IS NOT NULL AND name != ''
       ORDER BY name ASC
@@ -551,6 +551,50 @@ app.get('/api/agents/list', async (req, res) => {
     });
   } catch (error) {
     console.log(`[ERROR] Agents list error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
+// Update agent type
+app.put('/api/agents/:agentId/type', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const { agent_type } = req.body;
+    
+    console.log(`[DEBUG] Updating agent ${agentId} type to: ${agent_type}`);
+    
+    if (!agent_type || !['internal', 'outsource'].includes(agent_type)) {
+      return res.status(400).json({ 
+        error: 'Invalid agent type', 
+        message: 'Agent type must be either "internal" or "outsource"' 
+      });
+    }
+    
+    const updatedAgent = await prisma.$queryRaw`
+      UPDATE agent 
+      SET agent_type = ${agent_type}
+      WHERE bubble_id = ${agentId}
+      RETURNING bubble_id, name, agent_type
+    `;
+    
+    if (updatedAgent.length === 0) {
+      return res.status(404).json({ 
+        error: 'Agent not found', 
+        message: `Agent with ID ${agentId} not found` 
+      });
+    }
+    
+    console.log(`[DEBUG] Agent ${agentId} updated successfully to ${agent_type}`);
+    
+    res.json({ 
+      message: 'Agent type updated successfully',
+      agent: updatedAgent[0]
+    });
+  } catch (error) {
+    console.log(`[ERROR] Agent type update error:`, error.message);
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
