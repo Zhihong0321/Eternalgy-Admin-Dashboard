@@ -13,15 +13,16 @@ const prisma = new PrismaClient();
 // Middleware
 app.use(express.json());
 
-// API routes FIRST (before static files)
+// =====================
+// API ROUTES FIRST
+// =====================
+
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
-// Database status check
 app.get('/api/db-status', async (req, res) => {
   try {
-    // Try to query synced_records to see if table exists
     const count = await prisma.synced_records.count();
     res.json({ 
       status: 'connected',
@@ -42,7 +43,6 @@ app.get('/api/records/:table', async (req, res) => {
     const { table } = req.params;
     const { limit = 50 } = req.query;
     
-    // Query the table directly using raw SQL since we don't know the schema
     const records = await prisma.$queryRaw`
       SELECT * FROM ${Prisma.raw(table)} 
       LIMIT ${parseInt(limit)}
@@ -65,7 +65,6 @@ app.get('/api/records/:table', async (req, res) => {
   }
 });
 
-// Get all fully paid invoices
 app.get('/api/invoices/fully-paid', async (req, res) => {
   try {
     const { limit = 100, offset = 0 } = req.query;
@@ -96,10 +95,8 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
   }
 });
 
-// Rescan and update full payment status
 app.post('/api/invoices/rescan-payments', async (req, res) => {
   try {
-    // First, get all unpaid invoices with their linked payments
     const unpaidInvoices = await prisma.$queryRaw`
       SELECT i.bubble_id, i.amount, i.linked_payment
       FROM invoice i
@@ -112,12 +109,10 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
     for (const invoice of unpaidInvoices) {
       try {
         if (!invoice.linked_payment || invoice.linked_payment.length === 0) {
-          continue; // Skip invoices with no linked payments
+          continue;
         }
 
-        // Get sum of payments for this invoice
         const paymentIds = invoice.linked_payment;
-        const placeholders = paymentIds.map((_, index) => `$${index + 1}`).join(',');
         
         const paymentSumResult = await prisma.$queryRaw`
           SELECT COALESCE(SUM(CAST(amount AS DECIMAL)), 0) as total_paid
@@ -128,7 +123,6 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
         const totalPaid = parseFloat(paymentSumResult[0]?.total_paid || 0);
         const invoiceAmount = parseFloat(invoice.amount || 0);
 
-        // If total payments >= invoice amount, mark as paid
         if (totalPaid >= invoiceAmount && invoiceAmount > 0) {
           await prisma.$executeRaw`
             UPDATE invoice 
@@ -159,36 +153,63 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
   }
 });
 
-// Custom middleware to set correct MIME types for static files
-app.use('/assets', express.static(path.join(__dirname, 'frontend', 'dist', 'assets'), {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    } else if (filePath.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    }
-  }
-}));
+// =====================
+// STATIC FILE SERVING
+// =====================
 
-// Serve other static files (favicon, etc.)
+// Custom middleware to handle JS and CSS files explicitly
+app.use('/assets', (req, res, next) => {
+  const filePath = path.join(__dirname, 'frontend', 'dist', 'assets', req.path);
+  const ext = path.extname(req.path).toLowerCase();
+  
+  if (ext === '.js') {
+    res.setHeader('Content-Type', 'application/javascript');
+    return res.sendFile(filePath);
+  } else if (ext === '.css') {
+    res.setHeader('Content-Type', 'text/css');
+    return res.sendFile(filePath);
+  }
+  
+  next();
+});
+
+// Serve static files with proper MIME types
 app.use(express.static(path.join(__dirname, 'frontend', 'dist'), {
-  index: false, // Don't serve index.html for directory requests
+  index: false,
   setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    } else if (filePath.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    } else if (filePath.endsWith('.svg')) {
-      res.setHeader('Content-Type', 'image/svg+xml');
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+      case '.js':
+        res.setHeader('Content-Type', 'application/javascript');
+        break;
+      case '.css':
+        res.setHeader('Content-Type', 'text/css');
+        break;
+      case '.svg':
+        res.setHeader('Content-Type', 'image/svg+xml');
+        break;
+      case '.png':
+        res.setHeader('Content-Type', 'image/png');
+        break;
+      case '.ico':
+        res.setHeader('Content-Type', 'image/x-icon');
+        break;
     }
   }
 }));
 
-// Serve React app for all non-API routes (SPA fallback)
+// =====================
+// SPA FALLBACK
+// =====================
+
 app.get('*', (req, res) => {
-  // Only serve HTML for non-API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+  // Never serve HTML for these paths
+  if (req.path.startsWith('/api/') || 
+      req.path.startsWith('/assets/') ||
+      req.path.endsWith('.js') ||
+      req.path.endsWith('.css') ||
+      req.path.endsWith('.map')) {
+    return res.status(404).send('Not found');
   }
   
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
