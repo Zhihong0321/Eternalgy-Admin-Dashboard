@@ -13,6 +13,7 @@ import {
 
 interface SidebarProps {
   className?: string
+  onNavigate?: (path: string) => void
 }
 
 interface NavItem {
@@ -43,7 +44,7 @@ const navigation: NavItem[] = [
   }
 ]
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onNavigate }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>(['Finance'])
 
   const toggleExpanded = (title: string) => {
@@ -59,6 +60,14 @@ export function Sidebar({ className }: SidebarProps) {
     const isExpanded = expandedItems.includes(item.title)
     const Icon = item.icon
     
+    const handleClick = () => {
+      if (hasChildren) {
+        toggleExpanded(item.title)
+      } else if (item.path && onNavigate) {
+        onNavigate(item.path)
+      }
+    }
+    
     return (
       <div className="w-full">
         <Button
@@ -67,7 +76,7 @@ export function Sidebar({ className }: SidebarProps) {
             "w-full justify-start text-left h-auto py-2 px-3",
             level > 0 && "ml-4 text-sm"
           )}
-          onClick={() => hasChildren && toggleExpanded(item.title)}
+          onClick={handleClick}
         >
           <Icon className="mr-2 h-4 w-4" />
           <span className="flex-1">{item.title}</span>

@@ -3,16 +3,35 @@ import { Sidebar } from './Sidebar'
 import { FinanceView } from '../Views/FinanceView'
 import { ProjectView } from '../Views/ProjectView'
 import { AdminView } from '../Views/AdminView'
+import { FullPaymentInvoiceView } from '../Views/FullPaymentInvoiceView'
 
-type ActiveView = 'finance' | 'project' | 'admin'
+type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices'
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<ActiveView>('finance')
+
+  const handleNavigation = (path: string) => {
+    switch (path) {
+      case '/finance/invoices':
+        setActiveView('finance/invoices')
+        break
+      case '/project':
+        setActiveView('project')
+        break
+      case '/admin':
+        setActiveView('admin')
+        break
+      default:
+        setActiveView('finance')
+    }
+  }
 
   const renderView = () => {
     switch (activeView) {
       case 'finance':
         return <FinanceView />
+      case 'finance/invoices':
+        return <FullPaymentInvoiceView />
       case 'project':
         return <ProjectView />
       case 'admin':
@@ -24,7 +43,7 @@ export function Dashboard() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar />
+      <Sidebar onNavigate={handleNavigation} />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6">
           {/* Header */}
