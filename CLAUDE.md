@@ -39,6 +39,37 @@ If answer is NO → DON'T ADD IT
 
 ---
 
+# 🐛 DEBUGGING METHODOLOGY - CRITICAL 🐛
+
+## 🚨 NO GUESSWORK ALLOWED 🚨
+
+**I HATE GUESS WORK. WHEN SEEING BUGS/ERRORS, BUILD DETAILED DEBUG FEATURES & LOGGING TO SEE THE PROBLEM.**
+
+### BANNED DEBUGGING PRACTICES:
+- ❌ Making random guesses about what might be wrong
+- ❌ Trying different solutions without understanding the root cause  
+- ❌ "Bypassing" errors with workarounds instead of fixing them
+- ❌ Changing multiple things at once hoping something works
+- ❌ Assuming what the problem is without evidence
+
+### REQUIRED DEBUGGING APPROACH:
+- ✅ **ADD DETAILED LOGGING** - Log every step, variable, file path, request
+- ✅ **BUILD DEBUG ENDPOINTS** - Create routes to inspect system state
+- ✅ **VERIFY ASSUMPTIONS** - Check if files exist, paths are correct, etc.
+- ✅ **ISOLATE THE PROBLEM** - Test each component separately
+- ✅ **GATHER EVIDENCE** - Collect actual data about what's happening
+- ✅ **ONE CHANGE AT A TIME** - Make targeted fixes based on evidence
+
+### DEBUG RULE:
+**Before making ANY code changes to fix a bug:**
+1. **UNDERSTAND THE PROBLEM** - Add logging/debugging to see exactly what's wrong
+2. **VERIFY THE FIX** - Ensure the solution addresses the root cause
+3. **TEST THE FIX** - Confirm it actually works
+
+**If you don't understand WHY something is broken, don't try to fix it yet. Debug it first.**
+
+---
+
 ## Project Overview
 
 **Eternalgy Admin Dashboard 2.0** is a simple Node.js backend (will become PostgreSQL-based admin dashboard for ERP data).
