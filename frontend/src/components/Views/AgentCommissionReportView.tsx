@@ -143,10 +143,10 @@ export function AgentCommissionReportView() {
                 setSelectedAgent('') // Reset selected agent when type changes
                 setReportData(null) // Clear report data
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
-              <option value="internal">Internal Agent</option>
-              <option value="outsource">Outsource Agent</option>
+              <option value="internal" className="bg-white text-gray-900">Internal Agent</option>
+              <option value="outsource" className="bg-white text-gray-900">Outsource Agent</option>
             </select>
           </div>
 
@@ -159,17 +159,17 @@ export function AgentCommissionReportView() {
                 setSelectedAgent(e.target.value)
                 setReportData(null) // Clear report data when agent changes
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               disabled={filteredAgents.length === 0}
             >
-              <option value="">
+              <option value="" className="bg-white text-gray-900">
                 {filteredAgents.length === 0 
                   ? `No ${agentFilter} agents available` 
                   : 'Choose an agent'
                 }
               </option>
               {filteredAgents.map((agent) => (
-                <option key={agent.bubble_id} value={agent.bubble_id}>
+                <option key={agent.bubble_id} value={agent.bubble_id} className="bg-white text-gray-900">
                   {agent.name}
                 </option>
               ))}
@@ -185,10 +185,10 @@ export function AgentCommissionReportView() {
                 setSelectedMonth(e.target.value)
                 setReportData(null) // Clear report data when month changes
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             >
               {monthOptions.map((month) => (
-                <option key={month.value} value={month.value}>
+                <option key={month.value} value={month.value} className="bg-white text-gray-900">
                   {month.label}
                 </option>
               ))}
@@ -239,25 +239,25 @@ export function AgentCommissionReportView() {
               <table className="w-full border-collapse border border-gray-200">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="border border-gray-200 px-4 py-3 text-left font-medium">Customer Name</th>
-                    <th className="border border-gray-200 px-4 py-3 text-left font-medium">Payment Date</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium">Invoice Amount</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium">Monthly ANP</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium">Basic Commission (3%)</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium">Bonus Commission</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium">Total Commission</th>
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-900">Customer Name</th>
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-900">Payment Date</th>
+                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Invoice Amount</th>
+                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Monthly ANP</th>
+                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Basic Commission (3%)</th>
+                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Bonus Commission</th>
+                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Total Commission</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white">
                   {reportData.invoices.map((invoice) => (
                     <tr key={invoice.bubble_id} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-3">{invoice.customer_name}</td>
-                      <td className="border border-gray-200 px-4 py-3">{formatDate(invoice.full_payment_date)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right">{formatCurrency(invoice.amount)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right">{formatCurrency(invoice.achieved_monthly_anp)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right">{formatCurrency(invoice.basic_commission)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right">{formatCurrency(invoice.bonus_commission)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right font-semibold">{formatCurrency(invoice.total_commission)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-gray-900">{invoice.customer_name}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-gray-900">{formatDate(invoice.full_payment_date)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.amount)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.achieved_monthly_anp)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.basic_commission)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.bonus_commission)}</td>
+                      <td className="border border-gray-200 px-4 py-3 text-right font-semibold text-gray-900">{formatCurrency(invoice.total_commission)}</td>
                     </tr>
                   ))}
                 </tbody>
