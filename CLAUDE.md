@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# 🚨 CRITICAL PERMISSIONS & RULES 🚨
+
+## FILE EDIT PERMISSION GRANTED
+**EDIT FILE permission Granted. DONT KEEP ASKING ME for permission again.**
+
+Claude Code has full permission to edit/create/modify files without asking for permission each time.
+
+---
+
 # ⚠️ CRITICAL WARNING - NO OVER-ENGINEERING ⚠️
 
 ## 🚨 ABSOLUTELY PROHIBITED 🚨
