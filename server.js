@@ -21,6 +21,24 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'Eternalgy Admin Dashboard API', status: 'success' });
 });
 
+// Debug route to check files
+app.get('/api/debug/files', (req, res) => {
+  const fs = require('fs');
+  const assetsPath = path.join(__dirname, 'frontend', 'dist', 'assets');
+  
+  try {
+    const files = fs.readdirSync(assetsPath);
+    res.json({ 
+      assetsPath,
+      files,
+      __dirname,
+      exists: fs.existsSync(assetsPath)
+    });
+  } catch (error) {
+    res.json({ error: error.message, assetsPath });
+  }
+});
+
 app.get('/api/db-status', async (req, res) => {
   try {
     const count = await prisma.synced_records.count();
@@ -157,44 +175,29 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
 // STATIC FILE SERVING
 // =====================
 
-// Custom middleware to handle JS and CSS files explicitly
-app.use('/assets', (req, res, next) => {
-  const filePath = path.join(__dirname, 'frontend', 'dist', 'assets', req.path);
-  const ext = path.extname(req.path).toLowerCase();
-  
-  if (ext === '.js') {
-    res.setHeader('Content-Type', 'application/javascript');
-    return res.sendFile(filePath);
-  } else if (ext === '.css') {
-    res.setHeader('Content-Type', 'text/css');
-    return res.sendFile(filePath);
+// Serve assets directory with explicit static middleware
+app.use('/assets', express.static(path.join(__dirname, 'frontend', 'dist', 'assets'), {
+  setHeaders: (res, filePath) => {
+    console.log(`Serving asset: ${filePath}`);
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.js') {
+      res.setHeader('Content-Type', 'application/javascript');
+      console.log('Set Content-Type to application/javascript');
+    } else if (ext === '.css') {
+      res.setHeader('Content-Type', 'text/css');
+      console.log('Set Content-Type to text/css');
+    }
   }
-  
-  next();
-});
+}));
 
-// Serve static files with proper MIME types
+// Serve root static files (favicon, etc.) - NOT assets
 app.use(express.static(path.join(__dirname, 'frontend', 'dist'), {
-  index: false,
+  index: false, // Don't serve index.html automatically
   setHeaders: (res, filePath) => {
     const ext = path.extname(filePath).toLowerCase();
-    switch (ext) {
-      case '.js':
-        res.setHeader('Content-Type', 'application/javascript');
-        break;
-      case '.css':
-        res.setHeader('Content-Type', 'text/css');
-        break;
-      case '.svg':
-        res.setHeader('Content-Type', 'image/svg+xml');
-        break;
-      case '.png':
-        res.setHeader('Content-Type', 'image/png');
-        break;
-      case '.ico':
-        res.setHeader('Content-Type', 'image/x-icon');
-        break;
-    }
+    if (ext === '.svg') res.setHeader('Content-Type', 'image/svg+xml');
+    if (ext === '.png') res.setHeader('Content-Type', 'image/png');
+    if (ext === '.ico') res.setHeader('Content-Type', 'image/x-icon');
   }
 }));
 
@@ -203,15 +206,19 @@ app.use(express.static(path.join(__dirname, 'frontend', 'dist'), {
 // =====================
 
 app.get('*', (req, res) => {
+  console.log(`Catch-all route hit: ${req.path}`);
+  
   // Never serve HTML for these paths
   if (req.path.startsWith('/api/') || 
       req.path.startsWith('/assets/') ||
       req.path.endsWith('.js') ||
       req.path.endsWith('.css') ||
       req.path.endsWith('.map')) {
-    return res.status(404).send('Not found');
+    console.log(`Returning 404 for: ${req.path}`);
+    return res.status(404).send('Asset not found');
   }
   
+  console.log(`Serving index.html for: ${req.path}`);
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
