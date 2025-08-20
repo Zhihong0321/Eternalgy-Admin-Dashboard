@@ -426,6 +426,108 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
   }
 });
 
+app.post('/api/invoices/update-anp', async (req, res) => {
+  try {
+    console.log('[DEBUG] Starting Update ANP calculation');
+    
+    // Get all invoices with 1st_payment_date that is not null/empty
+    const invoicesWithPaymentDate = await prisma.$queryRaw`
+      SELECT i.bubble_id, i.amount, i.full_payment_date, i.linked_agent, i.1st_payment_date
+      FROM invoice i
+      WHERE i.1st_payment_date IS NOT NULL 
+        AND i.1st_payment_date != ''
+        AND i.full_payment_date IS NOT NULL
+        AND i.linked_agent IS NOT NULL
+    `;
+    
+    console.log(`[DEBUG] Found ${invoicesWithPaymentDate.length} invoices with payment dates`);
+    
+    let updatedCount = 0;
+    const errors = [];
+    const processedAgents = new Set();
+    
+    // Group invoices by agent and month
+    const agentMonthlyTotals = {};
+    
+    for (const invoice of invoicesWithPaymentDate) {
+      try {
+        const agentId = invoice.linked_agent;
+        const fullPaymentDate = new Date(invoice.full_payment_date);
+        const monthKey = `${fullPaymentDate.getFullYear()}-${String(fullPaymentDate.getMonth() + 1).padStart(2, '0')}`;
+        const agentMonthKey = `${agentId}_${monthKey}`;
+        
+        if (!agentMonthlyTotals[agentMonthKey]) {
+          agentMonthlyTotals[agentMonthKey] = {
+            agentId: agentId,
+            month: monthKey,
+            total: 0,
+            invoices: []
+          };
+        }
+        
+        const amount = parseFloat(invoice.amount || 0);
+        agentMonthlyTotals[agentMonthKey].total += amount;
+        agentMonthlyTotals[agentMonthKey].invoices.push(invoice.bubble_id);
+        
+        console.log(`[DEBUG] Agent ${agentId}, Month ${monthKey}, Amount: ${amount}, Running Total: ${agentMonthlyTotals[agentMonthKey].total}`);
+        
+      } catch (processingError) {
+        console.log(`[DEBUG] Error processing invoice ${invoice.bubble_id}:`, processingError.message);
+        errors.push({
+          invoice_id: invoice.bubble_id,
+          error: `Processing error: ${processingError.message}`
+        });
+      }
+    }
+    
+    // Now update each invoice with the calculated monthly ANP
+    for (const [agentMonthKey, data] of Object.entries(agentMonthlyTotals)) {
+      try {
+        const monthlyTotal = data.total;
+        
+        console.log(`[DEBUG] Updating invoices for agent ${data.agentId}, month ${data.month} with ANP: ${monthlyTotal}`);
+        
+        // Update all invoices for this agent-month combination
+        for (const invoiceId of data.invoices) {
+          await prisma.$executeRaw`
+            UPDATE invoice 
+            SET achieved_monthly_anp = ${monthlyTotal}
+            WHERE bubble_id = ${invoiceId}
+          `;
+          updatedCount++;
+        }
+        
+        processedAgents.add(data.agentId);
+        
+      } catch (updateError) {
+        console.log(`[DEBUG] Error updating ANP for ${agentMonthKey}:`, updateError.message);
+        errors.push({
+          agent_month: agentMonthKey,
+          error: `Update error: ${updateError.message}`
+        });
+      }
+    }
+    
+    console.log(`[DEBUG] ANP Update completed. Updated ${updatedCount} invoices for ${processedAgents.size} agents`);
+    
+    res.json({ 
+      message: 'ANP Update completed',
+      updated_invoices: updatedCount,
+      total_checked: invoicesWithPaymentDate.length,
+      processed_agents: processedAgents.size,
+      agent_month_combinations: Object.keys(agentMonthlyTotals).length,
+      errors: errors
+    });
+    
+  } catch (error) {
+    console.error('[ERROR] ANP Update failed:', error);
+    res.status(500).json({ 
+      error: 'ANP Update failed', 
+      message: error.message 
+    });
+  }
+});
+
 // =====================
 // STATIC FILE SERVING
 // =====================
