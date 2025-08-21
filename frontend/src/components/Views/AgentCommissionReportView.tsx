@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { RefreshCw, DollarSign, Calendar, User, Eye, X } from 'lucide-react'
 
 interface Agent {
@@ -325,25 +326,27 @@ export function AgentCommissionReportView() {
           {/* Invoice Details Table */}
           {reportData.invoices.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-900">Customer Name</th>
-                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-900">Payment Date</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Invoice Amount</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Monthly ANP</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Basic Commission (3%)</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Bonus Commission</th>
-                    <th className="border border-gray-200 px-4 py-3 text-right font-medium text-gray-900">Total Commission</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[180px]">Customer Name</TableHead>
+                    <TableHead>Payment Date</TableHead>
+                    <TableHead className="text-right">Eligible Amount</TableHead>
+                    <TableHead className="text-right">Invoice Amount</TableHead>
+                    <TableHead className="text-right">Monthly ANP</TableHead>
+                    <TableHead className="text-right">Basic Commission (3%)</TableHead>
+                    <TableHead className="text-right">Bonus Commission</TableHead>
+                    <TableHead className="text-right">Total Commission</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {reportData.invoices.map((invoice) => (
-                    <tr key={invoice.bubble_id} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-3 text-gray-900">{invoice.customer_name}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-gray-900">{formatDate(invoice.full_payment_date)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.amount)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">
+                    <TableRow key={invoice.bubble_id}>
+                      <TableCell className="font-medium">{invoice.customer_name}</TableCell>
+                      <TableCell>{formatDate(invoice.full_payment_date)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(invoice.amount_eligible_for_comm)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(invoice.amount)}</TableCell>
+                      <TableCell className="text-right">
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -353,14 +356,14 @@ export function AgentCommissionReportView() {
                           <Eye className="h-3 w-3 mr-1" />
                           {formatCurrency(invoice.achieved_monthly_anp)}
                         </Button>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.basic_commission)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right text-gray-900">{formatCurrency(invoice.bonus_commission)}</td>
-                      <td className="border border-gray-200 px-4 py-3 text-right font-semibold text-gray-900">{formatCurrency(invoice.total_commission)}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(invoice.basic_commission)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(invoice.bonus_commission)}</TableCell>
+                      <TableCell className="text-right font-semibold">{formatCurrency(invoice.total_commission)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
@@ -421,71 +424,69 @@ export function AgentCommissionReportView() {
                   </div>
                   
                   <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Invoice ID</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Agent Name</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">1st Payment Date</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">1st Payment Amount</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Invoice Amount</th>
-                          <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">Achieved Monthly ANP</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Invoice ID</TableHead>
+                          <TableHead>Agent Name</TableHead>
+                          <TableHead>1st Payment Date</TableHead>
+                          <TableHead>1st Payment Amount</TableHead>
+                          <TableHead>Invoice Amount</TableHead>
+                          <TableHead>Achieved Monthly ANP</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {anpRelatedInvoices.map((invoice) => (
-                          <tr key={invoice.bubble_id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">
+                          <TableRow key={invoice.bubble_id}>
+                            <TableCell className="font-medium">
                               {invoice.invoice_id}
-                            </td>
-                            <td className="py-3 px-2 text-gray-900 dark:text-white">
+                            </TableCell>
+                            <TableCell>
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-blue-500" />
                                 {invoice.agent_name}
                               </div>
-                            </td>
-                            <td className="py-3 px-2 text-gray-900 dark:text-white">
+                            </TableCell>
+                            <TableCell>
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-green-500" />
                                 {formatDateANP(invoice.first_payment_date)}
                               </div>
-                            </td>
-                            <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">
+                            </TableCell>
+                            <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-orange-500" />
                                 {formatCurrency(invoice.first_payment_amount)}
                               </div>
-                            </td>
-                            <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">
+                            </TableCell>
+                            <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-green-500" />
                                 {formatCurrency(invoice.amount)}
                               </div>
-                            </td>
-                            <td className="py-3 px-2 font-medium text-gray-900 dark:text-white">
+                            </TableCell>
+                            <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-purple-500" />
                                 {formatCurrency(invoice.achieved_monthly_anp)}
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="border-t-2 border-gray-300 bg-gray-50 dark:bg-gray-700">
-                          <td colSpan={4} className="py-3 px-2 font-bold text-right text-gray-900 dark:text-white">
+                        <TableRow className="border-t-2 bg-muted/50">
+                          <TableCell colSpan={4} className="font-bold text-right">
                             Total Invoice Amount:
-                          </td>
-                          <td className="py-3 px-2 font-bold text-gray-900 dark:text-white">
+                          </TableCell>
+                          <TableCell className="font-bold">
                             <div className="flex items-center gap-2 text-lg">
                               <DollarSign className="h-5 w-5 text-green-600" />
                               {formatCurrency(getTotalAmount())}
                             </div>
-                          </td>
-                          <td className="py-3 px-2"></td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                          </TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               )}
