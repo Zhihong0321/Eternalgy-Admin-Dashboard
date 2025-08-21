@@ -996,19 +996,21 @@ app.get('/api/invoice/by-bubble-id/:bubbleId', async (req, res) => {
     const { bubbleId } = req.params;
     console.log(`[DEBUG] Fetching invoice by bubble_id: ${bubbleId}`);
     
-    // Get the specific invoice by bubble_id
+    // Get the specific invoice by bubble_id with customer name from linked table
     const invoice = await prisma.$queryRaw`
       SELECT 
-        bubble_id,
-        invoice_id,
-        eligible_amount_description,
-        amount,
-        amount_eligible_for_comm,
-        customer_name,
-        invoice_date,
-        created_date
-      FROM invoice 
-      WHERE bubble_id = ${bubbleId}
+        i.bubble_id,
+        i.invoice_id,
+        i.eligible_amount_description,
+        i.amount,
+        i.amount_eligible_for_comm,
+        i.invoice_date,
+        i.created_date,
+        i.linked_customer,
+        cp.name as customer_name
+      FROM invoice i
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE i.bubble_id = ${bubbleId}
       LIMIT 1
     `;
     
