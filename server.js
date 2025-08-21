@@ -812,6 +812,17 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     const { invoiceId } = req.params;
     console.log(`[DEBUG] Getting invoice details for: ${invoiceId}`);
     
+    // First get the actual invoice table schema to understand available fields
+    const invoiceColumns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'invoice' 
+      AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `;
+    
+    console.log(`[DEBUG] Invoice table columns:`, invoiceColumns.map(c => c.column_name).join(', '));
+    
     // First check if invoice_item table exists
     const invoiceItemTableExists = await prisma.$queryRaw`
       SELECT table_name 
@@ -823,17 +834,22 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     
     console.log(`[DEBUG] invoice_item table exists: ${invoiceItemTableExists.length > 0}`);
     
-    // Get invoice with customer details
+    // If invoice_item table exists, get its columns too
+    let invoiceItemColumns = [];
+    if (invoiceItemTableExists.length > 0) {
+      invoiceItemColumns = await prisma.$queryRaw`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'invoice_item' 
+        AND table_schema = 'public'
+        ORDER BY ordinal_position
+      `;
+      console.log(`[DEBUG] Invoice_item table columns:`, invoiceItemColumns.map(c => c.column_name).join(', '));
+    }
+    
+    // Get all invoice data first to see what we have
     const invoiceDetails = await prisma.$queryRaw`
-      SELECT 
-        i.bubble_id,
-        i.invoice_id,
-        i.amount,
-        i.invoice_date,
-        i.created_date,
-        i.full_payment_date,
-        cp.name as customer_name,
-        cp.bubble_id as customer_bubble_id
+      SELECT i.*, cp.name as customer_name, cp.bubble_id as customer_bubble_id
       FROM invoice i
       LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
       WHERE i.bubble_id = ${invoiceId}
@@ -849,6 +865,8 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     
     const invoice = invoiceDetails[0];
     console.log(`[DEBUG] Found invoice: ${invoice.invoice_id}, customer: ${invoice.customer_name}`);
+    console.log(`[DEBUG] Full invoice data:`, JSON.stringify(invoice, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value, 2));
     
     let invoiceItems = [];
     let totalItemAmount = 0;
@@ -883,12 +901,15 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
       console.log(`[DEBUG] invoice_item table does not exist, skipping items fetch`);
     }
     
+    // Try to find the best date field available
+    const invoiceDate = invoice.invoice_date || invoice.created_date || invoice.date_created || invoice.creation_date || null;
+    
     const response = {
       invoice: {
         bubble_id: invoice.bubble_id,
         invoice_id: invoice.invoice_id,
         amount: parseFloat(invoice.amount || 0),
-        invoice_date: invoice.invoice_date,
+        invoice_date: invoiceDate,
         created_date: invoice.created_date,
         full_payment_date: invoice.full_payment_date,
         customer_name: invoice.customer_name || 'Unknown Customer',
@@ -903,11 +924,15 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
       total_items_amount: totalItemAmount,
       debug_info: {
         invoice_item_table_exists: invoiceItemTableExists.length > 0,
-        items_count: invoiceItems.length
+        items_count: invoiceItems.length,
+        available_invoice_columns: invoiceColumns.map(c => c.column_name),
+        available_invoice_item_columns: invoiceItemColumns.map(c => c.column_name),
+        found_date_field: invoiceDate ? 'yes' : 'no'
       }
     };
     
     console.log(`[DEBUG] Invoice details response prepared - Items: ${invoiceItems.length}, Total: ${totalItemAmount}`);
+    console.log(`[DEBUG] Full response data:`, JSON.stringify(response, null, 2));
     
     res.json(response);
     

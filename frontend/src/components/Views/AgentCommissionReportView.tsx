@@ -170,6 +170,9 @@ export function AgentCommissionReportView() {
       
       const data = await response.json()
       console.log('Invoice details received:', data)
+      console.log('Invoice items count:', data.invoice_items ? data.invoice_items.length : 'No items')
+      console.log('Invoice date:', data.invoice ? data.invoice.invoice_date : 'No date')
+      console.log('Debug info:', data.debug_info)
       setInvoiceDetails(data)
     } catch (error) {
       console.error('Error fetching invoice details:', error)
