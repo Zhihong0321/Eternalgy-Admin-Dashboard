@@ -812,6 +812,17 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     const { invoiceId } = req.params;
     console.log(`[DEBUG] Getting invoice details for: ${invoiceId}`);
     
+    // First check if invoice_item table exists
+    const invoiceItemTableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      AND table_name = 'invoice_item'
+    `;
+    
+    console.log(`[DEBUG] invoice_item table exists: ${invoiceItemTableExists.length > 0}`);
+    
     // Get invoice with customer details
     const invoiceDetails = await prisma.$queryRaw`
       SELECT 
@@ -829,6 +840,7 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     `;
     
     if (invoiceDetails.length === 0) {
+      console.log(`[DEBUG] Invoice not found: ${invoiceId}`);
       return res.status(404).json({ 
         error: 'Invoice not found', 
         message: `Invoice with ID ${invoiceId} not found` 
@@ -836,26 +848,40 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     }
     
     const invoice = invoiceDetails[0];
-    console.log(`[DEBUG] Found invoice: ${invoice.invoice_id}`);
+    console.log(`[DEBUG] Found invoice: ${invoice.invoice_id}, customer: ${invoice.customer_name}`);
     
-    // Get invoice items for this invoice
-    const invoiceItems = await prisma.$queryRaw`
-      SELECT 
-        ii.bubble_id,
-        ii.description,
-        ii.amount,
-        ii.sort
-      FROM invoice_item ii
-      WHERE ii.linked_invoice = ${invoiceId}
-      ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
-    `;
+    let invoiceItems = [];
+    let totalItemAmount = 0;
     
-    console.log(`[DEBUG] Found ${invoiceItems.length} invoice items`);
-    
-    // Calculate total amount from invoice items
-    const totalItemAmount = invoiceItems.reduce((sum, item) => {
-      return sum + parseFloat(item.amount || 0);
-    }, 0);
+    // Get invoice items if table exists
+    if (invoiceItemTableExists.length > 0) {
+      try {
+        invoiceItems = await prisma.$queryRaw`
+          SELECT 
+            ii.bubble_id,
+            ii.description,
+            ii.amount,
+            ii.sort
+          FROM invoice_item ii
+          WHERE ii.linked_invoice = ${invoiceId}
+          ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+        `;
+        
+        console.log(`[DEBUG] Found ${invoiceItems.length} invoice items`);
+        
+        // Calculate total amount from invoice items
+        totalItemAmount = invoiceItems.reduce((sum, item) => {
+          return sum + parseFloat(item.amount || 0);
+        }, 0);
+      } catch (itemError) {
+        console.log(`[DEBUG] Error fetching invoice items: ${itemError.message}`);
+        // Continue without items rather than failing
+        invoiceItems = [];
+        totalItemAmount = 0;
+      }
+    } else {
+      console.log(`[DEBUG] invoice_item table does not exist, skipping items fetch`);
+    }
     
     const response = {
       invoice: {
@@ -874,7 +900,11 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
         amount: parseFloat(item.amount || 0),
         sort: item.sort
       })),
-      total_items_amount: totalItemAmount
+      total_items_amount: totalItemAmount,
+      debug_info: {
+        invoice_item_table_exists: invoiceItemTableExists.length > 0,
+        items_count: invoiceItems.length
+      }
     };
     
     console.log(`[DEBUG] Invoice details response prepared - Items: ${invoiceItems.length}, Total: ${totalItemAmount}`);
@@ -883,9 +913,11 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     
   } catch (error) {
     console.log(`[ERROR] Invoice details API error:`, error.message);
+    console.log(`[ERROR] Full error:`, error);
     res.status(500).json({ 
       error: 'Database error', 
-      message: error.message 
+      message: error.message,
+      invoice_id: req.params.invoiceId
     });
   }
 });
@@ -1093,6 +1125,59 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
+    });
+  }
+});
+
+// Quick test for specific invoice details API
+app.get('/api/test/invoice-details/:invoiceId', async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log(`[TEST] Testing invoice details for: ${invoiceId}`);
+    
+    // Test if invoice exists
+    const invoiceExists = await prisma.$queryRaw`
+      SELECT bubble_id, invoice_id, amount, linked_customer
+      FROM invoice 
+      WHERE bubble_id = ${invoiceId}
+      LIMIT 1
+    `;
+    
+    // Test if customer_profile table exists
+    const customerTableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'customer_profile'
+    `;
+    
+    // Test if invoice_item table exists
+    const invoiceItemTableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'invoice_item'
+    `;
+    
+    const response = {
+      invoice_id: invoiceId,
+      invoice_exists: invoiceExists.length > 0,
+      invoice_data: invoiceExists[0] || null,
+      customer_table_exists: customerTableExists.length > 0,
+      invoice_item_table_exists: invoiceItemTableExists.length > 0,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log(`[TEST] Invoice test result:`, JSON.stringify(response, null, 2));
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.log(`[TEST ERROR] Invoice test error:`, error.message);
+    res.status(500).json({ 
+      error: 'Test error', 
+      message: error.message,
+      invoice_id: req.params.invoiceId
     });
   }
 });
