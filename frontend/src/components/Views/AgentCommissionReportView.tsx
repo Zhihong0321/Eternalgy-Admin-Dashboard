@@ -65,6 +65,10 @@ interface InvoiceDetails {
   }
   invoice_items: InvoiceItem[]
   total_items_amount: number
+  debug_info?: {
+    invoice_item_table_exists: boolean
+    items_count: number
+  }
 }
 
 export function AgentCommissionReportView() {
@@ -554,79 +558,124 @@ export function AgentCommissionReportView() {
 
       {/* Invoice Details Modal */}
       <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Invoice Details</DialogTitle>
+            <DialogTitle className="text-xl">Invoice Details</DialogTitle>
             <DialogDescription>
               {invoiceDetails ? `Invoice #${invoiceDetails.invoice.invoice_id}` : 'Loading invoice details...'}
             </DialogDescription>
           </DialogHeader>
           
           {isLoadingInvoice ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-6 w-6 animate-spin mr-2" />
               <span>Loading invoice details...</span>
             </div>
           ) : invoiceDetails ? (
-            <div className="space-y-6 overflow-y-auto">
-              {/* Invoice Header */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6 p-4">
+              {/* Invoice Header - Styled like a real invoice */}
+              <div className="border border-gray-200 rounded-lg p-6 bg-white">
+                <div className="mb-4 border-b pb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">INVOICE</h2>
+                  <p className="text-lg text-gray-600">#{invoiceDetails.invoice.invoice_id}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-semibold text-lg">Customer Information</h3>
-                    <p className="text-gray-600">{invoiceDetails.invoice.customer_name}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Bill To:</h3>
+                    <p className="text-gray-700 font-medium">{invoiceDetails.invoice.customer_name || 'Unknown Customer'}</p>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Invoice Information</h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p>Invoice ID: #{invoiceDetails.invoice.invoice_id}</p>
-                      <p>Invoice Date: {invoiceDetails.invoice.invoice_date ? formatDate(invoiceDetails.invoice.invoice_date) : 'N/A'}</p>
-                      <p>Total Amount: {formatCurrency(invoiceDetails.invoice.amount)}</p>
+                  
+                  <div className="text-left md:text-right">
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-sm text-gray-600">Invoice Date: </span>
+                        <span className="font-medium">
+                          {invoiceDetails.invoice.invoice_date 
+                            ? new Date(invoiceDetails.invoice.invoice_date).toLocaleDateString()
+                            : 'N/A'
+                          }
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Amount: </span>
+                        <span className="font-bold text-lg text-green-600">
+                          RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Invoice Items Table */}
-              <div>
-                <h3 className="font-semibold text-lg mb-3">Invoice Items</h3>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[70%]">Description</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoiceDetails.invoice_items.length > 0 ? (
-                        <>
-                          {invoiceDetails.invoice_items.map((item) => (
-                            <TableRow key={item.bubble_id}>
-                              <TableCell className="font-medium">{item.description}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                            </TableRow>
-                          ))}
-                          <TableRow className="border-t-2 bg-muted/50">
-                            <TableCell className="font-bold">Total Amount</TableCell>
-                            <TableCell className="text-right font-bold">{formatCurrency(invoiceDetails.total_items_amount)}</TableCell>
+              <div className="border border-gray-200 rounded-lg p-6 bg-white">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Items & Services</h3>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b-2 border-gray-300">
+                      <TableHead className="text-left font-bold text-gray-900 py-3">Description</TableHead>
+                      <TableHead className="text-right font-bold text-gray-900 py-3 w-32">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoiceDetails.invoice_items && invoiceDetails.invoice_items.length > 0 ? (
+                      <>
+                        {invoiceDetails.invoice_items.map((item, index) => (
+                          <TableRow key={item.bubble_id || index} className="border-b border-gray-100">
+                            <TableCell className="py-3 text-gray-700">
+                              {item.description || 'No Description'}
+                            </TableCell>
+                            <TableCell className="py-3 text-right font-medium">
+                              RM {Number(item.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </TableCell>
                           </TableRow>
-                        </>
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={2} className="text-center text-gray-500 py-8">
-                            No invoice items found
+                        ))}
+                        <TableRow className="border-t-2 border-gray-300 bg-gray-50">
+                          <TableCell className="py-4 font-bold text-gray-900 text-lg">
+                            TOTAL AMOUNT
+                          </TableCell>
+                          <TableCell className="py-4 text-right font-bold text-lg text-green-600">
+                            RM {Number(invoiceDetails.total_items_amount || invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </>
+                    ) : (
+                      <>
+                        <TableRow>
+                          <TableCell className="py-3 text-gray-700">
+                            Insurance Premium (Total Invoice Amount)
+                          </TableCell>
+                          <TableCell className="py-3 text-right font-medium">
+                            RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow className="border-t-2 border-gray-300 bg-gray-50">
+                          <TableCell className="py-4 font-bold text-gray-900 text-lg">
+                            TOTAL AMOUNT
+                          </TableCell>
+                          <TableCell className="py-4 text-right font-bold text-lg text-green-600">
+                            RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                      </>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
+
+              {/* Debug Info (only show if there are issues) */}
+              {invoiceDetails.debug_info && !invoiceDetails.debug_info.invoice_item_table_exists && (
+                <div className="text-xs text-gray-500 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  Note: Invoice items table not available in database. Showing invoice total amount only.
+                </div>
+              )}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              Failed to load invoice details
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg">Failed to load invoice details</p>
+              <p className="text-sm mt-2">Please try again or contact support if the issue persists.</p>
             </div>
           )}
         </DialogContent>
