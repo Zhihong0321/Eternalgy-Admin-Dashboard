@@ -49,7 +49,10 @@ interface InvoiceItem {
   bubble_id: string
   description: string
   amount: number
-  sort: number
+  unit_price: number
+  qty: number
+  sort: number | string
+  item_type: string | null
 }
 
 interface InvoiceDetails {
@@ -613,7 +616,12 @@ export function AgentCommissionReportView() {
 
               {/* Invoice Items Table */}
               <div className="border border-gray-200 rounded-lg p-6 bg-white">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Items & Services</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Items & Services</h3>
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                    {invoiceDetails.invoice_items ? invoiceDetails.invoice_items.length : 0} items
+                  </span>
+                </div>
                 
                 <Table>
                   <TableHeader>
@@ -625,16 +633,28 @@ export function AgentCommissionReportView() {
                   <TableBody>
                     {invoiceDetails.invoice_items && invoiceDetails.invoice_items.length > 0 ? (
                       <>
-                        {invoiceDetails.invoice_items.map((item, index) => (
-                          <TableRow key={item.bubble_id || index} className="border-b border-gray-100">
-                            <TableCell className="py-3 text-gray-700">
-                              {item.description || 'No Description'}
-                            </TableCell>
-                            <TableCell className="py-3 text-right font-medium">
-                              RM {Number(item.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {invoiceDetails.invoice_items.map((item, index) => {
+                          console.log(`[DEBUG] Invoice item ${index}:`, item);
+                          const amount = Number(item.amount || 0);
+                          const formattedAmount = amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          console.log(`[DEBUG] Item amount: ${item.amount} -> ${amount} -> ${formattedAmount}`);
+                          
+                          return (
+                            <TableRow key={item.bubble_id || index} className="border-b border-gray-100">
+                              <TableCell className="py-3 text-gray-700">
+                                {item.description || 'No Description'}
+                                {item.item_type && (
+                                  <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {item.item_type}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-3 text-right font-medium">
+                                RM {formattedAmount}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                         <TableRow className="border-t-2 border-gray-300 bg-gray-50">
                           <TableCell className="py-4 font-bold text-gray-900 text-lg">
                             TOTAL AMOUNT
