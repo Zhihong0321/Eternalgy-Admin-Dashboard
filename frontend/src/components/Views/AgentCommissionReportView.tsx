@@ -635,21 +635,39 @@ export function AgentCommissionReportView() {
                       <>
                         {invoiceDetails.invoice_items.map((item, index) => {
                           console.log(`[DEBUG] Invoice item ${index}:`, item);
-                          const amount = Number(item.amount || 0);
-                          const formattedAmount = amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          
+                          // Handle amount conversion more robustly
+                          let amount = 0;
+                          if (item.amount !== null && item.amount !== undefined) {
+                            amount = parseFloat(String(item.amount).replace(/,/g, '')) || 0;
+                          }
+                          
+                          let formattedAmount = '0.00';
+                          try {
+                            formattedAmount = amount.toLocaleString('en-MY', { 
+                              minimumFractionDigits: 2, 
+                              maximumFractionDigits: 2 
+                            });
+                          } catch (error) {
+                            console.error(`[ERROR] Amount formatting failed:`, error);
+                            formattedAmount = amount.toFixed(2);
+                          }
+                          
                           console.log(`[DEBUG] Item amount: ${item.amount} -> ${amount} -> ${formattedAmount}`);
                           
                           return (
                             <TableRow key={item.bubble_id || index} className="border-b border-gray-100">
-                              <TableCell className="py-3 text-gray-700">
-                                {item.description || 'No Description'}
+                              <TableCell className="py-2 text-gray-700 text-sm">
+                                <div className="text-sm leading-tight">
+                                  {item.description || 'No Description'}
+                                </div>
                                 {item.item_type && (
-                                  <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-1 inline-block">
                                     {item.item_type}
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="py-3 text-right font-medium">
+                              <TableCell className="py-2 text-right font-medium text-sm">
                                 RM {formattedAmount}
                               </TableCell>
                             </TableRow>
@@ -660,7 +678,14 @@ export function AgentCommissionReportView() {
                             TOTAL AMOUNT
                           </TableCell>
                           <TableCell className="py-4 text-right font-bold text-lg text-green-600">
-                            RM {Number(invoiceDetails.total_items_amount || invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            RM {(() => {
+                              const totalAmount = parseFloat(String(invoiceDetails.total_items_amount || invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
+                              try {
+                                return totalAmount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                              } catch (error) {
+                                return totalAmount.toFixed(2);
+                              }
+                            })()}
                           </TableCell>
                         </TableRow>
                       </>
@@ -671,7 +696,14 @@ export function AgentCommissionReportView() {
                             Insurance Premium (Total Invoice Amount)
                           </TableCell>
                           <TableCell className="py-3 text-right font-medium">
-                            RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            RM {(() => {
+                              const amount = parseFloat(String(invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
+                              try {
+                                return amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                              } catch (error) {
+                                return amount.toFixed(2);
+                              }
+                            })()}
                           </TableCell>
                         </TableRow>
                         <TableRow className="border-t-2 border-gray-300 bg-gray-50">
@@ -679,7 +711,14 @@ export function AgentCommissionReportView() {
                             TOTAL AMOUNT
                           </TableCell>
                           <TableCell className="py-4 text-right font-bold text-lg text-green-600">
-                            RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            RM {(() => {
+                              const amount = parseFloat(String(invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
+                              try {
+                                return amount.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                              } catch (error) {
+                                return amount.toFixed(2);
+                              }
+                            })()}
                           </TableCell>
                         </TableRow>
                       </>
