@@ -406,18 +406,21 @@ export function AgentCommissionReportView() {
                       <TableCell>{formatDate(invoice.full_payment_date)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(invoice.amount_eligible_for_comm)}</TableCell>
                       <TableCell className="text-right">
-                        <button 
+                        <Button 
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleViewInvoice(invoice)}
-                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950 font-medium"
                         >
+                          <DollarSign className="h-3 w-3 mr-1" />
                           {formatCurrency(invoice.amount)}
-                        </button>
+                        </Button>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="text-xs px-2 py-1"
+                          className="text-xs px-2 py-1 text-green-600 hover:text-green-800 hover:bg-green-50 dark:hover:bg-green-950 border-green-200 dark:border-green-800"
                           onClick={() => handleViewANP(invoice)}
                         >
                           <Eye className="h-3 w-3 mr-1" />
