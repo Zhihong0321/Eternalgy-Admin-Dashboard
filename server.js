@@ -1219,6 +1219,195 @@ app.get('/api/debug/invoice/:invoiceId', async (req, res) => {
   }
 });
 
+// Flexible data fetching API for development and data operations
+app.get('/api/data/fetch/:tableName', async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    const { limit = 50, offset = 0, sort_order = 'DESC' } = req.query;
+    
+    console.log(`[DEBUG] Data fetch request - Table: ${tableName}, Limit: ${limit}, Offset: ${offset}, Sort: ${sort_order}`);
+    
+    // Validate table name exists and get its schema
+    const tableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      AND table_name = ${tableName}
+    `;
+    
+    if (tableExists.length === 0) {
+      return res.status(404).json({ 
+        error: 'Table not found', 
+        message: `Table '${tableName}' does not exist`,
+        available_tables: await getAvailableTables()
+      });
+    }
+    
+    // Get table column information
+    const columns = await prisma.$queryRaw`
+      SELECT 
+        column_name, 
+        data_type, 
+        is_nullable,
+        column_default,
+        ordinal_position
+      FROM information_schema.columns 
+      WHERE table_name = ${tableName}
+      AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `;
+    
+    // Find the best date column to sort by (prioritize creation_date, created_at, created_date, etc.)
+    const dateColumns = ['created_date', 'created_at', 'creation_date', 'date_created', 'timestamp', 'synced_at', 'updated_at'];
+    let sortColumn = null;
+    
+    for (const dateCol of dateColumns) {
+      const foundCol = columns.find(col => col.column_name.toLowerCase() === dateCol);
+      if (foundCol) {
+        sortColumn = foundCol.column_name;
+        break;
+      }
+    }
+    
+    // If no date column found, try to find any column with 'id' for consistent sorting
+    if (!sortColumn) {
+      const idColumn = columns.find(col => col.column_name.toLowerCase().includes('id'));
+      if (idColumn) {
+        sortColumn = idColumn.column_name;
+      }
+    }
+    
+    // Build the query with dynamic sorting
+    let orderByClause = '';
+    if (sortColumn) {
+      orderByClause = `ORDER BY "${sortColumn}" ${sort_order.toUpperCase()}`;
+    }
+    
+    const query = `
+      SELECT * FROM "${tableName}" 
+      ${orderByClause}
+      LIMIT ${parseInt(limit)} 
+      OFFSET ${parseInt(offset)}
+    `;
+    
+    console.log(`[DEBUG] Executing query: ${query}`);
+    
+    const records = await prisma.$queryRawUnsafe(query);
+    
+    // Get total count
+    const totalCountResult = await prisma.$queryRawUnsafe(`SELECT COUNT(*) as count FROM "${tableName}"`);
+    const totalCount = parseInt(totalCountResult[0].count);
+    
+    // Clean data for JSON response (handle BigInt)
+    const cleanedRecords = records.map(record => 
+      JSON.parse(JSON.stringify(record, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ))
+    );
+    
+    console.log(`[DEBUG] Successfully fetched ${cleanedRecords.length} records from ${tableName}`);
+    
+    const response = {
+      table_name: tableName,
+      total_records: totalCount,
+      returned_records: cleanedRecords.length,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      sort_column: sortColumn,
+      sort_order: sort_order.toUpperCase(),
+      schema: {
+        columns: columns.map(col => ({
+          name: col.column_name,
+          type: col.data_type,
+          nullable: col.is_nullable === 'YES',
+          default: col.column_default,
+          position: col.ordinal_position
+        }))
+      },
+      data: cleanedRecords
+    };
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.log(`[ERROR] Data fetch error for table ${req.params.tableName}:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message,
+      table: req.params.tableName
+    });
+  }
+});
+
+// Helper function to get available tables
+async function getAvailableTables() {
+  try {
+    const tables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `;
+    return tables.map(t => t.table_name);
+  } catch (error) {
+    return [];
+  }
+}
+
+// Get list of all available tables with basic info
+app.get('/api/data/tables', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Getting list of all available tables`);
+    
+    const tables = await prisma.$queryRaw`
+      SELECT 
+        t.table_name,
+        (SELECT COUNT(*) FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = 'public') as column_count
+      FROM information_schema.tables t
+      WHERE t.table_schema = 'public' 
+      AND t.table_type = 'BASE TABLE'
+      ORDER BY t.table_name
+    `;
+    
+    // Get record counts for each table
+    const tablesWithCounts = await Promise.all(
+      tables.map(async (table) => {
+        try {
+          const countResult = await prisma.$queryRawUnsafe(`SELECT COUNT(*) as count FROM "${table.table_name}"`);
+          return {
+            table_name: table.table_name,
+            column_count: parseInt(table.column_count),
+            record_count: parseInt(countResult[0].count)
+          };
+        } catch (error) {
+          return {
+            table_name: table.table_name,
+            column_count: parseInt(table.column_count),
+            record_count: 0,
+            error: error.message
+          };
+        }
+      })
+    );
+    
+    console.log(`[DEBUG] Found ${tablesWithCounts.length} tables`);
+    
+    res.json({
+      total_tables: tablesWithCounts.length,
+      tables: tablesWithCounts
+    });
+    
+  } catch (error) {
+    console.log(`[ERROR] Tables list error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Simple API to check any table directly
 app.get('/api/table/check/:tableName', async (req, res) => {
   try {
