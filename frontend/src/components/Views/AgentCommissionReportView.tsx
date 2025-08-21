@@ -579,24 +579,24 @@ export function AgentCommissionReportView() {
             </div>
           ) : invoiceDetails ? (
             <div className="space-y-6 p-4">
-              {/* Invoice Header - Styled like a real invoice */}
-              <div className="border border-gray-200 rounded-lg p-6 bg-white">
-                <div className="mb-4 border-b pb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">INVOICE</h2>
-                  <p className="text-lg text-gray-600">#{invoiceDetails.invoice.invoice_id}</p>
+              {/* Invoice Header - Dark theme styled */}
+              <div className="border border-gray-700 rounded-lg p-6 bg-gray-900">
+                <div className="mb-4 border-b border-gray-700 pb-4">
+                  <h2 className="text-2xl font-bold text-white">INVOICE</h2>
+                  <p className="text-lg text-gray-300">#{invoiceDetails.invoice.invoice_id}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Bill To:</h3>
-                    <p className="text-gray-700 font-medium">{invoiceDetails.invoice.customer_name || 'Unknown Customer'}</p>
+                    <h3 className="text-lg font-semibold text-white mb-2">Bill To:</h3>
+                    <p className="text-gray-300 font-medium">{invoiceDetails.invoice.customer_name || 'Unknown Customer'}</p>
                   </div>
                   
                   <div className="text-left md:text-right">
                     <div className="space-y-2">
                       <div>
-                        <span className="text-sm text-gray-600">Invoice Date: </span>
-                        <span className="font-medium">
+                        <span className="text-sm text-gray-400">Invoice Date: </span>
+                        <span className="font-medium text-gray-200">
                           {invoiceDetails.invoice.invoice_date 
                             ? new Date(invoiceDetails.invoice.invoice_date).toLocaleDateString()
                             : 'N/A'
@@ -604,8 +604,8 @@ export function AgentCommissionReportView() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-sm text-gray-600">Amount: </span>
-                        <span className="font-bold text-lg text-green-600">
+                        <span className="text-sm text-gray-400">Amount: </span>
+                        <span className="font-bold text-lg text-green-400">
                           RM {Number(invoiceDetails.invoice.amount || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -615,19 +615,19 @@ export function AgentCommissionReportView() {
               </div>
 
               {/* Invoice Items Table */}
-              <div className="border border-gray-200 rounded-lg p-6 bg-white">
+              <div className="border border-gray-700 rounded-lg p-6 bg-gray-900">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Items & Services</h3>
-                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                  <h3 className="text-lg font-semibold text-white">Items & Services</h3>
+                  <span className="bg-blue-900 text-blue-200 text-sm font-medium px-3 py-1 rounded-full">
                     {invoiceDetails.invoice_items ? invoiceDetails.invoice_items.length : 0} items
                   </span>
                 </div>
                 
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-b-2 border-gray-300">
-                      <TableHead className="text-left font-bold text-gray-900 py-3">Description</TableHead>
-                      <TableHead className="text-right font-bold text-gray-900 py-3 w-32">Amount</TableHead>
+                    <TableRow className="border-b-2 border-gray-600">
+                      <TableHead className="text-left font-bold text-white py-3">Description</TableHead>
+                      <TableHead className="text-right font-bold text-white py-3 w-32">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -656,28 +656,28 @@ export function AgentCommissionReportView() {
                           console.log(`[DEBUG] Item amount: ${item.amount} -> ${amount} -> ${formattedAmount}`);
                           
                           return (
-                            <TableRow key={item.bubble_id || index} className="border-b border-gray-100">
-                              <TableCell className="py-2 text-gray-700 text-sm">
+                            <TableRow key={item.bubble_id || index} className="border-b border-gray-700">
+                              <TableCell className="py-2 text-gray-300 text-sm">
                                 <div className="text-sm leading-tight">
                                   {item.description || 'No Description'}
                                 </div>
                                 {item.item_type && (
-                                  <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mt-1 inline-block">
+                                  <span className="ml-2 text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded mt-1 inline-block">
                                     {item.item_type}
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="py-2 text-right font-medium text-sm">
+                              <TableCell className="py-2 text-right font-medium text-sm text-white">
                                 RM {formattedAmount}
                               </TableCell>
                             </TableRow>
                           );
                         })}
-                        <TableRow className="border-t-2 border-gray-300 bg-gray-50">
-                          <TableCell className="py-4 font-bold text-gray-900 text-lg">
+                        <TableRow className="border-t-2 border-gray-600 bg-gray-800">
+                          <TableCell className="py-4 font-bold text-white text-lg">
                             TOTAL AMOUNT
                           </TableCell>
-                          <TableCell className="py-4 text-right font-bold text-lg text-green-600">
+                          <TableCell className="py-4 text-right font-bold text-lg text-green-400">
                             RM {(() => {
                               const totalAmount = parseFloat(String(invoiceDetails.total_items_amount || invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
                               try {
@@ -692,10 +692,10 @@ export function AgentCommissionReportView() {
                     ) : (
                       <>
                         <TableRow>
-                          <TableCell className="py-3 text-gray-700">
+                          <TableCell className="py-3 text-gray-300">
                             Insurance Premium (Total Invoice Amount)
                           </TableCell>
-                          <TableCell className="py-3 text-right font-medium">
+                          <TableCell className="py-3 text-right font-medium text-white">
                             RM {(() => {
                               const amount = parseFloat(String(invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
                               try {
@@ -706,11 +706,11 @@ export function AgentCommissionReportView() {
                             })()}
                           </TableCell>
                         </TableRow>
-                        <TableRow className="border-t-2 border-gray-300 bg-gray-50">
-                          <TableCell className="py-4 font-bold text-gray-900 text-lg">
+                        <TableRow className="border-t-2 border-gray-600 bg-gray-800">
+                          <TableCell className="py-4 font-bold text-white text-lg">
                             TOTAL AMOUNT
                           </TableCell>
-                          <TableCell className="py-4 text-right font-bold text-lg text-green-600">
+                          <TableCell className="py-4 text-right font-bold text-lg text-green-400">
                             RM {(() => {
                               const amount = parseFloat(String(invoiceDetails.invoice.amount || 0).replace(/,/g, '')) || 0;
                               try {
