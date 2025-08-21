@@ -874,70 +874,60 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     // Get invoice items if table exists
     if (invoiceItemTableExists.length > 0) {
       try {
-        // Check if invoice has linked_invoice_item array
-        if (invoice.linked_invoice_item && invoice.linked_invoice_item.length > 0) {
-          console.log(`[DEBUG] Invoice has ${invoice.linked_invoice_item.length} linked invoice items:`, invoice.linked_invoice_item);
+        console.log(`[DEBUG] Searching for invoice items linked to invoice: ${invoiceId}`);
+        
+        // PRIMARY APPROACH: Use linked_invoice field (this is the working relationship)
+        invoiceItems = await prisma.$queryRaw`
+          SELECT 
+            ii.bubble_id,
+            ii.description,
+            ii.amount,
+            ii.sort,
+            ii.unit_price,
+            ii.qty,
+            ii.inv_item_type
+          FROM invoice_item ii
+          WHERE ii.linked_invoice = ${invoiceId}
+          ORDER BY COALESCE(CAST(ii.sort AS INTEGER), 999999) ASC, ii.description ASC
+        `;
+        
+        console.log(`[DEBUG] Found ${invoiceItems.length} invoice items using linked_invoice approach`);
+        
+        // If no items found with linked_invoice, try the linked_invoice_item array approach as fallback
+        if (invoiceItems.length === 0 && invoice.linked_invoice_item && invoice.linked_invoice_item.length > 0) {
+          console.log(`[DEBUG] No items found with linked_invoice, trying linked_invoice_item array:`, invoice.linked_invoice_item);
           
-          // Query invoice items by their bubble_id being in the linked_invoice_item array
-          // Convert array to proper PostgreSQL array format
-          const linkedItemIds = invoice.linked_invoice_item;
-          console.log(`[DEBUG] Searching for invoice items with IDs:`, linkedItemIds);
-          
-          // Try different query approaches for the array relationship
-          try {
-            // Approach 1: Use ANY with array
-            invoiceItems = await prisma.$queryRaw`
-              SELECT 
-                ii.bubble_id,
-                ii.description,
-                ii.amount,
-                ii.sort
-              FROM invoice_item ii
-              WHERE ii.bubble_id = ANY(${linkedItemIds}::text[])
-              ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
-            `;
-          } catch (anyError) {
-            console.log(`[DEBUG] ANY approach failed, trying IN approach:`, anyError.message);
-            
-            // Approach 2: Use IN with individual values  
-            const placeholders = linkedItemIds.map((_, index) => `$${index + 1}`).join(',');
-            const queryText = `
-              SELECT 
-                ii.bubble_id,
-                ii.description,
-                ii.amount,
-                ii.sort
-              FROM invoice_item ii
-              WHERE ii.bubble_id IN (${placeholders})
-              ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
-            `;
-            console.log(`[DEBUG] Using IN query:`, queryText, linkedItemIds);
-            
-            invoiceItems = await prisma.$queryRawUnsafe(queryText, ...linkedItemIds);
-          }
-        } else {
-          console.log(`[DEBUG] Invoice has no linked_invoice_item array, trying fallback query with linked_invoice`);
-          // Fallback: try the original approach in case some invoices use linked_invoice
-          invoiceItems = await prisma.$queryRaw`
+          // Build IN clause for the array items
+          const placeholders = invoice.linked_invoice_item.map((_, index) => `$${index + 1}`).join(',');
+          const queryText = `
             SELECT 
               ii.bubble_id,
               ii.description,
               ii.amount,
-              ii.sort
+              ii.sort,
+              ii.unit_price,
+              ii.qty,
+              ii.inv_item_type
             FROM invoice_item ii
-            WHERE ii.linked_invoice = ${invoiceId}
-            ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+            WHERE ii.bubble_id IN (${placeholders})
+            ORDER BY COALESCE(CAST(ii.sort AS INTEGER), 999999) ASC, ii.description ASC
           `;
+          
+          console.log(`[DEBUG] Using linked_invoice_item array query`);
+          invoiceItems = await prisma.$queryRawUnsafe(queryText, ...invoice.linked_invoice_item);
+          console.log(`[DEBUG] Found ${invoiceItems.length} invoice items using linked_invoice_item array approach`);
         }
-        
-        console.log(`[DEBUG] Found ${invoiceItems.length} invoice items`);
         
         // Calculate total amount from invoice items
         totalItemAmount = invoiceItems.reduce((sum, item) => {
           return sum + parseFloat(item.amount || 0);
         }, 0);
+        
+        console.log(`[DEBUG] Total invoice items amount: ${totalItemAmount}`);
+        
       } catch (itemError) {
-        console.log(`[DEBUG] Error fetching invoice items: ${itemError.message}`);
+        console.log(`[ERROR] Error fetching invoice items: ${itemError.message}`);
+        console.log(`[ERROR] Error stack:`, itemError.stack);
         // Continue without items rather than failing
         invoiceItems = [];
         totalItemAmount = 0;
@@ -964,7 +954,10 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
         bubble_id: item.bubble_id,
         description: item.description || 'No Description',
         amount: parseFloat(item.amount || 0),
-        sort: item.sort
+        unit_price: parseFloat(item.unit_price || 0),
+        qty: parseInt(item.qty || 1),
+        sort: item.sort,
+        item_type: item.inv_item_type
       })),
       total_items_amount: totalItemAmount,
       debug_info: {
