@@ -20,6 +20,7 @@ interface CommissionInvoice {
   full_payment_date: string
   amount: number
   amount_eligible_for_comm: number
+  eligible_amount_description: string
   achieved_monthly_anp: number
   basic_commission: number
   bonus_commission: number
@@ -90,6 +91,10 @@ export function AgentCommissionReportView() {
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails | null>(null)
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false)
+  
+  // Eligible Amount Modal state
+  const [showEligibleModal, setShowEligibleModal] = useState(false)
+  const [selectedEligibleInvoice, setSelectedEligibleInvoice] = useState<CommissionInvoice | null>(null)
 
   // Generate month options (current month to last 12 months)
   const generateMonthOptions = () => {
@@ -184,6 +189,11 @@ export function AgentCommissionReportView() {
     } finally {
       setIsLoadingInvoice(false)
     }
+  }
+
+  const handleViewEligibleAmount = (invoice: CommissionInvoice) => {
+    setSelectedEligibleInvoice(invoice)
+    setShowEligibleModal(true)
   }
 
   const getTotalAmount = () => {
@@ -404,7 +414,17 @@ export function AgentCommissionReportView() {
                     <TableRow key={invoice.bubble_id}>
                       <TableCell className="font-medium">{invoice.customer_name}</TableCell>
                       <TableCell>{formatDate(invoice.full_payment_date)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(invoice.amount_eligible_for_comm)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewEligibleAmount(invoice)}
+                          className="text-orange-600 hover:text-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950 font-medium"
+                        >
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          {formatCurrency(invoice.amount_eligible_for_comm)}
+                        </Button>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost"
@@ -741,6 +761,51 @@ export function AgentCommissionReportView() {
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg">Failed to load invoice details</p>
               <p className="text-sm mt-2">Please try again or contact support if the issue persists.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Eligible Amount Details Modal */}
+      <Dialog open={showEligibleModal} onOpenChange={setShowEligibleModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Eligible Amount Details</DialogTitle>
+            <DialogDescription>
+              {selectedEligibleInvoice ? `Invoice #${selectedEligibleInvoice.invoice_id} - ${selectedEligibleInvoice.customer_name}` : 'Eligible amount breakdown'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedEligibleInvoice && (
+            <div className="space-y-4 p-4">
+              {/* Amount Summary */}
+              <div className="border border-gray-700 rounded-lg p-4 bg-gray-900">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-white">Amount Summary</h3>
+                  <span className="text-orange-400 font-bold text-lg">
+                    {formatCurrency(selectedEligibleInvoice.amount_eligible_for_comm)}
+                  </span>
+                </div>
+                
+                <div className="space-y-2 text-gray-300">
+                  <div className="flex justify-between">
+                    <span>Total Invoice Amount:</span>
+                    <span className="text-white">{formatCurrency(selectedEligibleInvoice.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Eligible for Commission:</span>
+                    <span className="text-orange-400 font-medium">{formatCurrency(selectedEligibleInvoice.amount_eligible_for_comm)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Details */}
+              <div className="border border-gray-700 rounded-lg p-4 bg-gray-900">
+                <h3 className="text-lg font-semibold text-white mb-3">Breakdown Details</h3>
+                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {selectedEligibleInvoice.eligible_amount_description || 'No detailed breakdown available for this invoice.'}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
