@@ -200,17 +200,17 @@ export function AgentCommissionReportView() {
     try {
       console.log('Fetching full invoice details for eligible amount:', invoice.bubble_id)
       
-      // Fetch the full invoice details to get eligible_amount_description
-      const response = await fetch(`/api/data/fetch/invoice?filter_field=bubble_id&filter_value=${invoice.bubble_id}&limit=1`)
+      // Use the specific API endpoint to get invoice by bubble_id
+      const response = await fetch(`/api/invoice/by-bubble-id/${invoice.bubble_id}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       const data = await response.json()
-      console.log('Full invoice data response:', data)
+      console.log('Invoice by bubble_id response:', data)
       
-      if (data.data && data.data.length > 0) {
-        const fullInvoiceData = data.data[0]
+      if (data.success && data.invoice) {
+        const fullInvoiceData = data.invoice
         console.log('Found invoice eligible_amount_description:', fullInvoiceData.eligible_amount_description)
         
         // Update the selected invoice with the full data including eligible_amount_description

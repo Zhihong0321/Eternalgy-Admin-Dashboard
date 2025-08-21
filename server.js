@@ -990,6 +990,52 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
   }
 });
 
+// Get single invoice by bubble_id for eligible amount description
+app.get('/api/invoice/by-bubble-id/:bubbleId', async (req, res) => {
+  try {
+    const { bubbleId } = req.params;
+    console.log(`[DEBUG] Fetching invoice by bubble_id: ${bubbleId}`);
+    
+    // Get the specific invoice by bubble_id
+    const invoice = await prisma.$queryRaw`
+      SELECT 
+        bubble_id,
+        invoice_id,
+        eligible_amount_description,
+        amount,
+        amount_eligible_for_comm,
+        customer_name,
+        invoice_date,
+        created_date
+      FROM invoice 
+      WHERE bubble_id = ${bubbleId}
+      LIMIT 1
+    `;
+    
+    if (invoice.length === 0) {
+      return res.status(404).json({ 
+        error: 'Invoice not found', 
+        message: `Invoice with bubble_id ${bubbleId} not found` 
+      });
+    }
+    
+    console.log(`[DEBUG] Found invoice eligible_amount_description:`, invoice[0].eligible_amount_description);
+    
+    res.json({
+      success: true,
+      invoice: invoice[0]
+    });
+    
+  } catch (error) {
+    console.log(`[ERROR] Get invoice by bubble_id error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message,
+      bubble_id: req.params.bubbleId
+    });
+  }
+});
+
 // Get commission report for agent
 app.get('/api/commission/report', async (req, res) => {
   try {
