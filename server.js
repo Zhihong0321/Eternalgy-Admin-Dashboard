@@ -879,16 +879,42 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
           console.log(`[DEBUG] Invoice has ${invoice.linked_invoice_item.length} linked invoice items:`, invoice.linked_invoice_item);
           
           // Query invoice items by their bubble_id being in the linked_invoice_item array
-          invoiceItems = await prisma.$queryRaw`
-            SELECT 
-              ii.bubble_id,
-              ii.description,
-              ii.amount,
-              ii.sort
-            FROM invoice_item ii
-            WHERE ii.bubble_id = ANY(${invoice.linked_invoice_item})
-            ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
-          `;
+          // Convert array to proper PostgreSQL array format
+          const linkedItemIds = invoice.linked_invoice_item;
+          console.log(`[DEBUG] Searching for invoice items with IDs:`, linkedItemIds);
+          
+          // Try different query approaches for the array relationship
+          try {
+            // Approach 1: Use ANY with array
+            invoiceItems = await prisma.$queryRaw`
+              SELECT 
+                ii.bubble_id,
+                ii.description,
+                ii.amount,
+                ii.sort
+              FROM invoice_item ii
+              WHERE ii.bubble_id = ANY(${linkedItemIds}::text[])
+              ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+            `;
+          } catch (anyError) {
+            console.log(`[DEBUG] ANY approach failed, trying IN approach:`, anyError.message);
+            
+            // Approach 2: Use IN with individual values  
+            const placeholders = linkedItemIds.map((_, index) => `$${index + 1}`).join(',');
+            const queryText = `
+              SELECT 
+                ii.bubble_id,
+                ii.description,
+                ii.amount,
+                ii.sort
+              FROM invoice_item ii
+              WHERE ii.bubble_id IN (${placeholders})
+              ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+            `;
+            console.log(`[DEBUG] Using IN query:`, queryText, linkedItemIds);
+            
+            invoiceItems = await prisma.$queryRawUnsafe(queryText, ...linkedItemIds);
+          }
         } else {
           console.log(`[DEBUG] Invoice has no linked_invoice_item array, trying fallback query with linked_invoice`);
           // Fallback: try the original approach in case some invoices use linked_invoice
