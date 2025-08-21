@@ -806,6 +806,90 @@ app.post('/api/invoices/update-anp', async (req, res) => {
   }
 });
 
+// Get invoice details with customer and invoice items
+app.get('/api/invoice/details/:invoiceId', async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log(`[DEBUG] Getting invoice details for: ${invoiceId}`);
+    
+    // Get invoice with customer details
+    const invoiceDetails = await prisma.$queryRaw`
+      SELECT 
+        i.bubble_id,
+        i.invoice_id,
+        i.amount,
+        i.invoice_date,
+        i.created_date,
+        i.full_payment_date,
+        cp.name as customer_name,
+        cp.bubble_id as customer_bubble_id
+      FROM invoice i
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE i.bubble_id = ${invoiceId}
+    `;
+    
+    if (invoiceDetails.length === 0) {
+      return res.status(404).json({ 
+        error: 'Invoice not found', 
+        message: `Invoice with ID ${invoiceId} not found` 
+      });
+    }
+    
+    const invoice = invoiceDetails[0];
+    console.log(`[DEBUG] Found invoice: ${invoice.invoice_id}`);
+    
+    // Get invoice items for this invoice
+    const invoiceItems = await prisma.$queryRaw`
+      SELECT 
+        ii.bubble_id,
+        ii.description,
+        ii.amount,
+        ii.sort
+      FROM invoice_item ii
+      WHERE ii.linked_invoice = ${invoiceId}
+      ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+    `;
+    
+    console.log(`[DEBUG] Found ${invoiceItems.length} invoice items`);
+    
+    // Calculate total amount from invoice items
+    const totalItemAmount = invoiceItems.reduce((sum, item) => {
+      return sum + parseFloat(item.amount || 0);
+    }, 0);
+    
+    const response = {
+      invoice: {
+        bubble_id: invoice.bubble_id,
+        invoice_id: invoice.invoice_id,
+        amount: parseFloat(invoice.amount || 0),
+        invoice_date: invoice.invoice_date,
+        created_date: invoice.created_date,
+        full_payment_date: invoice.full_payment_date,
+        customer_name: invoice.customer_name || 'Unknown Customer',
+        customer_bubble_id: invoice.customer_bubble_id
+      },
+      invoice_items: invoiceItems.map(item => ({
+        bubble_id: item.bubble_id,
+        description: item.description || 'No Description',
+        amount: parseFloat(item.amount || 0),
+        sort: item.sort
+      })),
+      total_items_amount: totalItemAmount
+    };
+    
+    console.log(`[DEBUG] Invoice details response prepared - Items: ${invoiceItems.length}, Total: ${totalItemAmount}`);
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.log(`[ERROR] Invoice details API error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Get commission report for agent
 app.get('/api/commission/report', async (req, res) => {
   try {

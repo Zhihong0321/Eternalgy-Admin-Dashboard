@@ -3,6 +3,7 @@ import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
 import { RefreshCw, DollarSign, Calendar, User, Eye, X } from 'lucide-react'
 
 interface Agent {
@@ -44,6 +45,28 @@ interface ANPRelatedInvoice {
   first_payment_amount: number | null
 }
 
+interface InvoiceItem {
+  bubble_id: string
+  description: string
+  amount: number
+  sort: number
+}
+
+interface InvoiceDetails {
+  invoice: {
+    bubble_id: string
+    invoice_id: number
+    amount: number
+    invoice_date: string | null
+    created_date: string
+    full_payment_date: string | null
+    customer_name: string
+    customer_bubble_id: string | null
+  }
+  invoice_items: InvoiceItem[]
+  total_items_amount: number
+}
+
 export function AgentCommissionReportView() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgent, setSelectedAgent] = useState<string>('')
@@ -57,6 +80,9 @@ export function AgentCommissionReportView() {
   const [anpModalLoading, setAnpModalLoading] = useState(false)
   const [anpRelatedInvoices, setAnpRelatedInvoices] = useState<ANPRelatedInvoice[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<CommissionInvoice | null>(null)
+  const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails | null>(null)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [isLoadingInvoice, setIsLoadingInvoice] = useState(false)
 
   // Generate month options (current month to last 12 months)
   const generateMonthOptions = () => {
@@ -124,6 +150,30 @@ export function AgentCommissionReportView() {
     setSelectedInvoice(invoice)
     setShowANPModal(true)
     await fetchANPRelatedInvoices(invoice)
+  }
+
+  const handleViewInvoice = async (invoice: CommissionInvoice) => {
+    setIsLoadingInvoice(true)
+    setShowInvoiceModal(true)
+    
+    try {
+      console.log('Fetching invoice details for:', invoice.bubble_id)
+      const response = await fetch(`/api/invoice/details/${invoice.bubble_id}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      console.log('Invoice details received:', data)
+      setInvoiceDetails(data)
+    } catch (error) {
+      console.error('Error fetching invoice details:', error)
+      alert('Failed to load invoice details. Please try again.')
+      setShowInvoiceModal(false)
+    } finally {
+      setIsLoadingInvoice(false)
+    }
   }
 
   const getTotalAmount = () => {
@@ -345,7 +395,14 @@ export function AgentCommissionReportView() {
                       <TableCell className="font-medium">{invoice.customer_name}</TableCell>
                       <TableCell>{formatDate(invoice.full_payment_date)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(invoice.amount_eligible_for_comm)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(invoice.amount)}</TableCell>
+                      <TableCell className="text-right">
+                        <button 
+                          onClick={() => handleViewInvoice(invoice)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                        >
+                          {formatCurrency(invoice.amount)}
+                        </button>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           size="sm" 
@@ -494,6 +551,86 @@ export function AgentCommissionReportView() {
           </div>
         </div>
       )}
+
+      {/* Invoice Details Modal */}
+      <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Invoice Details</DialogTitle>
+            <DialogDescription>
+              {invoiceDetails ? `Invoice #${invoiceDetails.invoice.invoice_id}` : 'Loading invoice details...'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {isLoadingInvoice ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading invoice details...</span>
+            </div>
+          ) : invoiceDetails ? (
+            <div className="space-y-6 overflow-y-auto">
+              {/* Invoice Header */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold text-lg">Customer Information</h3>
+                    <p className="text-gray-600">{invoiceDetails.invoice.customer_name}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Invoice Information</h3>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p>Invoice ID: #{invoiceDetails.invoice.invoice_id}</p>
+                      <p>Invoice Date: {invoiceDetails.invoice.invoice_date ? formatDate(invoiceDetails.invoice.invoice_date) : 'N/A'}</p>
+                      <p>Total Amount: {formatCurrency(invoiceDetails.invoice.amount)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Items Table */}
+              <div>
+                <h3 className="font-semibold text-lg mb-3">Invoice Items</h3>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[70%]">Description</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invoiceDetails.invoice_items.length > 0 ? (
+                        <>
+                          {invoiceDetails.invoice_items.map((item) => (
+                            <TableRow key={item.bubble_id}>
+                              <TableCell className="font-medium">{item.description}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="border-t-2 bg-muted/50">
+                            <TableCell className="font-bold">Total Amount</TableCell>
+                            <TableCell className="text-right font-bold">{formatCurrency(invoiceDetails.total_items_amount)}</TableCell>
+                          </TableRow>
+                        </>
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={2} className="text-center text-gray-500 py-8">
+                            No invoice items found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              Failed to load invoice details
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
