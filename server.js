@@ -874,16 +874,35 @@ app.get('/api/invoice/details/:invoiceId', async (req, res) => {
     // Get invoice items if table exists
     if (invoiceItemTableExists.length > 0) {
       try {
-        invoiceItems = await prisma.$queryRaw`
-          SELECT 
-            ii.bubble_id,
-            ii.description,
-            ii.amount,
-            ii.sort
-          FROM invoice_item ii
-          WHERE ii.linked_invoice = ${invoiceId}
-          ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
-        `;
+        // Check if invoice has linked_invoice_item array
+        if (invoice.linked_invoice_item && invoice.linked_invoice_item.length > 0) {
+          console.log(`[DEBUG] Invoice has ${invoice.linked_invoice_item.length} linked invoice items:`, invoice.linked_invoice_item);
+          
+          // Query invoice items by their bubble_id being in the linked_invoice_item array
+          invoiceItems = await prisma.$queryRaw`
+            SELECT 
+              ii.bubble_id,
+              ii.description,
+              ii.amount,
+              ii.sort
+            FROM invoice_item ii
+            WHERE ii.bubble_id = ANY(${invoice.linked_invoice_item})
+            ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+          `;
+        } else {
+          console.log(`[DEBUG] Invoice has no linked_invoice_item array, trying fallback query with linked_invoice`);
+          // Fallback: try the original approach in case some invoices use linked_invoice
+          invoiceItems = await prisma.$queryRaw`
+            SELECT 
+              ii.bubble_id,
+              ii.description,
+              ii.amount,
+              ii.sort
+            FROM invoice_item ii
+            WHERE ii.linked_invoice = ${invoiceId}
+            ORDER BY COALESCE(ii.sort, 999999) ASC, ii.description ASC
+          `;
+        }
         
         console.log(`[DEBUG] Found ${invoiceItems.length} invoice items`);
         
