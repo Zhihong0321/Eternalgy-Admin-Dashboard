@@ -95,6 +95,7 @@ export function AgentCommissionReportView() {
   // Eligible Amount Modal state
   const [showEligibleModal, setShowEligibleModal] = useState(false)
   const [selectedEligibleInvoice, setSelectedEligibleInvoice] = useState<CommissionInvoice | null>(null)
+  const [isLoadingEligible, setIsLoadingEligible] = useState(false)
 
   // Generate month options (current month to last 12 months)
   const generateMonthOptions = () => {
@@ -191,9 +192,48 @@ export function AgentCommissionReportView() {
     }
   }
 
-  const handleViewEligibleAmount = (invoice: CommissionInvoice) => {
-    setSelectedEligibleInvoice(invoice)
+  const handleViewEligibleAmount = async (invoice: CommissionInvoice) => {
+    setIsLoadingEligible(true)
     setShowEligibleModal(true)
+    setSelectedEligibleInvoice(invoice)
+    
+    try {
+      console.log('Fetching full invoice details for eligible amount:', invoice.bubble_id)
+      
+      // Fetch the full invoice details to get eligible_amount_description
+      const response = await fetch(`/api/data/fetch/invoice?filter_field=bubble_id&filter_value=${invoice.bubble_id}&limit=1`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      console.log('Full invoice data response:', data)
+      
+      if (data.data && data.data.length > 0) {
+        const fullInvoiceData = data.data[0]
+        console.log('Found invoice eligible_amount_description:', fullInvoiceData.eligible_amount_description)
+        
+        // Update the selected invoice with the full data including eligible_amount_description
+        setSelectedEligibleInvoice({
+          ...invoice,
+          eligible_amount_description: fullInvoiceData.eligible_amount_description || 'No detailed breakdown available for this invoice.'
+        })
+      } else {
+        console.warn('No invoice data found for bubble_id:', invoice.bubble_id)
+        setSelectedEligibleInvoice({
+          ...invoice,
+          eligible_amount_description: 'Invoice details not found in database.'
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching invoice details:', error)
+      setSelectedEligibleInvoice({
+        ...invoice,
+        eligible_amount_description: 'Error loading invoice details. Please try again.'
+      })
+    } finally {
+      setIsLoadingEligible(false)
+    }
   }
 
   const getTotalAmount = () => {
@@ -776,7 +816,12 @@ export function AgentCommissionReportView() {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedEligibleInvoice && (
+          {isLoadingEligible ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading eligible amount details...</span>
+            </div>
+          ) : selectedEligibleInvoice && (
             <div className="space-y-4 p-4">
               {/* Amount Summary */}
               <div className="border border-gray-700 rounded-lg p-4 bg-gray-900">
