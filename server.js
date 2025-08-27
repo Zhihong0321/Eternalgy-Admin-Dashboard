@@ -626,27 +626,34 @@ app.get('/api/users/teams', async (req, res) => {
     
     console.log(`[DEBUG] User table columns:`, userColumns.map(c => c.column_name).join(', '));
     
-    const users = await prisma.$queryRaw`
+    // Query each team directly from PostgreSQL using LIKE
+    const teamJB = await prisma.$queryRaw`
       SELECT bubble_id, name, email, contact, access_level, profile_picture 
       FROM "user" 
       WHERE name IS NOT NULL AND name != ''
+        AND access_level LIKE '%team-jb%'
       ORDER BY name ASC
     `;
     
-    console.log(`[DEBUG] Found ${users.length} users`);
+    const teamKluang = await prisma.$queryRaw`
+      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+      FROM "user" 
+      WHERE name IS NOT NULL AND name != ''
+        AND access_level LIKE '%team-kluang%'
+      ORDER BY name ASC
+    `;
     
-    // Organize users by teams based on access_level
-    const teamJB = users.filter(user => 
-      user.access_level && user.access_level.toLowerCase().includes('team-jb')
-    );
+    const teamSeremban = await prisma.$queryRaw`
+      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+      FROM "user" 
+      WHERE name IS NOT NULL AND name != ''
+        AND access_level LIKE '%team-seremban%'
+      ORDER BY name ASC
+    `;
     
-    const teamKluang = users.filter(user => 
-      user.access_level && user.access_level.toLowerCase().includes('team-kluang')
-    );
+    const totalUsers = teamJB.length + teamKluang.length + teamSeremban.length;
     
-    const teamSeremban = users.filter(user => 
-      user.access_level && user.access_level.toLowerCase().includes('team-seremban')
-    );
+    console.log(`[DEBUG] Direct PostgreSQL queries - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}, Total: ${totalUsers}`);
     
     console.log(`[DEBUG] Team distribution - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
     
@@ -656,7 +663,7 @@ app.get('/api/users/teams', async (req, res) => {
         kluang: teamKluang,
         seremban: teamSeremban
       },
-      total_users: users.length,
+      total_users: totalUsers,
       debug_info: {
         user_table_exists: true,
         available_columns: userColumns.map(c => c.column_name)
@@ -726,6 +733,51 @@ app.get('/api/debug/tables', async (req, res) => {
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
+    });
+  }
+});
+
+// Test PostgreSQL query for users with team-jb access level
+app.get('/api/test/team-jb-users', async (req, res) => {
+  try {
+    console.log(`[TEST] Testing PostgreSQL query for team-jb users`);
+    
+    // Test the exact query we're trying to use
+    const testQuery = `
+      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+      FROM "user" 
+      WHERE access_level LIKE '%team-jb%'
+      ORDER BY name ASC
+    `;
+    
+    console.log(`[TEST] Executing query: ${testQuery}`);
+    
+    const users = await prisma.$queryRawUnsafe(testQuery);
+    
+    console.log(`[TEST] Found ${users.length} users with team-jb in access_level`);
+    console.log(`[TEST] Sample results:`, users.slice(0, 3));
+    
+    res.json({
+      success: true,
+      query_used: testQuery,
+      results_count: users.length,
+      users: users.map(user => ({
+        bubble_id: user.bubble_id,
+        name: user.name,
+        access_level: user.access_level,
+        profile_picture: user.profile_picture
+      }))
+    });
+    
+  } catch (error) {
+    console.log(`[TEST ERROR] Team-jb users test failed:`, error.message);
+    console.log(`[TEST ERROR] Full error:`, error);
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      error_code: error.code,
+      query_attempted: `SELECT bubble_id, name, email, contact, access_level, profile_picture FROM "user" WHERE access_level LIKE '%team-jb%' ORDER BY name ASC`
     });
   }
 });
