@@ -592,7 +592,7 @@ app.get('/api/users/teams', async (req, res) => {
     console.log(`[DEBUG] Getting users organized by teams`);
     
     const users = await prisma.$queryRaw`
-      SELECT bubble_id, name, email, contact, access_level 
+      SELECT bubble_id, name, email, contact, access_level, profile_picture 
       FROM "user" 
       WHERE name IS NOT NULL AND name != ''
       ORDER BY name ASC

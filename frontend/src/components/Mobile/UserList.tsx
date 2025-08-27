@@ -9,6 +9,7 @@ interface User {
   email?: string
   contact?: string
   access_level?: string
+  profile_picture?: string
 }
 
 interface TeamData {
@@ -112,7 +113,19 @@ export function UserList({ onBack }: UserListProps) {
             >
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  <User className="h-8 w-8 text-gray-400" />
+                  {user.profile_picture ? (
+                    <img 
+                      src={user.profile_picture} 
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                      onError={(e) => {
+                        // Fallback to icon if image fails to load
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <User className={`h-8 w-8 text-gray-400 ${user.profile_picture ? 'hidden' : ''}`} />
                 </div>
                 <div className="flex-grow min-w-0">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
