@@ -586,12 +586,12 @@ app.get('/api/agents/list', async (req, res) => {
   }
 });
 
-// Get all users organized by teams for mobile Daily Activity Report
+// SIMPLIFIED: Just return what we can actually see in the database
 app.get('/api/users/teams', async (req, res) => {
   try {
-    console.log(`[DEBUG] Getting users organized by teams`);
+    console.log(`[DEBUG] Getting users - SIMPLIFIED APPROACH`);
     
-    // First, check if user table exists
+    // Step 1: Check if user table exists at all
     const userTableExists = await prisma.$queryRaw`
       SELECT table_name 
       FROM information_schema.tables 
@@ -599,162 +599,46 @@ app.get('/api/users/teams', async (req, res) => {
       AND table_name = 'user'
     `;
     
-    console.log(`[DEBUG] User table exists: ${userTableExists.length > 0}`);
-    
     if (userTableExists.length === 0) {
-      // If user table doesn't exist, return empty teams
-      console.log(`[DEBUG] User table not found, returning empty teams`);
       return res.json({ 
-        teams: {
-          jb: [],
-          kluang: [],
-          seremban: []
-        },
+        teams: { jb: [], kluang: [], seremban: [] },
         total_users: 0,
-        debug_message: 'User table does not exist in database'
+        debug_message: 'User table does not exist'
       });
     }
     
-    // Check user table structure
-    const userColumns = await prisma.$queryRaw`
+    // Step 2: Get actual table structure
+    const columns = await prisma.$queryRaw`
       SELECT column_name, data_type 
       FROM information_schema.columns 
       WHERE table_name = 'user' 
-      AND table_schema = 'public'
       ORDER BY ordinal_position
     `;
     
-    console.log(`[DEBUG] User table columns:`, userColumns.map(c => c.column_name).join(', '));
+    // Step 3: Get a few sample rows to see real data
+    const sampleRows = await prisma.$queryRaw`SELECT * FROM "user" LIMIT 3`;
     
-    // First get a sample row to see what columns actually exist
-    const sampleUser = await prisma.$queryRaw`
-      SELECT * FROM "user" LIMIT 1
-    `;
+    console.log(`[DEBUG] Found ${columns.length} columns:`, columns.map(c => `${c.column_name} (${c.data_type})`));
+    console.log(`[DEBUG] Sample data:`, sampleRows.map(row => Object.keys(row)));
     
-    console.log(`[DEBUG] Sample user columns:`, sampleUser.length > 0 ? Object.keys(sampleUser[0]) : 'No users found');
-    
-    // Build dynamic query based on available columns
-    const availableColumns = userColumns.map(c => c.column_name);
-    const selectColumns = [];
-    
-    // Check which columns we can actually select
-    if (availableColumns.includes('bubble_id')) selectColumns.push('bubble_id');
-    if (availableColumns.includes('name')) selectColumns.push('name');
-    if (availableColumns.includes('user_name')) selectColumns.push('user_name'); 
-    if (availableColumns.includes('full_name')) selectColumns.push('full_name');
-    if (availableColumns.includes('display_name')) selectColumns.push('display_name');
-    if (availableColumns.includes('email')) selectColumns.push('email');
-    if (availableColumns.includes('contact')) selectColumns.push('contact');
-    if (availableColumns.includes('access_level')) selectColumns.push('access_level');
-    if (availableColumns.includes('profile_picture')) selectColumns.push('profile_picture');
-    
-    console.log(`[DEBUG] Available columns for select:`, selectColumns);
-    
-    const selectClause = selectColumns.length > 0 ? selectColumns.join(', ') : '*';
-    
-    // Build WHERE clause - find a name column that exists
-    let nameColumn = null;
-    const nameOptions = ['name', 'user_name', 'full_name', 'display_name'];
-    for (const option of nameOptions) {
-      if (availableColumns.includes(option)) {
-        nameColumn = option;
-        break;
-      }
-    }
-    
-    let whereClause = '';
-    if (nameColumn) {
-      whereClause = `WHERE ${nameColumn} IS NOT NULL AND ${nameColumn} != ''`;
-    } else {
-      whereClause = 'WHERE bubble_id IS NOT NULL'; // fallback
-    }
-    
-    // Check if access_level is an array type
-    const accessLevelColumn = userColumns.find(c => c.column_name === 'access_level');
-    const isAccessLevelArray = accessLevelColumn && accessLevelColumn.data_type.includes('[]');
-    
-    console.log(`[DEBUG] access_level column type:`, accessLevelColumn?.data_type);
-    console.log(`[DEBUG] Is access_level array:`, isAccessLevelArray);
-    
-    // Build appropriate WHERE condition based on data type
-    let teamCondition;
-    if (isAccessLevelArray) {
-      // For array types, use array contains operator
-      teamCondition = {
-        jb: `'team-jb' = ANY(access_level)`,
-        kluang: `'team-kluang' = ANY(access_level)`,
-        seremban: `'team-seremban' = ANY(access_level)`
-      };
-    } else {
-      // For text types, use LIKE or ILIKE
-      teamCondition = {
-        jb: `access_level ILIKE '%team-jb%'`,
-        kluang: `access_level ILIKE '%team-kluang%'`,
-        seremban: `access_level ILIKE '%team-seremban%'`
-      };
-    }
-    
-    // Query each team using appropriate conditions
-    const teamJBQuery = `
-      SELECT ${selectClause}
-      FROM "user" 
-      ${whereClause}
-        AND ${teamCondition.jb}
-      ORDER BY ${nameColumn || 'bubble_id'} ASC
-    `;
-    
-    const teamKluangQuery = `
-      SELECT ${selectClause}
-      FROM "user" 
-      ${whereClause}
-        AND ${teamCondition.kluang}
-      ORDER BY ${nameColumn || 'bubble_id'} ASC
-    `;
-    
-    const teamSerembanQuery = `
-      SELECT ${selectClause}
-      FROM "user" 
-      ${whereClause}
-        AND ${teamCondition.seremban}
-      ORDER BY ${nameColumn || 'bubble_id'} ASC
-    `;
-    
-    console.log(`[DEBUG] Team JB Query:`, teamJBQuery);
-    
-    const teamJB = await prisma.$queryRawUnsafe(teamJBQuery);
-    const teamKluang = await prisma.$queryRawUnsafe(teamKluangQuery);
-    const teamSeremban = await prisma.$queryRawUnsafe(teamSerembanQuery);
-    
-    const totalUsers = teamJB.length + teamKluang.length + teamSeremban.length;
-    
-    console.log(`[DEBUG] Direct PostgreSQL queries - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}, Total: ${totalUsers}`);
-    
-    console.log(`[DEBUG] Team distribution - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
-    
+    // Step 4: For now, just return empty teams but show what we found
     res.json({ 
-      teams: {
-        jb: teamJB,
-        kluang: teamKluang,
-        seremban: teamSeremban
-      },
-      total_users: totalUsers,
+      teams: { jb: [], kluang: [], seremban: [] },
+      total_users: 0,
       debug_info: {
         user_table_exists: true,
-        available_columns: userColumns.map(c => c.column_name),
-        selected_columns: selectColumns,
-        name_column_used: nameColumn,
-        sample_user_columns: sampleUser.length > 0 ? Object.keys(sampleUser[0]) : [],
-        access_level_column_type: accessLevelColumn?.data_type,
-        is_access_level_array: isAccessLevelArray,
-        team_conditions: teamCondition
+        columns: columns.map(c => ({ name: c.column_name, type: c.data_type })),
+        sample_rows_count: sampleRows.length,
+        sample_columns: sampleRows.length > 0 ? Object.keys(sampleRows[0]) : [],
+        message: 'Table structure inspection complete - no queries attempted yet'
       }
     });
+    
   } catch (error) {
-    console.log(`[ERROR] Users teams list error:`, error.message);
+    console.log(`[ERROR] Users teams inspection error:`, error.message);
     res.status(500).json({ 
-      error: 'Database error', 
-      message: error.message,
-      stack: error.stack
+      error: 'Database inspection error', 
+      message: error.message 
     });
   }
 });
