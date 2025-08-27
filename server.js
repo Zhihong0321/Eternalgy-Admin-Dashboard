@@ -621,16 +621,34 @@ app.get('/api/users/teams', async (req, res) => {
     console.log(`[DEBUG] Found ${columns.length} columns:`, columns.map(c => `${c.column_name} (${c.data_type})`));
     console.log(`[DEBUG] Sample data:`, sampleRows.map(row => Object.keys(row)));
     
-    // Step 4: For now, just return empty teams but show what we found
+    // Step 4: Show detailed column information
+    const columnDetails = columns.map(c => ({ name: c.column_name, type: c.data_type }));
+    const sampleData = sampleRows.length > 0 ? sampleRows[0] : {};
+    
+    console.log(`[DEBUG] Column details:`, columnDetails);
+    console.log(`[DEBUG] Sample data keys:`, Object.keys(sampleData));
+    
+    // Step 5: Look specifically for access_level data
+    let accessLevelSample = null;
+    if (sampleData.access_level !== undefined) {
+      accessLevelSample = sampleData.access_level;
+      console.log(`[DEBUG] Sample access_level value:`, accessLevelSample);
+      console.log(`[DEBUG] access_level type:`, typeof accessLevelSample);
+      console.log(`[DEBUG] access_level is array:`, Array.isArray(accessLevelSample));
+    }
+    
     res.json({ 
       teams: { jb: [], kluang: [], seremban: [] },
       total_users: 0,
       debug_info: {
         user_table_exists: true,
-        columns: columns.map(c => ({ name: c.column_name, type: c.data_type })),
+        columns: columnDetails,
         sample_rows_count: sampleRows.length,
-        sample_columns: sampleRows.length > 0 ? Object.keys(sampleRows[0]) : [],
-        message: 'Table structure inspection complete - no queries attempted yet'
+        sample_columns: Object.keys(sampleData),
+        access_level_sample: accessLevelSample,
+        access_level_sample_type: typeof accessLevelSample,
+        access_level_is_array: Array.isArray(accessLevelSample),
+        message: 'DETAILED inspection - check console for column names and access_level sample'
       }
     });
     
