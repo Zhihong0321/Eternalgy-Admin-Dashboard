@@ -626,38 +626,41 @@ app.get('/api/users/teams', async (req, res) => {
     
     console.log(`[DEBUG] Writing queries for actual array access_level`);
     
-    // Query each team - looking for array elements that contain team names
+    // Query each team with agent name JOIN - looking for array elements that contain team names
     const teamJBQuery = `
-      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
-      FROM "user" 
-      WHERE bubble_id IS NOT NULL
+      SELECT u.bubble_id, u.profile_picture, u.access_level, u.linked_agent_profile, a.name as agent_name
+      FROM "user" u
+      LEFT JOIN agent a ON u.linked_agent_profile = a.bubble_id
+      WHERE u.bubble_id IS NOT NULL
         AND EXISTS (
-          SELECT 1 FROM unnest(access_level) AS level 
+          SELECT 1 FROM unnest(u.access_level) AS level 
           WHERE level ILIKE '%team-jb%'
         )
-      ORDER BY bubble_id ASC
+      ORDER BY COALESCE(a.name, u.bubble_id) ASC
     `;
     
     const teamKluangQuery = `
-      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
-      FROM "user" 
-      WHERE bubble_id IS NOT NULL
+      SELECT u.bubble_id, u.profile_picture, u.access_level, u.linked_agent_profile, a.name as agent_name
+      FROM "user" u
+      LEFT JOIN agent a ON u.linked_agent_profile = a.bubble_id
+      WHERE u.bubble_id IS NOT NULL
         AND EXISTS (
-          SELECT 1 FROM unnest(access_level) AS level 
+          SELECT 1 FROM unnest(u.access_level) AS level 
           WHERE level ILIKE '%team-kluang%'
         )
-      ORDER BY bubble_id ASC
+      ORDER BY COALESCE(a.name, u.bubble_id) ASC
     `;
     
     const teamSerembanQuery = `
-      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
-      FROM "user" 
-      WHERE bubble_id IS NOT NULL
+      SELECT u.bubble_id, u.profile_picture, u.access_level, u.linked_agent_profile, a.name as agent_name
+      FROM "user" u
+      LEFT JOIN agent a ON u.linked_agent_profile = a.bubble_id
+      WHERE u.bubble_id IS NOT NULL
         AND EXISTS (
-          SELECT 1 FROM unnest(access_level) AS level 
+          SELECT 1 FROM unnest(u.access_level) AS level 
           WHERE level ILIKE '%team-seremban%'
         )
-      ORDER BY bubble_id ASC
+      ORDER BY COALESCE(a.name, u.bubble_id) ASC
     `;
     
     console.log(`[DEBUG] Executing team queries...`);
@@ -672,13 +675,14 @@ app.get('/api/users/teams', async (req, res) => {
     
     console.log(`[DEBUG] Team results - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
     
-    // Format users for frontend (use bubble_id as name since no name column)
+    // Format users for frontend (use agent name if available, fallback to bubble_id)
     const formatUser = (user) => ({
       bubble_id: user.bubble_id,
-      name: user.bubble_id, // Using bubble_id as display name since no name column
+      name: user.agent_name || user.bubble_id, // Use agent name from JOIN, fallback to bubble_id
       profile_picture: user.profile_picture,
       access_level: user.access_level,
-      linked_agent_profile: user.linked_agent_profile
+      linked_agent_profile: user.linked_agent_profile,
+      agent_name: user.agent_name
     });
     
     res.json({ 

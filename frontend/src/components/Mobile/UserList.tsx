@@ -68,6 +68,33 @@ export function UserList({ onBack }: UserListProps) {
     return user.name || user.user_name || user.full_name || user.display_name || user.bubble_id || 'Unknown User'
   }
 
+  const getThumbnailUrl = (originalUrl: string): string => {
+    if (!originalUrl) return originalUrl
+    
+    // Common thumbnail URL patterns
+    // Add more patterns based on your cloud storage service
+    
+    // Cloudinary: add w_150,h_150,c_fill
+    if (originalUrl.includes('cloudinary.com')) {
+      return originalUrl.replace('/upload/', '/upload/w_150,h_150,c_fill/')
+    }
+    
+    // AWS S3 with thumbs folder pattern
+    if (originalUrl.includes('.s3.') || originalUrl.includes('amazonaws.com')) {
+      const parts = originalUrl.split('/')
+      const filename = parts.pop()
+      return [...parts, 'thumbs', filename].join('/')
+    }
+    
+    // Google Cloud Storage with thumbnail suffix
+    if (originalUrl.includes('storage.googleapis.com')) {
+      return originalUrl.replace(/\.(jpg|jpeg|png|webp)$/i, '_thumb.$1')
+    }
+    
+    // Generic approach: try adding _thumb before extension
+    return originalUrl.replace(/(\.[^.]+)$/, '_thumb$1')
+  }
+
   const handleUserClick = (user: User) => {
     // TODO: Navigate to user activity details when specified
     alert(`User activity details for ${getUserDisplayName(user)} coming soon!`)
@@ -135,13 +162,18 @@ export function UserList({ onBack }: UserListProps) {
                 <div className="flex-shrink-0">
                   {user.profile_picture ? (
                     <img 
-                      src={user.profile_picture} 
+                      src={getThumbnailUrl(user.profile_picture)} 
                       alt={getUserDisplayName(user)}
                       className="h-8 w-8 rounded-full object-cover border border-gray-200"
                       onError={(e) => {
-                        // Fallback to icon if image fails to load
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        // Try original URL if thumbnail fails
+                        if (user.profile_picture && e.currentTarget.src !== user.profile_picture) {
+                          e.currentTarget.src = user.profile_picture;
+                        } else {
+                          // Fallback to icon if both fail
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }
                       }}
                     />
                   ) : null}
