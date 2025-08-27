@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { MobileHome } from './MobileHome'
-import { AgentList } from './AgentList'
+import { UserList } from './UserList'
 
-export type MobileView = 'home' | 'agents'
+export type MobileView = 'home' | 'users'
 
 export function MobileERP() {
   const [currentView, setCurrentView] = useState<MobileView>('home')
@@ -11,8 +11,8 @@ export function MobileERP() {
     switch (currentView) {
       case 'home':
         return <MobileHome onNavigate={setCurrentView} />
-      case 'agents':
-        return <AgentList onBack={() => setCurrentView('home')} />
+      case 'users':
+        return <UserList onBack={() => setCurrentView('home')} />
       default:
         return <MobileHome onNavigate={setCurrentView} />
     }

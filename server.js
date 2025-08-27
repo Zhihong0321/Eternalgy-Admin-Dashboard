@@ -586,6 +586,52 @@ app.get('/api/agents/list', async (req, res) => {
   }
 });
 
+// Get all users organized by teams for mobile Daily Activity Report
+app.get('/api/users/teams', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Getting users organized by teams`);
+    
+    const users = await prisma.$queryRaw`
+      SELECT bubble_id, name, email, contact, access_level 
+      FROM "user" 
+      WHERE name IS NOT NULL AND name != ''
+      ORDER BY name ASC
+    `;
+    
+    console.log(`[DEBUG] Found ${users.length} users`);
+    
+    // Organize users by teams based on access_level
+    const teamJB = users.filter(user => 
+      user.access_level && user.access_level.toLowerCase().includes('team-jb')
+    );
+    
+    const teamKluang = users.filter(user => 
+      user.access_level && user.access_level.toLowerCase().includes('team-kluang')
+    );
+    
+    const teamSeremban = users.filter(user => 
+      user.access_level && user.access_level.toLowerCase().includes('team-seremban')
+    );
+    
+    console.log(`[DEBUG] Team distribution - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
+    
+    res.json({ 
+      teams: {
+        jb: teamJB,
+        kluang: teamKluang,
+        seremban: teamSeremban
+      },
+      total_users: users.length
+    });
+  } catch (error) {
+    console.log(`[ERROR] Users teams list error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Update agent type
 app.put('/api/agents/:agentId/type', async (req, res) => {
   try {

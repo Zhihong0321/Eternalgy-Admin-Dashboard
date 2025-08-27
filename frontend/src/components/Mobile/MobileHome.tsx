@@ -26,13 +26,13 @@ export function MobileHome({ onNavigate }: MobileHomeProps) {
             Daily Activity Report
           </h2>
           <p className="text-gray-600 mb-4">
-            View sales agent performance and activities
+            View team user performance and activities
           </p>
           <Button 
-            onClick={() => onNavigate('agents')}
+            onClick={() => onNavigate('users')}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 text-lg"
           >
-            View Agent Reports
+            View Team Reports
           </Button>
         </div>
       </Card>
