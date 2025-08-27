@@ -669,12 +669,37 @@ app.get('/api/users/teams', async (req, res) => {
       whereClause = 'WHERE bubble_id IS NOT NULL'; // fallback
     }
     
-    // Query each team using dynamic columns
+    // Check if access_level is an array type
+    const accessLevelColumn = userColumns.find(c => c.column_name === 'access_level');
+    const isAccessLevelArray = accessLevelColumn && accessLevelColumn.data_type.includes('[]');
+    
+    console.log(`[DEBUG] access_level column type:`, accessLevelColumn?.data_type);
+    console.log(`[DEBUG] Is access_level array:`, isAccessLevelArray);
+    
+    // Build appropriate WHERE condition based on data type
+    let teamCondition;
+    if (isAccessLevelArray) {
+      // For array types, use array contains operator
+      teamCondition = {
+        jb: `'team-jb' = ANY(access_level)`,
+        kluang: `'team-kluang' = ANY(access_level)`,
+        seremban: `'team-seremban' = ANY(access_level)`
+      };
+    } else {
+      // For text types, use LIKE or ILIKE
+      teamCondition = {
+        jb: `access_level ILIKE '%team-jb%'`,
+        kluang: `access_level ILIKE '%team-kluang%'`,
+        seremban: `access_level ILIKE '%team-seremban%'`
+      };
+    }
+    
+    // Query each team using appropriate conditions
     const teamJBQuery = `
       SELECT ${selectClause}
       FROM "user" 
       ${whereClause}
-        AND access_level LIKE '%team-jb%'
+        AND ${teamCondition.jb}
       ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
     
@@ -682,7 +707,7 @@ app.get('/api/users/teams', async (req, res) => {
       SELECT ${selectClause}
       FROM "user" 
       ${whereClause}
-        AND access_level LIKE '%team-kluang%'
+        AND ${teamCondition.kluang}
       ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
     
@@ -690,7 +715,7 @@ app.get('/api/users/teams', async (req, res) => {
       SELECT ${selectClause}
       FROM "user" 
       ${whereClause}
-        AND access_level LIKE '%team-seremban%'
+        AND ${teamCondition.seremban}
       ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
     
@@ -718,7 +743,10 @@ app.get('/api/users/teams', async (req, res) => {
         available_columns: userColumns.map(c => c.column_name),
         selected_columns: selectColumns,
         name_column_used: nameColumn,
-        sample_user_columns: sampleUser.length > 0 ? Object.keys(sampleUser[0]) : []
+        sample_user_columns: sampleUser.length > 0 ? Object.keys(sampleUser[0]) : [],
+        access_level_column_type: accessLevelColumn?.data_type,
+        is_access_level_array: isAccessLevelArray,
+        team_conditions: teamCondition
       }
     });
   } catch (error) {
@@ -794,13 +822,34 @@ app.get('/api/test/team-jb-users', async (req, res) => {
   try {
     console.log(`[TEST] Testing PostgreSQL query for team-jb users`);
     
-    // Test the exact query we're trying to use
-    const testQuery = `
-      SELECT bubble_id, name, email, contact, access_level, profile_picture 
-      FROM "user" 
-      WHERE access_level LIKE '%team-jb%'
-      ORDER BY name ASC
+    // First check the access_level column type
+    const accessLevelInfo = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'user' 
+      AND column_name = 'access_level'
+      AND table_schema = 'public'
     `;
+    
+    const isArray = accessLevelInfo.length > 0 && accessLevelInfo[0].data_type.includes('[]');
+    
+    // Build appropriate test query
+    let testQuery;
+    if (isArray) {
+      testQuery = `
+        SELECT bubble_id, access_level 
+        FROM "user" 
+        WHERE 'team-jb' = ANY(access_level)
+        ORDER BY bubble_id ASC
+      `;
+    } else {
+      testQuery = `
+        SELECT bubble_id, access_level 
+        FROM "user" 
+        WHERE access_level ILIKE '%team-jb%'
+        ORDER BY bubble_id ASC
+      `;
+    }
     
     console.log(`[TEST] Executing query: ${testQuery}`);
     
@@ -812,12 +861,12 @@ app.get('/api/test/team-jb-users', async (req, res) => {
     res.json({
       success: true,
       query_used: testQuery,
+      access_level_type: accessLevelInfo[0]?.data_type,
+      is_array: isArray,
       results_count: users.length,
       users: users.map(user => ({
         bubble_id: user.bubble_id,
-        name: user.name,
-        access_level: user.access_level,
-        profile_picture: user.profile_picture
+        access_level: user.access_level
       }))
     });
     
