@@ -626,30 +626,79 @@ app.get('/api/users/teams', async (req, res) => {
     
     console.log(`[DEBUG] User table columns:`, userColumns.map(c => c.column_name).join(', '));
     
-    // Query each team directly from PostgreSQL using LIKE
-    const teamJB = await prisma.$queryRaw`
-      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+    // First get a sample row to see what columns actually exist
+    const sampleUser = await prisma.$queryRaw`
+      SELECT * FROM "user" LIMIT 1
+    `;
+    
+    console.log(`[DEBUG] Sample user columns:`, sampleUser.length > 0 ? Object.keys(sampleUser[0]) : 'No users found');
+    
+    // Build dynamic query based on available columns
+    const availableColumns = userColumns.map(c => c.column_name);
+    const selectColumns = [];
+    
+    // Check which columns we can actually select
+    if (availableColumns.includes('bubble_id')) selectColumns.push('bubble_id');
+    if (availableColumns.includes('name')) selectColumns.push('name');
+    if (availableColumns.includes('user_name')) selectColumns.push('user_name'); 
+    if (availableColumns.includes('full_name')) selectColumns.push('full_name');
+    if (availableColumns.includes('display_name')) selectColumns.push('display_name');
+    if (availableColumns.includes('email')) selectColumns.push('email');
+    if (availableColumns.includes('contact')) selectColumns.push('contact');
+    if (availableColumns.includes('access_level')) selectColumns.push('access_level');
+    if (availableColumns.includes('profile_picture')) selectColumns.push('profile_picture');
+    
+    console.log(`[DEBUG] Available columns for select:`, selectColumns);
+    
+    const selectClause = selectColumns.length > 0 ? selectColumns.join(', ') : '*';
+    
+    // Build WHERE clause - find a name column that exists
+    let nameColumn = null;
+    const nameOptions = ['name', 'user_name', 'full_name', 'display_name'];
+    for (const option of nameOptions) {
+      if (availableColumns.includes(option)) {
+        nameColumn = option;
+        break;
+      }
+    }
+    
+    let whereClause = '';
+    if (nameColumn) {
+      whereClause = `WHERE ${nameColumn} IS NOT NULL AND ${nameColumn} != ''`;
+    } else {
+      whereClause = 'WHERE bubble_id IS NOT NULL'; // fallback
+    }
+    
+    // Query each team using dynamic columns
+    const teamJBQuery = `
+      SELECT ${selectClause}
       FROM "user" 
-      WHERE name IS NOT NULL AND name != ''
+      ${whereClause}
         AND access_level LIKE '%team-jb%'
-      ORDER BY name ASC
+      ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
     
-    const teamKluang = await prisma.$queryRaw`
-      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+    const teamKluangQuery = `
+      SELECT ${selectClause}
       FROM "user" 
-      WHERE name IS NOT NULL AND name != ''
+      ${whereClause}
         AND access_level LIKE '%team-kluang%'
-      ORDER BY name ASC
+      ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
     
-    const teamSeremban = await prisma.$queryRaw`
-      SELECT bubble_id, name, email, contact, access_level, profile_picture 
+    const teamSerembanQuery = `
+      SELECT ${selectClause}
       FROM "user" 
-      WHERE name IS NOT NULL AND name != ''
+      ${whereClause}
         AND access_level LIKE '%team-seremban%'
-      ORDER BY name ASC
+      ORDER BY ${nameColumn || 'bubble_id'} ASC
     `;
+    
+    console.log(`[DEBUG] Team JB Query:`, teamJBQuery);
+    
+    const teamJB = await prisma.$queryRawUnsafe(teamJBQuery);
+    const teamKluang = await prisma.$queryRawUnsafe(teamKluangQuery);
+    const teamSeremban = await prisma.$queryRawUnsafe(teamSerembanQuery);
     
     const totalUsers = teamJB.length + teamKluang.length + teamSeremban.length;
     
@@ -666,7 +715,10 @@ app.get('/api/users/teams', async (req, res) => {
       total_users: totalUsers,
       debug_info: {
         user_table_exists: true,
-        available_columns: userColumns.map(c => c.column_name)
+        available_columns: userColumns.map(c => c.column_name),
+        selected_columns: selectColumns,
+        name_column_used: nameColumn,
+        sample_user_columns: sampleUser.length > 0 ? Object.keys(sampleUser[0]) : []
       }
     });
   } catch (error) {

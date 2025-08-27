@@ -5,7 +5,10 @@ import { ArrowLeft, User, Users } from 'lucide-react'
 
 interface User {
   bubble_id: string
-  name: string
+  name?: string
+  user_name?: string
+  full_name?: string
+  display_name?: string
   email?: string
   contact?: string
   access_level?: string
@@ -61,9 +64,13 @@ export function UserList({ onBack }: UserListProps) {
     }
   }
 
+  const getUserDisplayName = (user: User): string => {
+    return user.name || user.user_name || user.full_name || user.display_name || user.bubble_id || 'Unknown User'
+  }
+
   const handleUserClick = (user: User) => {
     // TODO: Navigate to user activity details when specified
-    alert(`User activity details for ${user.name} coming soon!`)
+    alert(`User activity details for ${getUserDisplayName(user)} coming soon!`)
   }
 
   if (loading) {
@@ -129,7 +136,7 @@ export function UserList({ onBack }: UserListProps) {
                   {user.profile_picture ? (
                     <img 
                       src={user.profile_picture} 
-                      alt={user.name}
+                      alt={getUserDisplayName(user)}
                       className="h-8 w-8 rounded-full object-cover border border-gray-200"
                       onError={(e) => {
                         // Fallback to icon if image fails to load
@@ -142,7 +149,7 @@ export function UserList({ onBack }: UserListProps) {
                 </div>
                 <div className="flex-grow min-w-0">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
-                    {user.name}
+                    {getUserDisplayName(user)}
                   </h3>
                   {user.email && (
                     <p className="text-xs text-gray-500 truncate">
