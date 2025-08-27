@@ -25,6 +25,7 @@ interface CommissionInvoice {
   basic_commission: number
   bonus_commission: number
   total_commission: number
+  flagged_comment: string | null
 }
 
 interface CommissionReport {
@@ -96,6 +97,12 @@ export function AgentCommissionReportView() {
   const [showEligibleModal, setShowEligibleModal] = useState(false)
   const [selectedEligibleInvoice, setSelectedEligibleInvoice] = useState<CommissionInvoice | null>(null)
   const [isLoadingEligible, setIsLoadingEligible] = useState(false)
+
+  // Flag Modal state
+  const [showFlagModal, setShowFlagModal] = useState(false)
+  const [selectedFlagInvoice, setSelectedFlagInvoice] = useState<CommissionInvoice | null>(null)
+  const [flagComment, setFlagComment] = useState('')
+  const [isSavingFlag, setIsSavingFlag] = useState(false)
 
   // Generate month options (current month to last 12 months)
   const generateMonthOptions = () => {
@@ -233,6 +240,58 @@ export function AgentCommissionReportView() {
       })
     } finally {
       setIsLoadingEligible(false)
+    }
+  }
+
+  const handleFlagInvoice = (invoice: CommissionInvoice) => {
+    setSelectedFlagInvoice(invoice)
+    setFlagComment(invoice.flagged_comment || '')
+    setShowFlagModal(true)
+  }
+
+  const handleSaveFlag = async () => {
+    if (!selectedFlagInvoice) return
+    
+    setIsSavingFlag(true)
+    try {
+      console.log('Saving flag comment for invoice:', selectedFlagInvoice.bubble_id, flagComment)
+      
+      const response = await fetch(`/api/invoice/flag/${selectedFlagInvoice.bubble_id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          flagged_comment: flagComment.trim() || null
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('Flag save result:', result)
+      
+      // Update the local invoice data
+      if (reportData) {
+        const updatedInvoices = reportData.invoices.map(inv => 
+          inv.bubble_id === selectedFlagInvoice.bubble_id 
+            ? { ...inv, flagged_comment: flagComment.trim() || null }
+            : inv
+        )
+        setReportData({ ...reportData, invoices: updatedInvoices })
+      }
+      
+      setShowFlagModal(false)
+      setSelectedFlagInvoice(null)
+      setFlagComment('')
+      
+    } catch (error) {
+      console.error('Error saving flag comment:', error)
+      alert('Error saving flag comment. Please try again.')
+    } finally {
+      setIsSavingFlag(false)
     }
   }
 

@@ -25,7 +25,8 @@
       "Bash(npx prisma:*)",
       "Bash(node:*)",
       "WebFetch(domain:eternalgyadmindashboard-production.up.railway.app)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
