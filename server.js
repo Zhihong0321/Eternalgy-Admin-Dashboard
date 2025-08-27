@@ -621,34 +621,81 @@ app.get('/api/users/teams', async (req, res) => {
     console.log(`[DEBUG] Found ${columns.length} columns:`, columns.map(c => `${c.column_name} (${c.data_type})`));
     console.log(`[DEBUG] Sample data:`, sampleRows.map(row => Object.keys(row)));
     
-    // Step 4: Show detailed column information
-    const columnDetails = columns.map(c => ({ name: c.column_name, type: c.data_type }));
-    const sampleData = sampleRows.length > 0 ? sampleRows[0] : {};
+    // Now I know: access_level is an array, no 'name' column, bubble_id exists
+    // Let's query for teams using the correct array syntax
     
-    console.log(`[DEBUG] Column details:`, columnDetails);
-    console.log(`[DEBUG] Sample data keys:`, Object.keys(sampleData));
+    console.log(`[DEBUG] Writing queries for actual array access_level`);
     
-    // Step 5: Look specifically for access_level data
-    let accessLevelSample = null;
-    if (sampleData.access_level !== undefined) {
-      accessLevelSample = sampleData.access_level;
-      console.log(`[DEBUG] Sample access_level value:`, accessLevelSample);
-      console.log(`[DEBUG] access_level type:`, typeof accessLevelSample);
-      console.log(`[DEBUG] access_level is array:`, Array.isArray(accessLevelSample));
-    }
+    // Query each team - looking for array elements that contain team names
+    const teamJBQuery = `
+      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
+      FROM "user" 
+      WHERE bubble_id IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM unnest(access_level) AS level 
+          WHERE level ILIKE '%team-jb%'
+        )
+      ORDER BY bubble_id ASC
+    `;
+    
+    const teamKluangQuery = `
+      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
+      FROM "user" 
+      WHERE bubble_id IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM unnest(access_level) AS level 
+          WHERE level ILIKE '%team-kluang%'
+        )
+      ORDER BY bubble_id ASC
+    `;
+    
+    const teamSerembanQuery = `
+      SELECT bubble_id, profile_picture, access_level, linked_agent_profile
+      FROM "user" 
+      WHERE bubble_id IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM unnest(access_level) AS level 
+          WHERE level ILIKE '%team-seremban%'
+        )
+      ORDER BY bubble_id ASC
+    `;
+    
+    console.log(`[DEBUG] Executing team queries...`);
+    
+    const [teamJB, teamKluang, teamSeremban] = await Promise.all([
+      prisma.$queryRawUnsafe(teamJBQuery),
+      prisma.$queryRawUnsafe(teamKluangQuery), 
+      prisma.$queryRawUnsafe(teamSerembanQuery)
+    ]);
+    
+    const totalUsers = teamJB.length + teamKluang.length + teamSeremban.length;
+    
+    console.log(`[DEBUG] Team results - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
+    
+    // Format users for frontend (use bubble_id as name since no name column)
+    const formatUser = (user) => ({
+      bubble_id: user.bubble_id,
+      name: user.bubble_id, // Using bubble_id as display name since no name column
+      profile_picture: user.profile_picture,
+      access_level: user.access_level,
+      linked_agent_profile: user.linked_agent_profile
+    });
     
     res.json({ 
-      teams: { jb: [], kluang: [], seremban: [] },
-      total_users: 0,
+      teams: {
+        jb: teamJB.map(formatUser),
+        kluang: teamKluang.map(formatUser),
+        seremban: teamSeremban.map(formatUser)
+      },
+      total_users: totalUsers,
       debug_info: {
-        user_table_exists: true,
-        columns: columnDetails,
-        sample_rows_count: sampleRows.length,
-        sample_columns: Object.keys(sampleData),
-        access_level_sample: accessLevelSample,
-        access_level_sample_type: typeof accessLevelSample,
-        access_level_is_array: Array.isArray(accessLevelSample),
-        message: 'DETAILED inspection - check console for column names and access_level sample'
+        queries_used: { teamJBQuery, teamKluangQuery, teamSerembanQuery },
+        raw_results: {
+          jb_count: teamJB.length,
+          kluang_count: teamKluang.length, 
+          seremban_count: teamSeremban.length
+        },
+        message: 'SUCCESS: Using correct array queries with unnest()'
       }
     });
     
