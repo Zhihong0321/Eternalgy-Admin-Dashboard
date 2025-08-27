@@ -71,28 +71,32 @@ export function UserList({ onBack }: UserListProps) {
   const getThumbnailUrl = (originalUrl: string): string => {
     if (!originalUrl) return originalUrl
     
-    // Common thumbnail URL patterns
-    // Add more patterns based on your cloud storage service
+    // Bubble.io AWS S3 specific patterns
+    if (originalUrl.includes('amazonaws.com') || originalUrl.includes('.s3.')) {
+      
+      // Method 1: Try adding URL parameters for AWS S3 image resizing (if supported)
+      const separator = originalUrl.includes('?') ? '&' : '?'
+      const thumbnailWithParams = `${originalUrl}${separator}w=150&h=150&fit=crop&auto=compress`
+      
+      // Method 2: Look for Bubble's thumbnail naming convention
+      // Bubble sometimes creates thumbnails with _thumb suffix or different naming
+      const thumbnailWithSuffix = originalUrl.replace(/(\.[^./?]+)(\?.*)?$/, '_thumb$1$2')
+      
+      // Method 3: Try reducing quality and size with AWS CloudFront parameters (if configured)
+      const thumbnailWithCloudFront = originalUrl.replace(/(\.[^./?]+)(\?.*)?$/, '$1?w=150&h=150&q=75$2')
+      
+      // Return the parameter-based approach first (most likely to work with AWS)
+      return thumbnailWithParams
+    }
     
-    // Cloudinary: add w_150,h_150,c_fill
+    // Cloudinary fallback (in case you use it elsewhere)
     if (originalUrl.includes('cloudinary.com')) {
-      return originalUrl.replace('/upload/', '/upload/w_150,h_150,c_fill/')
+      return originalUrl.replace('/upload/', '/upload/w_150,h_150,c_fill,q_auto/')
     }
     
-    // AWS S3 with thumbs folder pattern
-    if (originalUrl.includes('.s3.') || originalUrl.includes('amazonaws.com')) {
-      const parts = originalUrl.split('/')
-      const filename = parts.pop()
-      return [...parts, 'thumbs', filename].join('/')
-    }
-    
-    // Google Cloud Storage with thumbnail suffix
-    if (originalUrl.includes('storage.googleapis.com')) {
-      return originalUrl.replace(/\.(jpg|jpeg|png|webp)$/i, '_thumb.$1')
-    }
-    
-    // Generic approach: try adding _thumb before extension
-    return originalUrl.replace(/(\.[^.]+)$/, '_thumb$1')
+    // Generic fallback - try adding thumbnail parameters
+    const separator = originalUrl.includes('?') ? '&' : '?'
+    return `${originalUrl}${separator}w=150&h=150`
   }
 
   const handleUserClick = (user: User) => {
@@ -166,13 +170,25 @@ export function UserList({ onBack }: UserListProps) {
                       alt={getUserDisplayName(user)}
                       className="h-8 w-8 rounded-full object-cover border border-gray-200"
                       onError={(e) => {
-                        // Try original URL if thumbnail fails
-                        if (user.profile_picture && e.currentTarget.src !== user.profile_picture) {
-                          e.currentTarget.src = user.profile_picture;
+                        const currentSrc = e.currentTarget.src
+                        const originalUrl = user.profile_picture!
+                        
+                        // Multi-stage fallback for Bubble AWS S3
+                        if (currentSrc.includes('w=150&h=150&fit=crop')) {
+                          // Try method 2: _thumb suffix
+                          const thumbSuffix = originalUrl.replace(/(\.[^./?]+)(\?.*)?$/, '_thumb$1$2')
+                          e.currentTarget.src = thumbSuffix
+                        } else if (currentSrc.includes('_thumb')) {
+                          // Try method 3: CloudFront parameters
+                          const cloudFront = originalUrl.replace(/(\.[^./?]+)(\?.*)?$/, '$1?w=150&h=150&q=75$2')
+                          e.currentTarget.src = cloudFront
+                        } else if (currentSrc.includes('q=75')) {
+                          // Try original URL
+                          e.currentTarget.src = originalUrl
                         } else {
-                          // Fallback to icon if both fail
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          // All methods failed - show icon
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden')
                         }
                       }}
                     />
