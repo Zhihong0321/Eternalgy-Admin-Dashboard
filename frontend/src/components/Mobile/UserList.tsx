@@ -36,13 +36,26 @@ export function UserList({ onBack }: UserListProps) {
     try {
       setLoading(true)
       const response = await fetch('/api/users/teams')
-      if (!response.ok) throw new Error('Failed to fetch team users')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+        throw new Error(`API Error: ${errorData.message || response.statusText}`)
+      }
       
       const data = await response.json()
       setTeams(data.teams)
       setTotalUsers(data.total_users)
+      
+      // Log debug info if available
+      if (data.debug_message) {
+        console.log('[DEBUG]', data.debug_message)
+      }
+      if (data.debug_info) {
+        console.log('[DEBUG] API Info:', data.debug_info)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load team users')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load team users'
+      console.error('[ERROR] UserList fetch error:', err)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

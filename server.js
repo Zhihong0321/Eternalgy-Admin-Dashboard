@@ -591,6 +591,41 @@ app.get('/api/users/teams', async (req, res) => {
   try {
     console.log(`[DEBUG] Getting users organized by teams`);
     
+    // First, check if user table exists
+    const userTableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'user'
+    `;
+    
+    console.log(`[DEBUG] User table exists: ${userTableExists.length > 0}`);
+    
+    if (userTableExists.length === 0) {
+      // If user table doesn't exist, return empty teams
+      console.log(`[DEBUG] User table not found, returning empty teams`);
+      return res.json({ 
+        teams: {
+          jb: [],
+          kluang: [],
+          seremban: []
+        },
+        total_users: 0,
+        debug_message: 'User table does not exist in database'
+      });
+    }
+    
+    // Check user table structure
+    const userColumns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'user' 
+      AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `;
+    
+    console.log(`[DEBUG] User table columns:`, userColumns.map(c => c.column_name).join(', '));
+    
     const users = await prisma.$queryRaw`
       SELECT bubble_id, name, email, contact, access_level, profile_picture 
       FROM "user" 
@@ -621,10 +656,73 @@ app.get('/api/users/teams', async (req, res) => {
         kluang: teamKluang,
         seremban: teamSeremban
       },
-      total_users: users.length
+      total_users: users.length,
+      debug_info: {
+        user_table_exists: true,
+        available_columns: userColumns.map(c => c.column_name)
+      }
     });
   } catch (error) {
     console.log(`[ERROR] Users teams list error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Debug endpoint to check available tables and user-related data
+app.get('/api/debug/tables', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Checking available database tables`);
+    
+    // Get all tables
+    const allTables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `;
+    
+    const tableNames = allTables.map(t => t.table_name);
+    console.log(`[DEBUG] Available tables:`, tableNames);
+    
+    // Check for user-related tables
+    const userRelatedTables = tableNames.filter(name => 
+      name.toLowerCase().includes('user') || 
+      name.toLowerCase().includes('agent') ||
+      name.toLowerCase().includes('team')
+    );
+    
+    let sampleData = {};
+    
+    // Try to get sample data from user-related tables
+    for (const tableName of userRelatedTables) {
+      try {
+        const sample = await prisma.$queryRawUnsafe(`SELECT * FROM "${tableName}" LIMIT 3`);
+        sampleData[tableName] = {
+          count: sample.length,
+          columns: sample.length > 0 ? Object.keys(sample[0]) : [],
+          sample: sample.map(row => 
+            JSON.parse(JSON.stringify(row, (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value
+            ))
+          )
+        };
+      } catch (error) {
+        sampleData[tableName] = { error: error.message };
+      }
+    }
+    
+    res.json({
+      all_tables: tableNames,
+      user_related_tables: userRelatedTables,
+      sample_data: sampleData
+    });
+  } catch (error) {
+    console.log(`[ERROR] Debug tables error:`, error.message);
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
