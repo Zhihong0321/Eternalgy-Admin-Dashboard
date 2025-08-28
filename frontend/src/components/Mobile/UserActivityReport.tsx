@@ -160,12 +160,13 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
     const completeData = generateLast7Days()
     const maxPoints = Math.max(...completeData.map(d => d.total_points), 10) // Minimum scale of 10
     const chartHeight = 140 // Increased height for point labels
-    const padding = 25 // Increased padding for labels
+    const chartWidth = 320 // Use full mobile width
+    const padding = 20 // Padding for labels
 
-    // Create points for the area chart (using percentages for full width)
+    // Create points for the area chart
     const points = completeData.map((day, index) => {
-      const x = padding + (index * (100 - padding * 2)) / (completeData.length - 1)
-      const y = chartHeight - padding - 10 - ((day.total_points / maxPoints) * (chartHeight - padding * 2 - 20))
+      const x = padding + (index * (chartWidth - padding * 2)) / (completeData.length - 1)
+      const y = chartHeight - padding - 15 - ((day.total_points / maxPoints) * (chartHeight - padding * 2 - 30))
       return { x, y, points: day.total_points, date: day.date }
     })
 
@@ -189,7 +190,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
       }
       
       if (isArea) {
-        const baseY = chartHeight - padding - 10
+        const baseY = chartHeight - padding - 15
         path += ` L ${points[points.length - 1].x} ${baseY} L ${points[0].x} ${baseY} Z`
       }
       
@@ -207,18 +208,18 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
           <span className="text-xs text-gray-400">Max: {maxPoints} pts</span>
         </div>
         <div className="bg-gray-700 rounded-lg p-4">
-          <svg viewBox={`0 0 100 ${chartHeight}`} className="w-full h-auto" style={{maxHeight: `${chartHeight}px`}}>
+          <svg width={chartWidth} height={chartHeight} className="w-full h-auto">
             {/* Grid lines */}
             {[0.25, 0.5, 0.75].map((ratio) => (
               <line
                 key={ratio}
                 x1={padding}
-                y1={chartHeight - padding - 10 - (ratio * (chartHeight - padding * 2 - 20))}
-                x2={100 - padding}
-                y2={chartHeight - padding - 10 - (ratio * (chartHeight - padding * 2 - 20))}
+                y1={chartHeight - padding - 15 - (ratio * (chartHeight - padding * 2 - 30))}
+                x2={chartWidth - padding}
+                y2={chartHeight - padding - 15 - (ratio * (chartHeight - padding * 2 - 30))}
                 stroke="#374151"
-                strokeWidth="0.3"
-                strokeDasharray="1,1"
+                strokeWidth="1"
+                strokeDasharray="3,3"
               />
             ))}
             
@@ -233,7 +234,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
             <path
               d={linePath}
               stroke="#3B82F6"
-              strokeWidth="0.6"
+              strokeWidth="2"
               fill="none"
             />
             
@@ -243,10 +244,10 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
                 key={index}
                 cx={point.x}
                 cy={point.y}
-                r="1.2"
+                r="4"
                 fill="#3B82F6"
                 stroke="#1F2937"
-                strokeWidth="0.5"
+                strokeWidth="2"
               />
             ))}
             
@@ -255,10 +256,10 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
               <text
                 key={`label-${index}`}
                 x={point.x}
-                y={point.y - 3}
+                y={point.y - 10}
                 textAnchor="middle"
                 className="fill-white text-xs font-medium"
-                fontSize="4"
+                fontSize="12"
               >
                 {point.points}
               </text>
@@ -272,10 +273,10 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
                 <text
                   key={`day-${index}`}
                   x={point.x}
-                  y={chartHeight - 2}
+                  y={chartHeight - 5}
                   textAnchor="middle"
                   className="fill-gray-400 text-xs"
-                  fontSize="3.5"
+                  fontSize="11"
                 >
                   {dayLabel}
                 </text>
