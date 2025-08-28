@@ -878,11 +878,11 @@ app.get('/api/debug/agent-daily-report', async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentData = await prisma.$queryRaw`
+    const recentData = await prisma.$queryRawUnsafe(`
       SELECT * FROM agent_daily_report 
-      WHERE report_date >= ${sevenDaysAgo.toISOString()}
+      WHERE report_date >= $1
       LIMIT 10
-    `;
+    `, sevenDaysAgo);
     
     res.json({
       success: true,
