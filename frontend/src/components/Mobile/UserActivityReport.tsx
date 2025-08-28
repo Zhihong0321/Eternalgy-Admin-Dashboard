@@ -399,15 +399,58 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
           <h2 className="text-lg font-semibold text-white">Daily Points (Last 7 Days)</h2>
         </div>
         <div className="space-y-2">
-          {data.summary.seven_day_daily_points.map((day) => (
-            <div key={day.date} className="flex items-center justify-between py-2 px-3 bg-gray-700 rounded-lg">
-              <div className="text-sm text-white">{formatDate(day.date)}</div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-white">{day.total_points} pts</div>
-                <div className="text-xs text-gray-400">{day.activity_count} activities</div>
-              </div>
-            </div>
-          ))}
+          {(() => {
+            // Generate complete last 7 days data for daily points section
+            const generateLast7DaysPoints = () => {
+              const result = []
+              const today = new Date()
+              
+              for (let i = 6; i >= 0; i--) {
+                const date = new Date(today)
+                date.setDate(date.getDate() - i)
+                const dateStr = date.toISOString().split('T')[0]
+                
+                // Find existing data for this date
+                const existingDay = data.summary.seven_day_daily_points?.find(d => d.date.split('T')[0] === dateStr)
+                
+                result.push({
+                  date: dateStr,
+                  total_points: existingDay?.total_points || 0,
+                  activity_count: existingDay?.activity_count || 0
+                })
+              }
+              
+              return result
+            }
+
+            const completeDays = generateLast7DaysPoints()
+            
+            return completeDays.map((day) => {
+              const date = new Date(day.date)
+              const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+              const dayName = date.toLocaleDateString('en-MY', { weekday: 'short' }).toUpperCase()
+              const dayNumber = date.toLocaleDateString('en-MY', { day: '2-digit' })
+              const monthName = date.toLocaleDateString('en-MY', { month: 'short' }).toUpperCase()
+              
+              return (
+                <div 
+                  key={day.date} 
+                  className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                    isWeekend ? 'bg-red-900 border border-red-700' : 'bg-gray-700'
+                  }`}
+                >
+                  <div className="text-sm text-white">
+                    {dayNumber} {monthName} {dayName}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">{day.total_points} pts</div>
+                    <div className="text-xs text-gray-400">{day.activity_count} activities</div>
+                  </div>
+                </div>
+              )
+            })
+          })()}
         </div>
       </Card>
 
