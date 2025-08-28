@@ -100,6 +100,15 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
     })
   }
 
+  const formatDateCard = (dateString: string) => {
+    const date = new Date(dateString)
+    return {
+      day: date.toLocaleDateString('en-MY', { day: '2-digit' }),
+      month: date.toLocaleDateString('en-MY', { month: 'short' }).toUpperCase(),
+      weekday: date.toLocaleDateString('en-MY', { weekday: 'short' }).toUpperCase()
+    }
+  }
+
   const getActivityIcon = (activityType: string) => {
     // Remove emojis and use text indicators instead
     switch (activityType.toLowerCase()) {
@@ -235,51 +244,63 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
       <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
         <div className="flex items-center mb-4">
           <Activity className="h-5 w-5 text-purple-400 mr-2" />
-          <h2 className="text-lg font-semibold text-white">Recent Activities (Last 14 Days)</h2>
+          <h2 className="text-lg font-semibold text-white">All Reports (Sort by Date)</h2>
         </div>
         
         <div className="space-y-3">
-          {data.detailed_reports.reports.map((report) => (
-            <div key={report.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center">
-                  <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
-                  <div>
-                    <div className="text-sm font-medium text-white">{report.activity_type}</div>
-                    <div className="text-xs text-gray-400">
-                      {formatDate(report.report_date)} • {formatTime(report.created_date)}
+          {data.detailed_reports.reports.map((report) => {
+            const dateCard = formatDateCard(report.report_date)
+            return (
+              <div key={report.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    {/* Compact Date Card */}
+                    <div className="flex-shrink-0 bg-gray-900 rounded-lg p-2 text-center border border-gray-500" style={{minWidth: '50px'}}>
+                      <div className="text-xs text-gray-400 font-medium">{dateCard.weekday}</div>
+                      <div className="text-lg font-bold text-white leading-none">{dateCard.day}</div>
+                      <div className="text-xs text-gray-400 font-medium">{dateCard.month}</div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
+                      <div>
+                        <div className="text-sm font-medium text-white">{report.activity_type}</div>
+                        <div className="text-xs text-gray-400">
+                          {formatTime(report.created_date)}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getPointsColor(report.report_point)}`}>
+                    {report.report_point} pts
+                  </div>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getPointsColor(report.report_point)}`}>
-                  {report.report_point} pts
-                </div>
+                
+                {report.customer_name && (
+                  <div className="flex items-center mb-2">
+                    <User className="h-3 w-3 text-gray-400 mr-1" />
+                    <span className="text-xs text-gray-300">{report.customer_name}</span>
+                  </div>
+                )}
+                
+                {report.remark && (
+                  <p className="text-sm text-gray-300 bg-gray-600 rounded p-2">
+                    {report.remark}
+                  </p>
+                )}
+                
+                {report.tag && report.tag.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {report.tag.map((tag, index) => (
+                      <span key={index} className="px-2 py-1 bg-blue-600 text-blue-200 text-xs rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-              
-              {report.customer_name && (
-                <div className="flex items-center mb-2">
-                  <User className="h-3 w-3 text-gray-400 mr-1" />
-                  <span className="text-xs text-gray-300">{report.customer_name}</span>
-                </div>
-              )}
-              
-              {report.remark && (
-                <p className="text-sm text-gray-300 bg-gray-600 rounded p-2">
-                  {report.remark}
-                </p>
-              )}
-              
-              {report.tag && report.tag.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {report.tag.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 bg-blue-600 text-blue-200 text-xs rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Pagination */}
