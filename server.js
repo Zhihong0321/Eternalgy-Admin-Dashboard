@@ -839,6 +839,70 @@ app.get('/api/debug/tables', async (req, res) => {
   }
 });
 
+// Test if agent_daily_report table exists and has data
+app.get('/api/debug/agent-daily-report', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Checking agent_daily_report table`);
+    
+    // Check if table exists
+    const tableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'agent_daily_report'
+    `;
+    
+    if (tableExists.length === 0) {
+      return res.json({
+        success: false,
+        message: 'agent_daily_report table does not exist',
+        table_exists: false
+      });
+    }
+    
+    // Get table structure
+    const columns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'agent_daily_report' 
+      ORDER BY ordinal_position
+    `;
+    
+    // Get sample data
+    const sampleData = await prisma.$queryRaw`SELECT * FROM agent_daily_report LIMIT 5`;
+    
+    // Get total count
+    const totalCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM agent_daily_report`;
+    
+    // Get recent data (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const recentData = await prisma.$queryRaw`
+      SELECT * FROM agent_daily_report 
+      WHERE report_date >= ${sevenDaysAgo.toISOString()}
+      LIMIT 10
+    `;
+    
+    res.json({
+      success: true,
+      table_exists: true,
+      columns: columns,
+      total_records: totalCount[0]?.count || 0,
+      sample_data: sampleData,
+      recent_7_days_data: recentData,
+      seven_days_ago_date: sevenDaysAgo.toISOString()
+    });
+    
+  } catch (error) {
+    console.log(`[ERROR] Agent daily report debug error:`, error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Test PostgreSQL query for users with team-jb access level
 app.get('/api/test/team-jb-users', async (req, res) => {
   try {
