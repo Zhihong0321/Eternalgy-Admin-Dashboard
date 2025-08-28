@@ -874,15 +874,13 @@ app.get('/api/debug/agent-daily-report', async (req, res) => {
     // Get total count
     const totalCount = await prisma.$queryRaw`SELECT COUNT(*) as count FROM agent_daily_report`;
     
-    // Get recent data (last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const recentData = await prisma.$queryRawUnsafe(`
-      SELECT * FROM agent_daily_report 
-      WHERE report_date >= $1
-      LIMIT 10
-    `, sevenDaysAgo);
+    // Get recent data (last 7 days) - simplified to avoid date casting issues
+    let recentData = [];
+    try {
+      recentData = await prisma.$queryRaw`SELECT * FROM agent_daily_report LIMIT 10`;
+    } catch (recentError) {
+      console.log(`[DEBUG] Could not fetch recent data: ${recentError.message}`);
+    }
     
     res.json({
       success: true,
@@ -890,8 +888,7 @@ app.get('/api/debug/agent-daily-report', async (req, res) => {
       columns: columns,
       total_records: totalCount[0]?.count || 0,
       sample_data: sampleData,
-      recent_7_days_data: recentData,
-      seven_days_ago_date: sevenDaysAgo.toISOString()
+      recent_data: recentData
     });
     
   } catch (error) {
