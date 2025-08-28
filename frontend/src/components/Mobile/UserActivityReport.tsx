@@ -133,6 +133,115 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
     return 'text-white bg-gray-600'
   }
 
+  const AreaChart = ({ data }: { data: DailyPointsSummary[] }) => {
+    if (!data || data.length === 0) return null
+
+    const maxPoints = Math.max(...data.map(d => d.total_points))
+    const chartHeight = 120
+    const chartWidth = 300
+    const padding = 20
+
+    // Create points for the area chart
+    const points = data.map((day, index) => {
+      const x = padding + (index * (chartWidth - padding * 2)) / (data.length - 1)
+      const y = chartHeight - padding - ((day.total_points / (maxPoints || 1)) * (chartHeight - padding * 2))
+      return { x, y, points: day.total_points, date: day.date }
+    })
+
+    // Create SVG path for area
+    const areaPath = points.reduce((path, point, index) => {
+      if (index === 0) {
+        return `M ${point.x} ${chartHeight - padding} L ${point.x} ${point.y}`
+      }
+      return `${path} L ${point.x} ${point.y}`
+    }, '') + ` L ${points[points.length - 1]?.x} ${chartHeight - padding} Z`
+
+    // Create SVG path for line
+    const linePath = points.reduce((path, point, index) => {
+      return index === 0 ? `M ${point.x} ${point.y}` : `${path} L ${point.x} ${point.y}`
+    }, '')
+
+    return (
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-gray-300">Last 7 Days Points</h3>
+          <span className="text-xs text-gray-400">Max: {maxPoints} pts</span>
+        </div>
+        <div className="bg-gray-700 rounded-lg p-4">
+          <svg width={chartWidth} height={chartHeight} className="w-full h-auto">
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map((ratio) => (
+              <line
+                key={ratio}
+                x1={padding}
+                y1={chartHeight - padding - (ratio * (chartHeight - padding * 2))}
+                x2={chartWidth - padding}
+                y2={chartHeight - padding - (ratio * (chartHeight - padding * 2))}
+                stroke="#374151"
+                strokeWidth="1"
+                strokeDasharray="3,3"
+              />
+            ))}
+            
+            {/* Area fill */}
+            <path
+              d={areaPath}
+              fill="url(#areaGradient)"
+              opacity="0.6"
+            />
+            
+            {/* Line */}
+            <path
+              d={linePath}
+              stroke="#3B82F6"
+              strokeWidth="2"
+              fill="none"
+            />
+            
+            {/* Data points */}
+            {points.map((point, index) => (
+              <circle
+                key={index}
+                cx={point.x}
+                cy={point.y}
+                r="3"
+                fill="#3B82F6"
+                stroke="#1F2937"
+                strokeWidth="2"
+              />
+            ))}
+            
+            {/* X-axis labels */}
+            {points.map((point, index) => {
+              const date = new Date(point.date)
+              const dayLabel = date.toLocaleDateString('en-MY', { weekday: 'short' }).substring(0, 3)
+              return (
+                <text
+                  key={index}
+                  x={point.x}
+                  y={chartHeight - 5}
+                  textAnchor="middle"
+                  className="fill-gray-400 text-xs"
+                  fontSize="10"
+                >
+                  {dayLabel}
+                </text>
+              )
+            })}
+            
+            {/* Gradient definition */}
+            <defs>
+              <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
@@ -188,6 +297,10 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
           <TrendingUp className="h-5 w-5 text-blue-400 mr-2" />
           <h2 className="text-lg font-semibold text-white">Last 7 Days Summary</h2>
         </div>
+        
+        {/* Area Chart */}
+        <AreaChart data={data.summary.seven_day_daily_points} />
+        
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center bg-blue-900 rounded-lg p-3">
             <div className="text-2xl font-bold text-blue-400">
