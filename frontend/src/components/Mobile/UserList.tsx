@@ -21,6 +21,20 @@ interface TeamData {
   seremban: User[]
 }
 
+interface TeamAverages {
+  jb: number
+  kluang: number
+  seremban: number
+}
+
+interface ApiResponse {
+  teams: TeamData
+  total_users: number
+  team_averages: TeamAverages
+  debug_info?: any
+  debug_message?: string
+}
+
 interface UserListProps {
   onBack: () => void
   onUserSelect: (user: { userId: string, userName: string }) => void
@@ -28,6 +42,7 @@ interface UserListProps {
 
 export function UserList({ onBack, onUserSelect }: UserListProps) {
   const [teams, setTeams] = useState<TeamData>({ jb: [], kluang: [], seremban: [] })
+  const [teamAverages, setTeamAverages] = useState<TeamAverages>({ jb: 0, kluang: 0, seremban: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalUsers, setTotalUsers] = useState(0)
@@ -39,15 +54,17 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
   const fetchTeamUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/users/teams')
+      const apiUrl = import.meta.env.DEV ? '/api/users/teams' : 'https://eternalgyadmindashboard-production.up.railway.app/api/users/teams'
+      const response = await fetch(apiUrl)
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
         throw new Error(`API Error: ${errorData.message || response.statusText}`)
       }
       
-      const data = await response.json()
+      const data: ApiResponse = await response.json()
       setTeams(data.teams)
       setTotalUsers(data.total_users)
+      setTeamAverages(data.team_averages)
       
       // Log debug info if available
       if (data.debug_message) {
@@ -141,7 +158,7 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
     )
   }
 
-  const renderTeamSection = (title: string, users: User[], bgColor: string, textColor: string) => (
+  const renderTeamSection = (title: string, users: User[], bgColor: string, textColor: string, teamKey: keyof TeamAverages) => (
     <div className="mb-6">
       <div className={`${bgColor} ${textColor} p-3 rounded-t-lg`}>
         <div className="flex items-center justify-between">
@@ -253,21 +270,24 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
         'Team JB', 
         teams.jb, 
         'bg-blue-500', 
-        'text-white'
+        'text-white',
+        'jb'
       )}
       
       {renderTeamSection(
         'Team Kluang', 
         teams.kluang, 
         'bg-green-500', 
-        'text-white'
+        'text-white',
+        'kluang'
       )}
       
       {renderTeamSection(
         'Team Seremban', 
         teams.seremban, 
         'bg-purple-500', 
-        'text-white'
+        'text-white',
+        'seremban'
       )}
 
       {/* Empty State for all teams */}
