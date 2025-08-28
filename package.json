@@ -10,9 +10,9 @@
   "scripts": {
     "start": "npx prisma generate && node server.js",
     "dev": "node --watch server.js",
-    "build": "npx prisma generate && cd frontend && npm ci && npm run build",
+    "build": "npx prisma generate && cd frontend && npm install && npm run build",
     "build:backend": "npx prisma generate",
-    "build:frontend": "cd frontend && npm ci && npm run build",
+    "build:frontend": "cd frontend && npm install && npm run build",
     "build:full": "npm run build:backend && npm run build:frontend"
   },
   "author": "Eternalgy Team",
