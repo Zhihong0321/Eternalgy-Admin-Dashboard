@@ -9,23 +9,23 @@ interface MobileHomeProps {
 
 export function MobileHome({ onNavigate }: MobileHomeProps) {
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Sales Manager ERP</h1>
-        <p className="text-gray-600 mt-2">Mobile Dashboard</p>
+        <h1 className="text-2xl font-bold text-white">Sales Manager ERP</h1>
+        <p className="text-gray-300 mt-2">Mobile Dashboard</p>
       </div>
 
       {/* Daily Activity Report Card */}
-      <Card className="p-6 mb-4 shadow-lg">
+      <Card className="p-6 mb-4 shadow-lg bg-gray-800 border-gray-700">
         <div className="text-center">
           <div className="mb-4">
-            <ClipboardList className="h-16 w-16 text-blue-600 mx-auto" />
+            <ClipboardList className="h-16 w-16 text-blue-400 mx-auto" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-white mb-2">
             Daily Activity Report
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-300 mb-4">
             View team user performance and activities
           </p>
           <Button 
@@ -38,7 +38,7 @@ export function MobileHome({ onNavigate }: MobileHomeProps) {
       </Card>
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500 mt-8">
+      <div className="text-center text-sm text-gray-400 mt-8">
         Eternalgy Sales Management System
       </div>
     </div>

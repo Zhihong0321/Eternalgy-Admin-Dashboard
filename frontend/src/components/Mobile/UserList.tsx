@@ -109,16 +109,16 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
 
   if (loading) {
     return (
-      <div className="p-4 max-w-md mx-auto">
+      <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
         <div className="flex items-center mb-6">
-          <Button variant="outline" onClick={onBack} className="mr-3">
+          <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">Daily Activity Report</h1>
+          <h1 className="text-xl font-semibold text-white">Daily Activity Report</h1>
         </div>
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-2">Loading team users...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="text-gray-300 mt-2">Loading team users...</p>
         </div>
       </div>
     )
@@ -126,16 +126,16 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
 
   if (error) {
     return (
-      <div className="p-4 max-w-md mx-auto">
+      <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
         <div className="flex items-center mb-6">
-          <Button variant="outline" onClick={onBack} className="mr-3">
+          <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">Daily Activity Report</h1>
+          <h1 className="text-xl font-semibold text-white">Daily Activity Report</h1>
         </div>
-        <Card className="p-6 text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
-          <Button onClick={fetchTeamUsers}>Retry</Button>
+        <Card className="p-6 text-center bg-gray-800 border-gray-700">
+          <p className="text-red-400 mb-4">Error: {error}</p>
+          <Button onClick={fetchTeamUsers} className="bg-blue-600 hover:bg-blue-700 text-white">Retry</Button>
         </Card>
       </div>
     )
@@ -156,12 +156,12 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
       </div>
       
       {users.length > 0 ? (
-        <div className="bg-white border border-gray-200 rounded-b-lg">
+        <div className="bg-gray-800 border border-gray-600 rounded-b-lg">
           {users.map((user, index) => (
             <div 
               key={user.bubble_id}
-              className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                index < users.length - 1 ? 'border-b border-gray-100' : ''
+              className={`p-4 cursor-pointer hover:bg-gray-700 transition-colors ${
+                index < users.length - 1 ? 'border-b border-gray-600' : ''
               }`}
               onClick={() => handleUserClick(user)}
             >
@@ -171,7 +171,7 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
                     <img 
                       src={getThumbnailUrl(user.profile_picture)} 
                       alt={getUserDisplayName(user)}
-                      className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                      className="h-8 w-8 rounded-full object-cover border border-gray-500"
                       onError={(e) => {
                         const currentSrc = e.currentTarget.src
                         const originalUrl = user.profile_picture!
@@ -199,23 +199,23 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
                   <User className={`h-8 w-8 text-gray-400 ${user.profile_picture ? 'hidden' : ''}`} />
                 </div>
                 <div className="flex-grow min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">
+                  <h3 className="text-sm font-medium text-white truncate">
                     {getUserDisplayName(user)}
                   </h3>
                   {user.email && (
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-gray-400 truncate">
                       {user.email}
                     </p>
                   )}
                   {user.contact && (
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-gray-400 truncate">
                       {user.contact}
                     </p>
                   )}
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="h-6 w-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <div className="h-2 w-2 bg-green-600 rounded-full"></div>
+                  <div className="h-6 w-6 bg-green-900 rounded-full flex items-center justify-center">
+                    <div className="h-2 w-2 bg-green-400 rounded-full"></div>
                   </div>
                 </div>
               </div>
@@ -223,27 +223,27 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-b-lg p-6 text-center">
+        <div className="bg-gray-800 border border-gray-600 rounded-b-lg p-6 text-center">
           <User className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">No users in this team</p>
+          <p className="text-sm text-gray-300">No users in this team</p>
         </div>
       )}
     </div>
   )
 
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="flex items-center mb-6">
-        <Button variant="outline" onClick={onBack} className="mr-3">
+        <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-xl font-semibold">Daily Activity Report</h1>
+        <h1 className="text-xl font-semibold text-white">Daily Activity Report</h1>
       </div>
 
       {/* Total Count */}
       <div className="mb-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-gray-300">
           Total: {totalUsers} {totalUsers === 1 ? 'user' : 'users'} across all teams
         </p>
       </div>
@@ -272,10 +272,10 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
 
       {/* Empty State for all teams */}
       {totalUsers === 0 && (
-        <Card className="p-8 text-center">
+        <Card className="p-8 text-center bg-gray-800 border-gray-700">
           <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Team Users Found</h3>
-          <p className="text-gray-600">
+          <h3 className="text-lg font-medium text-white mb-2">No Team Users Found</h3>
+          <p className="text-gray-300">
             No users found in any of the teams (JB, Kluang, Seremban).
           </p>
         </Card>

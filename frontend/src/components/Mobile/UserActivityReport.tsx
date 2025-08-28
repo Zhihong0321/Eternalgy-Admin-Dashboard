@@ -101,39 +101,41 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   }
 
   const getActivityIcon = (activityType: string) => {
+    // Remove emojis and use text indicators instead
     switch (activityType.toLowerCase()) {
       case 'site visit':
-        return '🏠'
+        return 'SV'
       case 'follow up call':
-        return '📞'
+        return 'FC'
       case 'new presentation':
-        return '🎯'
+        return 'NP'
       case 'other work':
-        return '📋'
+        return 'OW'
       default:
-        return '💼'
+        return 'AC'
     }
   }
 
   const getPointsColor = (points: number) => {
-    if (points >= 50) return 'text-green-600 bg-green-100'
-    if (points >= 30) return 'text-blue-600 bg-blue-100'
-    if (points > 0) return 'text-orange-600 bg-orange-100'
-    return 'text-gray-600 bg-gray-100'
+    // Dark theme colors - white text on dark backgrounds
+    if (points >= 50) return 'text-white bg-green-600'
+    if (points >= 30) return 'text-white bg-blue-600'
+    if (points > 0) return 'text-white bg-orange-600'
+    return 'text-white bg-gray-600'
   }
 
   if (loading) {
     return (
-      <div className="p-4 max-w-md mx-auto">
+      <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
         <div className="flex items-center mb-6">
-          <Button variant="outline" onClick={onBack} className="mr-3">
+          <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">Activity Report</h1>
+          <h1 className="text-xl font-semibold text-white">Activity Report</h1>
         </div>
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-2">Loading activity report...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="text-gray-300 mt-2">Loading activity report...</p>
         </div>
       </div>
     )
@@ -141,16 +143,16 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
 
   if (error) {
     return (
-      <div className="p-4 max-w-md mx-auto">
+      <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
         <div className="flex items-center mb-6">
-          <Button variant="outline" onClick={onBack} className="mr-3">
+          <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-semibold">Activity Report</h1>
+          <h1 className="text-xl font-semibold text-white">Activity Report</h1>
         </div>
-        <Card className="p-6 text-center">
-          <p className="text-red-600 mb-4">Error: {error}</p>
-          <Button onClick={() => fetchActivityReport(currentPage)}>Retry</Button>
+        <Card className="p-6 text-center bg-gray-800 border-gray-700">
+          <p className="text-red-400 mb-4">Error: {error}</p>
+          <Button onClick={() => fetchActivityReport(currentPage)} className="bg-blue-600 hover:bg-blue-700 text-white">Retry</Button>
         </Card>
       </div>
     )
@@ -159,51 +161,51 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   if (!data) return null
 
   return (
-    <div className="p-4 max-w-md mx-auto">
+    <div className="p-4 max-w-md mx-auto bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="flex items-center mb-6">
-        <Button variant="outline" onClick={onBack} className="mr-3">
+        <Button variant="outline" onClick={onBack} className="mr-3 bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-xl font-semibold">Activity Report</h1>
-          <p className="text-sm text-gray-600">{userName}</p>
+          <h1 className="text-xl font-semibold text-white">Activity Report</h1>
+          <p className="text-sm text-gray-400">{userName}</p>
         </div>
       </div>
 
       {/* 7-Day Summary Card */}
-      <Card className="p-4 mb-4">
+      <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
         <div className="flex items-center mb-3">
-          <TrendingUp className="h-5 w-5 text-blue-600 mr-2" />
-          <h2 className="text-lg font-semibold">Last 7 Days Summary</h2>
+          <TrendingUp className="h-5 w-5 text-blue-400 mr-2" />
+          <h2 className="text-lg font-semibold text-white">Last 7 Days Summary</h2>
         </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center bg-blue-50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="text-center bg-blue-900 rounded-lg p-3">
+            <div className="text-2xl font-bold text-blue-400">
               {data.summary.seven_day_totals.total_points}
             </div>
-            <div className="text-sm text-gray-600">Total Points</div>
+            <div className="text-sm text-gray-300">Total Points</div>
           </div>
-          <div className="text-center bg-green-50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-green-600">
+          <div className="text-center bg-green-900 rounded-lg p-3">
+            <div className="text-2xl font-bold text-green-400">
               {data.summary.seven_day_totals.total_activities}
             </div>
-            <div className="text-sm text-gray-600">Activities</div>
+            <div className="text-sm text-gray-300">Activities</div>
           </div>
         </div>
 
         {/* Activity Types */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-700">By Activity Type:</h3>
+          <h3 className="text-sm font-medium text-gray-300">By Activity Type:</h3>
           {data.summary.seven_day_activity_types.map((activity) => (
-            <div key={activity.activity_type} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+            <div key={activity.activity_type} className="flex items-center justify-between py-2 px-3 bg-gray-700 rounded-lg">
               <div className="flex items-center">
-                <span className="mr-2">{getActivityIcon(activity.activity_type)}</span>
-                <span className="text-sm">{activity.activity_type}</span>
+                <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(activity.activity_type)}</span>
+                <span className="text-sm text-white">{activity.activity_type}</span>
               </div>
               <div className="text-right">
-                <div className="text-sm font-medium">{activity.count}x</div>
-                <div className="text-xs text-gray-500">{activity.total_points} pts</div>
+                <div className="text-sm font-medium text-white">{activity.count}x</div>
+                <div className="text-xs text-gray-400">{activity.total_points} pts</div>
               </div>
             </div>
           ))}
@@ -211,18 +213,18 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
       </Card>
 
       {/* Daily Points Chart */}
-      <Card className="p-4 mb-4">
+      <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
         <div className="flex items-center mb-3">
-          <Calendar className="h-5 w-5 text-green-600 mr-2" />
-          <h2 className="text-lg font-semibold">Daily Points (Last 7 Days)</h2>
+          <Calendar className="h-5 w-5 text-green-400 mr-2" />
+          <h2 className="text-lg font-semibold text-white">Daily Points (Last 7 Days)</h2>
         </div>
         <div className="space-y-2">
           {data.summary.seven_day_daily_points.map((day) => (
-            <div key={day.date} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-              <div className="text-sm">{formatDate(day.date)}</div>
+            <div key={day.date} className="flex items-center justify-between py-2 px-3 bg-gray-700 rounded-lg">
+              <div className="text-sm text-white">{formatDate(day.date)}</div>
               <div className="text-right">
-                <div className="text-sm font-medium">{day.total_points} pts</div>
-                <div className="text-xs text-gray-500">{day.activity_count} activities</div>
+                <div className="text-sm font-medium text-white">{day.total_points} pts</div>
+                <div className="text-xs text-gray-400">{day.activity_count} activities</div>
               </div>
             </div>
           ))}
@@ -230,21 +232,21 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
       </Card>
 
       {/* Detailed Reports */}
-      <Card className="p-4 mb-4">
+      <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
         <div className="flex items-center mb-4">
-          <Activity className="h-5 w-5 text-purple-600 mr-2" />
-          <h2 className="text-lg font-semibold">Recent Activities (Last 14 Days)</h2>
+          <Activity className="h-5 w-5 text-purple-400 mr-2" />
+          <h2 className="text-lg font-semibold text-white">Recent Activities (Last 14 Days)</h2>
         </div>
         
         <div className="space-y-3">
           {data.detailed_reports.reports.map((report) => (
-            <div key={report.id} className="border border-gray-200 rounded-lg p-3">
+            <div key={report.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center">
-                  <span className="mr-2">{getActivityIcon(report.activity_type)}</span>
+                  <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
                   <div>
-                    <div className="text-sm font-medium">{report.activity_type}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm font-medium text-white">{report.activity_type}</div>
+                    <div className="text-xs text-gray-400">
                       {formatDate(report.report_date)} • {formatTime(report.created_date)}
                     </div>
                   </div>
@@ -257,12 +259,12 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
               {report.customer_name && (
                 <div className="flex items-center mb-2">
                   <User className="h-3 w-3 text-gray-400 mr-1" />
-                  <span className="text-xs text-gray-600">{report.customer_name}</span>
+                  <span className="text-xs text-gray-300">{report.customer_name}</span>
                 </div>
               )}
               
               {report.remark && (
-                <p className="text-sm text-gray-700 bg-gray-50 rounded p-2">
+                <p className="text-sm text-gray-300 bg-gray-600 rounded p-2">
                   {report.remark}
                 </p>
               )}
@@ -270,7 +272,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
               {report.tag && report.tag.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {report.tag.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    <span key={index} className="px-2 py-1 bg-blue-600 text-blue-200 text-xs rounded-full">
                       {tag}
                     </span>
                   ))}
@@ -282,30 +284,30 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
 
         {/* Pagination */}
         {data.detailed_reports.pagination.total_pages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-600">
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage(prev => prev - 1)}
               disabled={!data.detailed_reports.pagination.has_prev}
-              className="text-sm"
+              className="text-sm bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
             >
               Previous
             </Button>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-300">
               Page {data.detailed_reports.pagination.current_page} of {data.detailed_reports.pagination.total_pages}
             </div>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage(prev => prev + 1)}
               disabled={!data.detailed_reports.pagination.has_next}
-              className="text-sm"
+              className="text-sm bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
             >
               Next
             </Button>
           </div>
         )}
         
-        <div className="text-center text-xs text-gray-500 mt-2">
+        <div className="text-center text-xs text-gray-400 mt-2">
           Showing {data.detailed_reports.reports.length} of {data.detailed_reports.pagination.total_reports} reports
         </div>
       </Card>
