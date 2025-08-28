@@ -102,10 +102,14 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
 
   const formatDateCard = (dateString: string) => {
     const date = new Date(dateString)
+    const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    
     return {
       day: date.toLocaleDateString('en-MY', { day: '2-digit' }),
       month: date.toLocaleDateString('en-MY', { month: 'short' }).toUpperCase(),
-      weekday: date.toLocaleDateString('en-MY', { weekday: 'short' }).toUpperCase()
+      weekday: date.toLocaleDateString('en-MY', { weekday: 'short' }).toUpperCase(),
+      isWeekend
     }
   }
 
@@ -415,59 +419,118 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
         </div>
         
         <div className="space-y-3">
-          {data.detailed_reports.reports.map((report) => {
-            const dateCard = formatDateCard(report.report_date)
-            return (
-              <div key={report.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    {/* Compact Date Card */}
-                    <div className="flex-shrink-0 bg-gray-900 rounded-lg p-2 text-center border border-gray-500" style={{minWidth: '50px'}}>
-                      <div className="text-xs text-gray-400 font-medium">{dateCard.weekday}</div>
-                      <div className="text-lg font-bold text-white leading-none">{dateCard.day}</div>
-                      <div className="text-xs text-gray-400 font-medium">{dateCard.month}</div>
+          {(() => {
+            // Generate all dates in the current page period (14 days from most recent report)
+            const generateDateRange = () => {
+              if (!data.detailed_reports.reports.length) return []
+              
+              // Get the date range from the reports
+              const reportDates = data.detailed_reports.reports.map(r => r.report_date.split('T')[0])
+              const earliestDate = new Date(Math.min(...reportDates.map(d => new Date(d).getTime())))
+              const latestDate = new Date(Math.max(...reportDates.map(d => new Date(d).getTime())))
+              
+              // Generate all dates in range
+              const allDates = []
+              const currentDate = new Date(earliestDate)
+              
+              while (currentDate <= latestDate) {
+                allDates.push(currentDate.toISOString().split('T')[0])
+                currentDate.setDate(currentDate.getDate() + 1)
+              }
+              
+              return allDates.reverse() // Show newest first
+            }
+
+            const allDates = generateDateRange()
+            
+            return allDates.map((dateStr) => {
+              const reportsForDate = data.detailed_reports.reports.filter(r => 
+                r.report_date.split('T')[0] === dateStr
+              )
+              const dateCard = formatDateCard(dateStr)
+              const hasReports = reportsForDate.length > 0
+
+              if (hasReports) {
+                // Show all reports for this date
+                return reportsForDate.map((report) => (
+                  <div key={report.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        {/* Compact Date Card with weekend styling */}
+                        <div className={`flex-shrink-0 rounded-lg p-2 text-center border ${
+                          dateCard.isWeekend 
+                            ? 'bg-red-900 border-red-700' 
+                            : 'bg-gray-900 border-gray-500'
+                        }`} style={{minWidth: '50px'}}>
+                          <div className="text-xs text-gray-400 font-medium">{dateCard.weekday}</div>
+                          <div className="text-lg font-bold text-white leading-none">{dateCard.day}</div>
+                          <div className="text-xs text-gray-400 font-medium">{dateCard.month}</div>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
+                          <div>
+                            <div className="text-sm font-medium text-white">{report.activity_type}</div>
+                            <div className="text-xs text-gray-400">
+                              {formatTime(report.created_date)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getPointsColor(report.report_point)}`}>
+                        {report.report_point} pts
+                      </div>
                     </div>
                     
-                    <div className="flex items-center">
-                      <span className="mr-2 text-xs bg-gray-600 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
-                      <div>
-                        <div className="text-sm font-medium text-white">{report.activity_type}</div>
-                        <div className="text-xs text-gray-400">
-                          {formatTime(report.created_date)}
-                        </div>
+                    {report.customer_name && (
+                      <div className="flex items-center mb-2">
+                        <User className="h-3 w-3 text-gray-400 mr-1" />
+                        <span className="text-xs text-gray-300">{report.customer_name}</span>
+                      </div>
+                    )}
+                    
+                    {report.remark && (
+                      <p className="text-sm text-gray-300 bg-gray-600 rounded p-2">
+                        {report.remark}
+                      </p>
+                    )}
+                    
+                    {report.tag && report.tag.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {report.tag.map((tag, index) => (
+                          <span key={index} className="px-2 py-1 bg-blue-600 text-blue-200 text-xs rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              } else {
+                // Show empty date card for days with no reports
+                return (
+                  <div key={`empty-${dateStr}`} className="border border-gray-600 rounded-lg p-3 bg-gray-750">
+                    <div className="flex items-center space-x-3">
+                      {/* Empty Date Card with weekend styling */}
+                      <div className={`flex-shrink-0 rounded-lg p-2 text-center border ${
+                        dateCard.isWeekend 
+                          ? 'bg-red-900 border-red-700' 
+                          : 'bg-gray-900 border-gray-500'
+                      }`} style={{minWidth: '50px'}}>
+                        <div className="text-xs text-gray-400 font-medium">{dateCard.weekday}</div>
+                        <div className="text-lg font-bold text-white leading-none">{dateCard.day}</div>
+                        <div className="text-xs text-gray-400 font-medium">{dateCard.month}</div>
+                      </div>
+                      
+                      <div className="flex-grow">
+                        <div className="text-sm text-gray-500 italic">No reports for this day</div>
                       </div>
                     </div>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getPointsColor(report.report_point)}`}>
-                    {report.report_point} pts
-                  </div>
-                </div>
-                
-                {report.customer_name && (
-                  <div className="flex items-center mb-2">
-                    <User className="h-3 w-3 text-gray-400 mr-1" />
-                    <span className="text-xs text-gray-300">{report.customer_name}</span>
-                  </div>
-                )}
-                
-                {report.remark && (
-                  <p className="text-sm text-gray-300 bg-gray-600 rounded p-2">
-                    {report.remark}
-                  </p>
-                )}
-                
-                {report.tag && report.tag.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {report.tag.map((tag, index) => (
-                      <span key={index} className="px-2 py-1 bg-blue-600 text-blue-200 text-xs rounded-full">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                )
+              }
+            }).flat()
+          })()}
         </div>
 
         {/* Pagination */}
