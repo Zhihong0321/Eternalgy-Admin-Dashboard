@@ -836,6 +836,87 @@ app.get('/api/test/team-jb-users', async (req, res) => {
   }
 });
 
+// Get latest agent daily reports for mobile Daily Activity Report analysis
+app.get('/api/agent-daily-reports/latest', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    console.log(`[DEBUG] Fetching latest ${limit} agent daily reports`);
+    
+    // First check if agent_daily_report table exists
+    const tableExists = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = 'agent_daily_report'
+    `;
+    
+    if (tableExists.length === 0) {
+      return res.status(404).json({ 
+        error: 'Table not found',
+        message: 'agent_daily_report table does not exist'
+      });
+    }
+    
+    // Get table structure
+    const columns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'agent_daily_report' 
+      AND table_schema = 'public'
+      ORDER BY ordinal_position
+    `;
+    
+    console.log(`[DEBUG] agent_daily_report columns:`, columns.map(c => `${c.column_name} (${c.data_type})`));
+    
+    // Get latest records ordered by most recent first
+    // Try common date column names
+    const dateColumns = ['created_date', 'report_date', 'date', 'created_at', 'updated_at', 'synced_at'];
+    const availableColumns = columns.map(c => c.column_name);
+    let orderByColumn = 'id'; // fallback
+    
+    for (const dateCol of dateColumns) {
+      if (availableColumns.includes(dateCol)) {
+        orderByColumn = dateCol;
+        break;
+      }
+    }
+    
+    console.log(`[DEBUG] Using order by column: ${orderByColumn}`);
+    
+    const latestReports = await prisma.$queryRawUnsafe(`
+      SELECT * FROM agent_daily_report 
+      ORDER BY "${orderByColumn}" DESC 
+      LIMIT ${parseInt(limit)}
+    `);
+    
+    console.log(`[DEBUG] Found ${latestReports.length} agent daily reports`);
+    
+    // Clean data for JSON (handle BigInt and other special types)
+    const cleanedReports = latestReports.map(report => 
+      JSON.parse(JSON.stringify(report, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ))
+    );
+    
+    res.json({
+      success: true,
+      reports: cleanedReports,
+      table_info: {
+        columns: columns.map(c => ({ name: c.column_name, type: c.data_type })),
+        total_records: latestReports.length,
+        order_by_column: orderByColumn
+      }
+    });
+    
+  } catch (error) {
+    console.log(`[ERROR] Agent daily reports fetch error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Update agent type
 app.put('/api/agents/:agentId/type', async (req, res) => {
   try {
