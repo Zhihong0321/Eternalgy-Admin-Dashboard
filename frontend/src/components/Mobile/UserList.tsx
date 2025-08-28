@@ -13,6 +13,9 @@ interface User {
   contact?: string
   access_level?: string
   profile_picture?: string
+  seven_day_points?: number
+  seven_day_activities?: number
+  average_daily_points?: number
 }
 
 interface TeamData {
@@ -170,6 +173,9 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
             {users.length} {users.length === 1 ? 'user' : 'users'}
           </span>
         </div>
+        <div className="mt-2 text-sm opacity-90">
+          7-Days Average Point = {teamAverages[teamKey]} pts
+        </div>
       </div>
       
       {users.length > 0 ? (
@@ -230,9 +236,12 @@ export function UserList({ onBack, onUserSelect }: UserListProps) {
                     </p>
                   )}
                 </div>
-                <div className="flex-shrink-0">
-                  <div className="h-6 w-6 bg-green-900 rounded-full flex items-center justify-center">
-                    <div className="h-2 w-2 bg-green-400 rounded-full"></div>
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-xs text-blue-400 font-medium">
+                    {(user.average_daily_points || 0)} pts/day
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    7-day avg
                   </div>
                 </div>
               </div>

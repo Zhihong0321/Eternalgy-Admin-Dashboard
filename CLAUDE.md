@@ -68,6 +68,57 @@ If answer is NO → DON'T ADD IT
 
 **If you don't understand WHY something is broken, don't try to fix it yet. Debug it first.**
 
+## 🚨 CRITICAL: ASK FOR CLARIFICATION - NO GUESSING 🚨
+
+**NEVER MAKE ASSUMPTIONS OR GUESSES. ALWAYS ASK FOR CLARIFICATION FIRST.**
+
+### WHY GUESSING IS BANNED:
+- ❌ Wastes time and tokens on wrong solutions
+- ❌ Produces buggy, slow, and bad outcomes  
+- ❌ Creates more problems than it solves
+- ❌ Leads to incorrect implementations
+
+### REQUIRED APPROACH:
+- ✅ **ASK FOR MISSING INFORMATION** - If unclear about requirements, ask specific questions
+- ✅ **REQUEST EXAMPLES** - Ask for concrete examples when requirements are vague
+- ✅ **VERIFY UNDERSTANDING** - Confirm interpretation before implementing
+- ✅ **GET CLARIFICATION ON DATA STRUCTURES** - Ask about field names, data types, relationships
+
+### RULE: WHEN IN DOUBT, ASK
+**Before making ANY assumptions about:**
+- Data field names or structures
+- User requirements
+- Expected behavior
+- API responses
+- Database relationships
+
+**→ ASK SPECIFIC QUESTIONS FIRST**
+
+---
+
+# 📊 PROJECT-SPECIFIC DATA KNOWLEDGE 📊
+
+## User Team Assignment Logic
+**CRITICAL: How to determine user's team/group:**
+- Check `user.access_level` field (this is an array/list of text values)
+- Look for these specific team identifiers:
+  - `team-jb` = JB Team
+  - `team-kluang` = Kluang Team  
+  - `team-seremban` = Seremban Team
+
+Example:
+```javascript
+// User team detection
+const user = {
+  access_level: ["sales", "team-jb", "report"]  // This user is in JB team
+}
+
+// Check team membership
+const isJBTeam = user.access_level.includes('team-jb')
+const isKluangTeam = user.access_level.includes('team-kluang')
+const isSerembanTeam = user.access_level.includes('team-seremban')
+```
+
 ---
 
 ## Project Overview
