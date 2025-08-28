@@ -917,6 +917,152 @@ app.get('/api/agent-daily-reports/latest', async (req, res) => {
   }
 });
 
+// Get user activity report with 7-day summary and 14-day detailed reports
+app.get('/api/user/:userId/activity-report', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 14 } = req.query;
+    console.log(`[DEBUG] Getting activity report for user: ${userId}`);
+    
+    // Calculate date ranges
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const fourteenDaysAgo = new Date(now.getTime() - (14 * 24 * 60 * 60 * 1000));
+    
+    console.log(`[DEBUG] Date ranges - 7 days ago: ${sevenDaysAgo.toISOString()}, 14 days ago: ${fourteenDaysAgo.toISOString()}`);
+    
+    // 1. Last 7 days summary by activity type
+    const activityTypeSummary = await prisma.$queryRaw`
+      SELECT 
+        activity_type,
+        COUNT(*) as count,
+        SUM(report_point) as total_points
+      FROM agent_daily_report 
+      WHERE linked_user = ${userId}
+        AND report_date >= ${sevenDaysAgo}
+        AND report_date <= ${now}
+      GROUP BY activity_type
+      ORDER BY total_points DESC
+    `;
+    
+    console.log(`[DEBUG] Activity type summary:`, activityTypeSummary);
+    
+    // 2. Last 7 days total points by date
+    const dailyPointsSummary = await prisma.$queryRaw`
+      SELECT 
+        DATE(report_date) as report_day,
+        SUM(report_point) as total_points,
+        COUNT(*) as activity_count
+      FROM agent_daily_report 
+      WHERE linked_user = ${userId}
+        AND report_date >= ${sevenDaysAgo}
+        AND report_date <= ${now}
+      GROUP BY DATE(report_date)
+      ORDER BY report_day DESC
+    `;
+    
+    console.log(`[DEBUG] Daily points summary:`, dailyPointsSummary);
+    
+    // 3. Last 14 days detailed reports with pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    const detailedReports = await prisma.$queryRaw`
+      SELECT 
+        adr.id,
+        adr.bubble_id,
+        adr.activity_type,
+        adr.report_point,
+        adr.report_date,
+        adr.created_date,
+        adr.remark,
+        adr.tag,
+        adr.linked_customer,
+        cp.name as customer_name
+      FROM agent_daily_report adr
+      LEFT JOIN customer_profile cp ON adr.linked_customer = cp.bubble_id
+      WHERE adr.linked_user = ${userId}
+        AND adr.report_date >= ${fourteenDaysAgo}
+        AND adr.report_date <= ${now}
+      ORDER BY adr.created_date DESC
+      LIMIT ${parseInt(limit)}
+      OFFSET ${offset}
+    `;
+    
+    console.log(`[DEBUG] Found ${detailedReports.length} detailed reports for page ${page}`);
+    
+    // Get total count for pagination
+    const totalCountResult = await prisma.$queryRaw`
+      SELECT COUNT(*) as count
+      FROM agent_daily_report 
+      WHERE linked_user = ${userId}
+        AND report_date >= ${fourteenDaysAgo}
+        AND report_date <= ${now}
+    `;
+    
+    const totalReports = parseInt(totalCountResult[0].count);
+    const totalPages = Math.ceil(totalReports / parseInt(limit));
+    
+    // Clean data for JSON response
+    const cleanedActivitySummary = activityTypeSummary.map(item => ({
+      activity_type: item.activity_type,
+      count: parseInt(item.count),
+      total_points: parseInt(item.total_points || 0)
+    }));
+    
+    const cleanedDailySummary = dailyPointsSummary.map(item => ({
+      date: item.report_day,
+      total_points: parseInt(item.total_points || 0),
+      activity_count: parseInt(item.activity_count)
+    }));
+    
+    const cleanedReports = detailedReports.map(report => 
+      JSON.parse(JSON.stringify(report, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ))
+    );
+    
+    // Calculate 7-day totals
+    const sevenDayTotalPoints = cleanedActivitySummary.reduce((sum, item) => sum + item.total_points, 0);
+    const sevenDayTotalActivities = cleanedActivitySummary.reduce((sum, item) => sum + item.count, 0);
+    
+    res.json({
+      success: true,
+      user_id: userId,
+      summary: {
+        seven_day_activity_types: cleanedActivitySummary,
+        seven_day_daily_points: cleanedDailySummary,
+        seven_day_totals: {
+          total_points: sevenDayTotalPoints,
+          total_activities: sevenDayTotalActivities
+        }
+      },
+      detailed_reports: {
+        reports: cleanedReports,
+        pagination: {
+          current_page: parseInt(page),
+          total_pages: totalPages,
+          total_reports: totalReports,
+          limit: parseInt(limit),
+          has_next: parseInt(page) < totalPages,
+          has_prev: parseInt(page) > 1
+        }
+      },
+      date_ranges: {
+        seven_days_ago: sevenDaysAgo.toISOString(),
+        fourteen_days_ago: fourteenDaysAgo.toISOString(),
+        now: now.toISOString()
+      }
+    });
+    
+  } catch (error) {
+    console.log(`[ERROR] User activity report error:`, error.message);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Update agent type
 app.put('/api/agents/:agentId/type', async (req, res) => {
   try {

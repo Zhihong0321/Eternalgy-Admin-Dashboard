@@ -1,0 +1,5 @@
+{
+  "error": "HTTP 404: Not Found",
+  "timestamp": "2025-08-28T03:53:10.906Z",
+  "note": "Check if the API endpoint exists and the database table is available"
+}

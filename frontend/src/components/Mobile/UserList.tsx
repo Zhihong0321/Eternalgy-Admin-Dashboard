@@ -23,9 +23,10 @@ interface TeamData {
 
 interface UserListProps {
   onBack: () => void
+  onUserSelect: (user: { userId: string, userName: string }) => void
 }
 
-export function UserList({ onBack }: UserListProps) {
+export function UserList({ onBack, onUserSelect }: UserListProps) {
   const [teams, setTeams] = useState<TeamData>({ jb: [], kluang: [], seremban: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -100,8 +101,10 @@ export function UserList({ onBack }: UserListProps) {
   }
 
   const handleUserClick = (user: User) => {
-    // TODO: Navigate to user activity details when specified
-    alert(`User activity details for ${getUserDisplayName(user)} coming soon!`)
+    onUserSelect({
+      userId: user.bubble_id,
+      userName: getUserDisplayName(user)
+    })
   }
 
   if (loading) {
