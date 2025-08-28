@@ -675,23 +675,91 @@ app.get('/api/users/teams', async (req, res) => {
     
     console.log(`[DEBUG] Team results - JB: ${teamJB.length}, Kluang: ${teamKluang.length}, Seremban: ${teamSeremban.length}`);
     
-    // Format users for frontend (use agent name if available, fallback to bubble_id)
-    const formatUser = (user) => ({
-      bubble_id: user.bubble_id,
-      name: user.agent_name || user.bubble_id, // Use agent name from JOIN, fallback to bubble_id
-      profile_picture: user.profile_picture,
-      access_level: user.access_level,
-      linked_agent_profile: user.linked_agent_profile,
-      agent_name: user.agent_name
-    });
+    // Get 7-day activity data for all users
+    console.log(`[DEBUG] Fetching 7-day activity data for all users...`);
     
+    const allUserIds = [...teamJB, ...teamKluang, ...teamSeremban].map(u => u.bubble_id);
+    
+    let userActivityData = {};
+    if (allUserIds.length > 0) {
+      try {
+        // Get last 7 days activity for all users
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const activityQuery = `
+          SELECT 
+            linked_user,
+            SUM(report_point) as total_points,
+            COUNT(*) as activity_count
+          FROM agent_daily_report 
+          WHERE linked_user = ANY($1)
+            AND report_date >= $2
+          GROUP BY linked_user
+        `;
+        
+        const activityResults = await prisma.$queryRawUnsafe(activityQuery, allUserIds, sevenDaysAgo.toISOString());
+        
+        // Convert to lookup object
+        activityResults.forEach(result => {
+          userActivityData[result.linked_user] = {
+            total_points: parseInt(result.total_points) || 0,
+            activity_count: parseInt(result.activity_count) || 0,
+            average_daily_points: Math.round((parseInt(result.total_points) || 0) / 7)
+          };
+        });
+        
+        console.log(`[DEBUG] Found activity data for ${activityResults.length} users`);
+      } catch (activityError) {
+        console.log(`[DEBUG] Activity data fetch failed: ${activityError.message}`);
+      }
+    }
+
+    // Calculate team averages
+    const calculateTeamAverage = (teamUsers) => {
+      if (teamUsers.length === 0) return 0;
+      const totalPoints = teamUsers.reduce((sum, user) => {
+        const userData = userActivityData[user.bubble_id] || { total_points: 0 };
+        return sum + userData.total_points;
+      }, 0);
+      return Math.round(totalPoints / teamUsers.length);
+    };
+
+    // Format users for frontend with activity data
+    const formatUser = (user) => {
+      const activity = userActivityData[user.bubble_id] || {
+        total_points: 0,
+        activity_count: 0,
+        average_daily_points: 0
+      };
+      
+      return {
+        bubble_id: user.bubble_id,
+        name: user.agent_name || user.bubble_id,
+        profile_picture: user.profile_picture,
+        access_level: user.access_level,
+        linked_agent_profile: user.linked_agent_profile,
+        agent_name: user.agent_name,
+        seven_day_points: activity.total_points,
+        seven_day_activities: activity.activity_count,
+        average_daily_points: activity.average_daily_points
+      };
+    };
+    
+    const formattedTeams = {
+      jb: teamJB.map(formatUser),
+      kluang: teamKluang.map(formatUser), 
+      seremban: teamSeremban.map(formatUser)
+    };
+
     res.json({ 
-      teams: {
-        jb: teamJB.map(formatUser),
-        kluang: teamKluang.map(formatUser),
-        seremban: teamSeremban.map(formatUser)
-      },
+      teams: formattedTeams,
       total_users: totalUsers,
+      team_averages: {
+        jb: calculateTeamAverage(teamJB),
+        kluang: calculateTeamAverage(teamKluang),
+        seremban: calculateTeamAverage(teamSeremban)
+      },
       debug_info: {
         queries_used: { teamJBQuery, teamKluangQuery, teamSerembanQuery },
         raw_results: {
@@ -699,7 +767,8 @@ app.get('/api/users/teams', async (req, res) => {
           kluang_count: teamKluang.length, 
           seremban_count: teamSeremban.length
         },
-        message: 'SUCCESS: Using correct array queries with unnest()'
+        activity_data_count: Object.keys(userActivityData).length,
+        message: 'SUCCESS: Using correct array queries with unnest() + 7-day activity data'
       }
     });
     

@@ -26,7 +26,8 @@
       "Bash(node:*)",
       "WebFetch(domain:eternalgyadmindashboard-production.up.railway.app)",
       "Bash(curl:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []
