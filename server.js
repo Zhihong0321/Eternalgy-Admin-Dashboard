@@ -683,9 +683,12 @@ app.get('/api/users/teams', async (req, res) => {
     let userActivityData = {};
     if (allUserIds.length > 0) {
       try {
-        // Get last 7 days activity for all users
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        // Get last 7 days activity for all users - using same format as working individual report
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        
+        console.log(`[DEBUG] Teams API - Date ranges - 7 days ago: ${sevenDaysAgo.toISOString()}, now: ${now.toISOString()}`);
+        console.log(`[DEBUG] Teams API - Looking for activity data for ${allUserIds.length} users:`, allUserIds);
         
         const activityQuery = `
           SELECT 
@@ -695,21 +698,30 @@ app.get('/api/users/teams', async (req, res) => {
           FROM agent_daily_report 
           WHERE linked_user = ANY($1)
             AND report_date >= $2
+            AND report_date <= $3
           GROUP BY linked_user
         `;
         
-        const activityResults = await prisma.$queryRawUnsafe(activityQuery, allUserIds, sevenDaysAgo.toISOString());
+        const activityResults = await prisma.$queryRawUnsafe(activityQuery, allUserIds, sevenDaysAgo, now);
         
         // Convert to lookup object
+        console.log(`[DEBUG] Teams API - Raw activity results:`, activityResults);
+        
         activityResults.forEach(result => {
+          const totalPoints = parseInt(result.total_points) || 0;
+          const activityCount = parseInt(result.activity_count) || 0;
+          const avgDaily = Math.round(totalPoints / 7);
+          
           userActivityData[result.linked_user] = {
-            total_points: parseInt(result.total_points) || 0,
-            activity_count: parseInt(result.activity_count) || 0,
-            average_daily_points: Math.round((parseInt(result.total_points) || 0) / 7)
+            total_points: totalPoints,
+            activity_count: activityCount,
+            average_daily_points: avgDaily
           };
+          
+          console.log(`[DEBUG] Teams API - User ${result.linked_user}: ${totalPoints} total pts, ${activityCount} activities, ${avgDaily} avg daily`);
         });
         
-        console.log(`[DEBUG] Found activity data for ${activityResults.length} users`);
+        console.log(`[DEBUG] Found activity data for ${activityResults.length} users out of ${allUserIds.length} total users`);
       } catch (activityError) {
         console.log(`[DEBUG] Activity data fetch failed: ${activityError.message}`);
       }
