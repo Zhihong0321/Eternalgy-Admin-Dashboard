@@ -134,27 +134,49 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   }
 
   const AreaChart = ({ data }: { data: DailyPointsSummary[] }) => {
-    if (!data || data.length === 0) return null
+    // Generate complete last 7 days data, filling missing days with 0 points
+    const generateLast7Days = () => {
+      const result = []
+      const today = new Date()
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today)
+        date.setDate(date.getDate() - i)
+        const dateStr = date.toISOString().split('T')[0]
+        
+        // Find existing data for this date
+        const existingDay = data?.find(d => d.date.split('T')[0] === dateStr)
+        
+        result.push({
+          date: dateStr,
+          total_points: existingDay?.total_points || 0,
+          activity_count: existingDay?.activity_count || 0
+        })
+      }
+      
+      return result
+    }
 
-    const maxPoints = Math.max(...data.map(d => d.total_points))
-    const chartHeight = 120
+    const completeData = generateLast7Days()
+    const maxPoints = Math.max(...completeData.map(d => d.total_points), 10) // Minimum scale of 10
+    const chartHeight = 140 // Increased height for point labels
     const chartWidth = 300
-    const padding = 20
+    const padding = 25 // Increased padding for labels
 
     // Create points for the area chart
-    const points = data.map((day, index) => {
-      const x = padding + (index * (chartWidth - padding * 2)) / (data.length - 1)
-      const y = chartHeight - padding - ((day.total_points / (maxPoints || 1)) * (chartHeight - padding * 2))
+    const points = completeData.map((day, index) => {
+      const x = padding + (index * (chartWidth - padding * 2)) / (completeData.length - 1)
+      const y = chartHeight - padding - 10 - ((day.total_points / maxPoints) * (chartHeight - padding * 2 - 20))
       return { x, y, points: day.total_points, date: day.date }
     })
 
     // Create SVG path for area
     const areaPath = points.reduce((path, point, index) => {
       if (index === 0) {
-        return `M ${point.x} ${chartHeight - padding} L ${point.x} ${point.y}`
+        return `M ${point.x} ${chartHeight - padding - 10} L ${point.x} ${point.y}`
       }
       return `${path} L ${point.x} ${point.y}`
-    }, '') + ` L ${points[points.length - 1]?.x} ${chartHeight - padding} Z`
+    }, '') + ` L ${points[points.length - 1]?.x} ${chartHeight - padding - 10} Z`
 
     // Create SVG path for line
     const linePath = points.reduce((path, point, index) => {
@@ -174,9 +196,9 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
               <line
                 key={ratio}
                 x1={padding}
-                y1={chartHeight - padding - (ratio * (chartHeight - padding * 2))}
+                y1={chartHeight - padding - 10 - (ratio * (chartHeight - padding * 2 - 20))}
                 x2={chartWidth - padding}
-                y2={chartHeight - padding - (ratio * (chartHeight - padding * 2))}
+                y2={chartHeight - padding - 10 - (ratio * (chartHeight - padding * 2 - 20))}
                 stroke="#374151"
                 strokeWidth="1"
                 strokeDasharray="3,3"
@@ -204,11 +226,25 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
                 key={index}
                 cx={point.x}
                 cy={point.y}
-                r="3"
+                r="4"
                 fill="#3B82F6"
                 stroke="#1F2937"
                 strokeWidth="2"
               />
+            ))}
+            
+            {/* Point labels (numbers on dots) */}
+            {points.map((point, index) => (
+              <text
+                key={`label-${index}`}
+                x={point.x}
+                y={point.y - 8}
+                textAnchor="middle"
+                className="fill-white text-xs font-medium"
+                fontSize="11"
+              >
+                {point.points}
+              </text>
             ))}
             
             {/* X-axis labels */}
@@ -217,7 +253,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
               const dayLabel = date.toLocaleDateString('en-MY', { weekday: 'short' }).substring(0, 3)
               return (
                 <text
-                  key={index}
+                  key={`day-${index}`}
                   x={point.x}
                   y={chartHeight - 5}
                   textAnchor="middle"
