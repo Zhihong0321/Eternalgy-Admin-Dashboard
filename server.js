@@ -1125,7 +1125,7 @@ app.get('/api/user/:userId/activity-report', async (req, res) => {
       WHERE adr.linked_user = ${userId}
         AND adr.report_date >= ${fourteenDaysAgo}
         AND adr.report_date <= ${now}
-      ORDER BY adr.created_date DESC
+      ORDER BY adr.report_date DESC, adr.created_date DESC
       LIMIT ${parseInt(limit)}
       OFFSET ${offset}
     `;

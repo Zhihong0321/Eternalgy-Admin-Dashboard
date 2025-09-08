@@ -532,7 +532,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
                               <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded">{getActivityIcon(report.activity_type)}</span>
                               <div>
                                 <div className="text-sm font-medium text-white">{report.activity_type}</div>
-                                <div className="text-xs text-gray-400">{formatTime(report.created_date)}</div>
+                                <div className="text-xs text-gray-400">{formatTime(report.report_date)}</div>
                               </div>
                             </div>
                             <div className={`px-2 py-1 rounded-full text-xs font-medium ${getPointsColor(report.report_point)}`}>
