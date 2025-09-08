@@ -94,10 +94,11 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   }
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-MY', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+    const year = date.getFullYear().toString().slice(-2)
+    return `REPORT DATE: ${day}-${month}-${year}`
   }
 
   const formatDateCard = (dateString: string) => {
