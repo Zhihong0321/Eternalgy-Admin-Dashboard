@@ -101,6 +101,48 @@ app.get('/api/debug/schemas', async (req, res) => {
   }
 });
 
+// Safe schema discovery endpoint
+app.get('/api/debug/safe-schemas', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Getting safe table schemas`);
+    
+    // First get all tables
+    const tables = await prisma.$queryRaw`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `;
+    
+    const schemas = {};
+    
+    // Get structure for each table
+    for (const table of tables) {
+      const tableName = table.table_name;
+      
+      const columns = await prisma.$queryRaw`
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns 
+        WHERE table_name = ${tableName}
+        ORDER BY ordinal_position
+      `;
+      
+      schemas[tableName] = columns;
+    }
+    
+    res.json({
+      message: 'Schema discovery successful',
+      tables: tables.map(t => t.table_name),
+      schemas: schemas
+    });
+    
+  } catch (error) {
+    console.error('[ERROR] Safe schema discovery failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Debug route to check paid invoices directly
 app.get('/api/debug/paid-invoices', async (req, res) => {
   try {
@@ -2353,47 +2395,6 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
-// Safe schema discovery endpoint
-app.get('/api/debug/safe-schemas', async (req, res) => {
-  try {
-    console.log(`[DEBUG] Getting safe table schemas`);
-    
-    // First get all tables
-    const tables = await prisma.$queryRaw`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_type = 'BASE TABLE'
-      ORDER BY table_name
-    `;
-    
-    const schemas = {};
-    
-    // Get structure for each table
-    for (const table of tables) {
-      const tableName = table.table_name;
-      
-      const columns = await prisma.$queryRaw`
-        SELECT column_name, data_type, is_nullable, column_default
-        FROM information_schema.columns 
-        WHERE table_name = ${tableName}
-        ORDER BY ordinal_position
-      `;
-      
-      schemas[tableName] = columns;
-    }
-    
-    res.json({
-      message: 'Schema discovery successful',
-      tables: tables.map(t => t.table_name),
-      schemas: schemas
-    });
-    
-  } catch (error) {
-    console.error('[ERROR] Safe schema discovery failed:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
