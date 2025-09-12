@@ -82,6 +82,7 @@ model invoice {
   linked_payment_plan String?
   linked_saving_report String?
   linked_lead_from_customer String[]
+  achieved_monthly_anp Decimal?
 
   @@index([bubble_id])
   @@index([paid])
