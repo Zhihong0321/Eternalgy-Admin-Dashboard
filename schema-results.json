@@ -1,0 +1,5385 @@
+{
+  "tables": [
+    "agent",
+    "agent_content",
+    "agent_daily_report",
+    "agent_monthly_commission",
+    "agent_monthly_perf",
+    "ai_contact",
+    "ai_profile",
+    "brand",
+    "bug_report",
+    "career_invitation",
+    "category",
+    "commission_adjustment",
+    "commission_adjustment_v2",
+    "company_setting",
+    "content_category",
+    "conversation",
+    "customer",
+    "customer_profile",
+    "daily_job_planning",
+    "dealership",
+    "department",
+    "department_report",
+    "dept_report_comment",
+    "discovery_logs",
+    "ee_calendar",
+    "ee_circular",
+    "epp_gateway",
+    "epp_option",
+    "eternalgy_agreement",
+    "eternalgynotification",
+    "financial_projection",
+    "follow_up_notes",
+    "generated_commission_report",
+    "invoice",
+    "invoice_item",
+    "invoice_payment_planning",
+    "join_us_form",
+    "package",
+    "package_formula",
+    "package_item",
+    "package_test",
+    "payment",
+    "pending_schema_patches",
+    "product",
+    "referal_contact",
+    "relationship_discovery_status",
+    "saving_report",
+    "seda_registration",
+    "submit_payment",
+    "support_ticket",
+    "sync_cursors",
+    "sync_status",
+    "synced_records",
+    "system_logs",
+    "system_setting",
+    "tariff_b_d_database",
+    "terminal",
+    "tnb_bill_database",
+    "tnb_tariff_2025",
+    "user",
+    "voucher"
+  ],
+  "schemas": {
+    "agent": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('agent_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_user_login",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "current_annual_sales",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "contact",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "last_update_annual_sales",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "slug",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "agent_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "commission",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "annual_collection",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "intro_youtube",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tree_seed",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "banker",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "bankin_account",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "introducer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ic_front",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ic_back",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "address",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "agent_content": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('agent_content_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "google_drive_link",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "active",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_category",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "agent_daily_report": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('agent_daily_report_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "activity_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_user",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "report_point",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tag",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "report_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "agent_monthly_commission": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('agent_monthly_commission_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "record_month",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "total_bonus_comm",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "total_normal_comm",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "agent_monthly_perf": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('agent_monthly_perf_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "total_amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "record_month",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_user",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "all_full_on_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "achieved_tier_bonus",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "ai_contact": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('ai_contact_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "whatsapp_no_",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "ai_profile": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('ai_profile_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "user_instruction",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "brand": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('brand_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "logo",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "bug_report": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('bug_report_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "report_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "is_a_update_",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "report_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "screenshoot",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "career_invitation": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('career_invitation_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "message",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "expire_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invitation_code",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "position_to_offer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "person_to_invite_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "category": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('category_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "category_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_products",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "commission_adjustment": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('commission_adjustment_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "commission_adjustment_v2": [
+      {
+        "column_name": "adjustment_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "report_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "agent_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "adjustment_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "company_setting": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('company_setting_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_request_system_drawing",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "grand_strategy",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "seda_request_engineering_drawing",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "content_category": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('content_category_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "cat_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent_content",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "conversation": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('conversation_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "customer": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('customer_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "customer_profile": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('customer_profile_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "address",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "contact",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "whatsapp",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "state",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "link_seda_reg",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "chinese_content",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "group_status",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "daily_job_planning": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('daily_job_planning_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealer_code",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "checkin_person",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_in_time",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "planning_today",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "dealership": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('dealership_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealer_tier_bonus",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealercode",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "join_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealer_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "department": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('department_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "department_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "current_task_last_update",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "current_task",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "hod",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "member",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "assign_task",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "department_report": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('department_report_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_department",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_comment",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "content",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "report_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "dept_report_comment": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('dept_report_comment_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "comment",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_report",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "discovery_logs": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('discovery_logs_id_seq'::regclass)"
+      },
+      {
+        "column_name": "run_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "table_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "field_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "field_type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "link_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "target_table",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sample_value",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "reason",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "bubble_id_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "discovered_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      }
+    ],
+    "ee_calendar": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('ee_calendar_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "ee_circular": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('ee_circular_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "active_",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "department",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "read_by",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "file",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "date_of_circular",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "epp_gateway": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('epp_gateway_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "epp_option": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('epp_option_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "bank",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "interest_charges",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tenures",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "eternalgy_agreement": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('eternalgy_agreement_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "refund_policy",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "installation_related",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "disclaimer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "privacy_policy",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "warranty",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "version_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "eternalgynotification": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('eternalgynotification_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "content",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "checked_agent",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "gallery_image",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "financial_projection": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('financial_projection_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "year",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "cumulative_earning",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "degradation",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "follow_up_notes": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('follow_up_notes_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "message",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "generated_commission_report": [
+      {
+        "column_name": "report_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "agent_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "agent_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "month_period",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "total_basic_commission",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "total_bonus_commission",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "total_adjustments",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "final_total_commission",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "commission_paid",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "false"
+      },
+      {
+        "column_name": "invoice_bubble_ids",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "paid_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "paid_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "invoice": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('invoice_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "visit",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "eligible_amount_description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_seda_registration",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "normal_commission",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "performance_tier_month",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "full_payment_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "need_approval",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_package",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "locked_package",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_qty",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealercode",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agreement",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "performance_tier_year",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_id",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "last_payment_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "approval_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "1st_payment_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "commission_paid",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "paid",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "version",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount_eligible_for_comm",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "2nd_payment",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_payment",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "1st_payment",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "logs",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_stock_transaction",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "stamp_cash_price",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "percent_of_total_amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "stock_status_inv",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice_item",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "perf_tier_commission",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent_monthly_perf",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "how_you_win",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "stock_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_average_tnb",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "estimated_saving",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_roof_image",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "state",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_notification",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_follow_up",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "case_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "referrer_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_signature",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "signature_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "estimated_new_bill_amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "effective_epp",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "lead_source",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "strategic_va",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "hide_payment_terms",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "premium_electrical_job",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_rating",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "custom_proposal",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "package_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "request_urgent_submission",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_voucher",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "approved_toberemove",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "user_manual_pdf",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_payment_plan",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_saving_report",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_lead_from_customer",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "invoice_item": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('invoice_item_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "qty",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "unit_price",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "is_a_package",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inv_item_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_package",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sort",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_voucher",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "voucher_remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "invoice_payment_planning": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('invoice_payment_planning_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_method_3",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_1_charges",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "final_payment_amount___inclusive",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp_option_3",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "1st_payment_amount___inclusive",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_2_epp_charges",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_3_epp_charges",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "2nd_payment_amount___inclusive",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_method_1",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp_option_2",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_method_2",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "join_us_form": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('join_us_form_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "mobile",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "package": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('package_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "price",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "package_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_qty",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "max_discount",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_package_item",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_desc",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "special",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "active",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "need_approval",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "password",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "package_formula": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('package_formula_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "baseprice",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "formula_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "installation",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "skylift",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "per_invoice",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "electrical",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_price",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dcac_ratio",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "package_item": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('package_item_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "total_cost",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "product",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "qty",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sort",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inventory",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "package_test": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('package_test_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inverter_01",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "recal",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "price",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ratio",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_count",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "system_size",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "price_without_inverter",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "payment": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('payment_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "payment_method",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "attachment",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "verified_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "edit_history",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "issuer_bank",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp_month",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_method_v2",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "terminal",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "bank_charges",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "pending_schema_patches": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('pending_schema_patches_id_seq'::regclass)"
+      },
+      {
+        "column_name": "table_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "field_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "original_field_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "suggested_type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "error_message",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'pending'::text"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "approved_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "approved_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "executed_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "execution_result",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sync_run_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "product": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('product_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_brand",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "warranty_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_category",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "product_warranty__desc_",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "image",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "cost_price",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "active_",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inventory",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "label",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "selling_price",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "warranty_link",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "solar_output_rating",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "pdf_product",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "referal_contact": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('referal_contact_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "lead_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "lead_contact_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "refer_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "relationship_discovery_status": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('relationship_discovery_status_id_seq'::regclass)"
+      },
+      {
+        "column_name": "source_table",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "source_field",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "field_type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "link_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "target_table",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "last_checked",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      }
+    ],
+    "saving_report": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('saving_report_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_type",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "panel_qty",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sun_peak",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_ori_bill",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "after_solar_bill",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "morning_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "export_generation",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "morning_offset_generation",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "solar_generation",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "seda_registration": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('seda_registration_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "reg_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "drawing_system_submitted",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "state",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "redex_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "roof_images",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sunpeak_hours",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "system_size_in_form_kwp",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "project_price",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "system_size",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "city",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inverter_kwac",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "slug",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "estimated_monthly_saving",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "average_tnb",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "price_category",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "g_electric_folder_link",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "g_roof_folder_link",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "installation_address",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_signature",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ic_copy_back",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ic_copy_front",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_bill_3",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_bill_1",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_meter",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "e_contact_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_bill_2",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "drawing_pdf_system",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "e_contact_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "seda_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "version",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "nem_application_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "e_contact_relationship",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "ic_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "request_drawing_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "phase_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "special_remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_account_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "nem_cert",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "property_ownership_prove",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "inverter_serial_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_meter_install_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tnb_meter_status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "first_completion_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "e_contact_mykad",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "mykad_pdf",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "nem_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "e_email",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "redex_remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "site_images",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "company_registration_no",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "drawing_system_actual",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_tnb_bill_and_meter_image",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_mykad",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_ownership",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_fill_in_detail",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "drawing_engineering_seda_pdf",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "submit_payment": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('submit_payment_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "terminal",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_installment",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "attachment",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_method_v2",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_invoice",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "issuer_bank",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "support_ticket": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('support_ticket_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "link_customer",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "problem_description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "technician_remark",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "images",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "sync_cursors": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('sync_cursors_id_seq'::regclass)"
+      },
+      {
+        "column_name": "table_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_cursor",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "last_sync_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "sync_run_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      }
+    ],
+    "sync_status": [
+      {
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "running",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "false"
+      },
+      {
+        "column_name": "progress",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "currentTable",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "lastSync",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "error",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "createdAt",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "column_name": "updatedAt",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": null
+      }
+    ],
+    "synced_records": [
+      {
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "data_type",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "raw_data",
+        "data_type": "jsonb",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "processed_data",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": "CURRENT_TIMESTAMP"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "is_nullable": "NO",
+        "column_default": null
+      }
+    ],
+    "system_logs": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('system_logs_id_seq'::regclass)"
+      },
+      {
+        "column_name": "timestamp",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "run_id",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "level",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "context",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "message",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "metadata",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "system_setting": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('system_setting_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_id_run",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "landed_view",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "assistant_prompt",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "epp_default_rate",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "whatsapp_click",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "tariff_b_d_database": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('tariff_b_d_database_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "201_and_above",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "icpt",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "kwtbb",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "jumlah",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "first_200kwh",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "tariff_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "terminal": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('terminal_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "bank",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "oversea_credit_card",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "local_credit_card__rate_",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "tnb_bill_database": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('tnb_bill_database_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t5_57_1",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t3_51_6",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t1_21_8",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t3_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "kwtbb_1_6",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t1_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "st_total",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t2_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t4_54_6",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "kwh_tanpa_st",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "icpt_surcharge",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "kwh_with_st",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t2_33_4",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t4_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "t5_usage",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "total_bill",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "total_kwh",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "tnb_tariff_2025": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('tnb_tariff_2025_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "network",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "bill_total_normal",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "capacity",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "retail",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "eei",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "usage_kwh",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "usage_normal",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "kwtbb_normal",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "sst_normal",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      }
+    ],
+    "user": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('user_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "access_level",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "linked_agent_profile",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "authentication",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "profile_picture",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dealership",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "check_in_report_today",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "user_signed_up",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "voucher": [
+      {
+        "column_name": "id",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "nextval('voucher_id_seq'::regclass)"
+      },
+      {
+        "column_name": "bubble_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "last_synced_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "title",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "modified_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "invoice_description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "discount_amount",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_by",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "voucher_code",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_date",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "terms_conditions",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "active",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "auto_cancel_voucher",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "voucher_availability",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "voucher_type",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "discount_percent",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "deductable_from_commission",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "available_until",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "delete",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "public",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ]
+  }
+}

@@ -384,6 +384,98 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
   }
 });
 
+// Get invoices where eligible commission amount is higher than invoice amount
+app.get('/api/invoices/eligible-comm', async (req, res) => {
+  try {
+    const { limit = 100, offset = 0, agent } = req.query;
+    console.log(`[DEBUG] Eligible Commission invoices request - limit: ${limit}, offset: ${offset}, agent: ${agent}`);
+    
+    // Build dynamic WHERE clause for filters
+    let whereConditions = ['i.amount_eligible_for_comm > i.amount'];
+    let queryParams = [];
+    
+    // Add agent filter if provided
+    if (agent && agent !== 'all') {
+      whereConditions.push(`a.bubble_id = $${queryParams.length + 1}`);
+      queryParams.push(agent);
+    }
+    
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Build the query string
+    const queryText = `
+      SELECT 
+        i.invoice_id,
+        i.bubble_id,
+        i.amount,
+        i.amount_eligible_for_comm,
+        i.eligible_amount_description,
+        i.invoice_date,
+        i.created_date,
+        a.name as agent_name,
+        a.bubble_id as agent_bubble_id,
+        cp.name as customer_name
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE ${whereClause}
+        AND i.amount IS NOT NULL 
+        AND i.amount_eligible_for_comm IS NOT NULL
+      ORDER BY i.invoice_id ASC
+      LIMIT $${queryParams.length + 1}
+      OFFSET $${queryParams.length + 2}
+    `;
+    
+    queryParams.push(parseInt(limit), parseInt(offset));
+    
+    console.log(`[DEBUG] Eligible Commission query:`, queryText);
+    console.log(`[DEBUG] Query params:`, queryParams);
+    
+    const invoices = await prisma.$queryRawUnsafe(queryText, ...queryParams);
+    
+    // Get total count with same filters
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM invoice i
+      LEFT JOIN agent a ON i.linked_agent = a.bubble_id  
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE ${whereClause}
+        AND i.amount IS NOT NULL 
+        AND i.amount_eligible_for_comm IS NOT NULL
+    `;
+    
+    const countParams = queryParams.slice(0, -2); // Remove limit and offset
+    const totalResult = await prisma.$queryRawUnsafe(countQuery, ...countParams);
+    const total = parseInt(totalResult[0]?.total || 0);
+    
+    console.log(`[DEBUG] Found ${invoices.length} eligible commission invoices (${total} total)`);
+    
+    res.json({
+      invoices: invoices.map(invoice => ({
+        bubble_id: invoice.bubble_id,
+        invoice_id: invoice.invoice_id,
+        amount: invoice.amount?.toString() || '0',
+        amount_eligible_for_comm: invoice.amount_eligible_for_comm?.toString() || '0',
+        eligible_amount_description: invoice.eligible_amount_description,
+        agent_name: invoice.agent_name,
+        customer_name: invoice.customer_name,
+        invoice_date: invoice.invoice_date?.toISOString(),
+        created_date: invoice.created_date?.toISOString()
+      })),
+      total,
+      offset: parseInt(offset),
+      limit: parseInt(limit)
+    });
+
+  } catch (error) {
+    console.error('[ERROR] Eligible commission invoices error:', error);
+    res.status(500).json({ 
+      error: 'Database error', 
+      message: error.message 
+    });
+  }
+});
+
 // Get invoices for ANP Calculator - where payment received > 0
 app.get('/api/invoices/anp-calculator', async (req, res) => {
   try {

@@ -27,7 +27,11 @@
       "WebFetch(domain:eternalgyadmindashboard-production.up.railway.app)",
       "Bash(curl:*)",
       "Bash(git log:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
