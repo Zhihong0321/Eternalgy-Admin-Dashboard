@@ -68,7 +68,7 @@ app.get('/api/debug/schemas', async (req, res) => {
     
     // Get sample data to understand field values
     const sampleInvoice = await prisma.$queryRaw`
-      SELECT * FROM invoice WHERE paid_ = true LIMIT 1
+      SELECT * FROM invoice WHERE paid = true LIMIT 1
     `;
     
     console.log(`[DEBUG] Invoice columns:`, invoiceSchema.length);
@@ -153,9 +153,9 @@ app.get('/api/debug/paid-invoices', async (req, res) => {
     console.log(`[DEBUG] Total invoices in database:`, totalInvoices[0].count);
     
     // Check paid invoices with different queries
-    const paidTrue = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ = true`;
-    const paidFalse = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ = false`;
-    const paidNull = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid_ IS NULL`;
+    const paidTrue = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid = true`;
+    const paidFalse = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid = false`;
+    const paidNull = await prisma.$queryRaw`SELECT COUNT(*) as count FROM invoice WHERE paid IS NULL`;
     
     console.log(`[DEBUG] Paid = true:`, paidTrue[0].count);
     console.log(`[DEBUG] Paid = false:`, paidFalse[0].count);
@@ -163,9 +163,9 @@ app.get('/api/debug/paid-invoices', async (req, res) => {
     
     // Get sample of paid invoices
     const samplePaid = await prisma.$queryRaw`
-      SELECT bubble_id, paid_, amount, full_payment_date 
+      SELECT bubble_id, paid, amount, full_payment_date 
       FROM invoice 
-      WHERE paid_ = true 
+      WHERE paid = true 
       LIMIT 5
     `;
     
@@ -282,7 +282,7 @@ app.get('/api/invoices/fully-paid', async (req, res) => {
     console.log(`[DEBUG] Fully-paid invoices request - limit: ${limit}, offset: ${offset}, month: ${month}, agent: ${agent}`);
     
     // Build dynamic WHERE clause for filters
-    let whereConditions = ['i.paid_ = true'];
+    let whereConditions = ['i.paid = true'];
     let queryParams = [];
     
     // Add month filter if provided (format: "2025-07" for Jul, 2025)
@@ -1296,7 +1296,7 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
     const unpaidInvoices = await prisma.$queryRaw`
       SELECT i.bubble_id, i.amount, i.linked_payment
       FROM invoice i
-      WHERE i.paid_ != true OR i.paid_ IS NULL
+      WHERE i.paid != true OR i.paid IS NULL
     `;
 
     let updatedCount = 0;
@@ -1322,7 +1322,7 @@ app.post('/api/invoices/rescan-payments', async (req, res) => {
         if (totalPaid >= invoiceAmount && invoiceAmount > 0) {
           await prisma.$executeRaw`
             UPDATE invoice 
-            SET paid_ = true, full_payment_date = COALESCE(full_payment_date, NOW())
+            SET paid = true, full_payment_date = COALESCE(full_payment_date, NOW())
             WHERE bubble_id = ${invoice.bubble_id}
           `;
           updatedCount++;
@@ -1757,7 +1757,7 @@ app.get('/api/commission/report', async (req, res) => {
       FROM invoice i
       LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
       WHERE i.linked_agent = ${agent}
-        AND i.paid_ = true
+        AND i.paid = true
         AND i.full_payment_date IS NOT NULL
         AND EXTRACT(YEAR FROM i.full_payment_date) = ${parseInt(year)}
         AND EXTRACT(MONTH FROM i.full_payment_date) = ${parseInt(monthNum)}
