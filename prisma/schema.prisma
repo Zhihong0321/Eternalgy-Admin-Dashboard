@@ -540,6 +540,104 @@ model voucher {
   synced_at DateTime? @default(now())
 }
 
+model agent {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  agent_name String?
+  agent_code String?
+  email String?
+  phone String?
+  agent_type String?
+  active Boolean?
+  commission_rate Decimal?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model agent_daily_report {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  agent_id String?
+  agent_name String?
+  report_date DateTime?
+  daily_sales Decimal?
+  daily_commission Decimal?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model customer_profile {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  customer_name String?
+  email String?
+  phone String?
+  address String?
+  ic_number String?
+  date_of_birth DateTime?
+  gender String?
+  nationality String?
+  occupation String?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model invoice {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  invoice_id Int?
+  customer_id String?
+  customer_name String?
+  agent_id String?
+  agent_name String?
+  amount Decimal?
+  invoice_date DateTime?
+  due_date DateTime?
+  status String?
+  payment_status String?
+  full_payment_date DateTime?
+  first_payment_date DateTime?
+  amount_eligible_for_comm Decimal?
+  eligible_amount_description String?
+  achieved_monthly_anp Decimal?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model user {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  username String?
+  email String?
+  password String?
+  role String?
+  active Boolean?
+  access_level String[]
+  last_login DateTime?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
 model relationship_discovery_status {
   id Int @id @default(autoincrement())
   source_table String
