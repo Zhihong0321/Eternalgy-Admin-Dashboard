@@ -8,8 +8,9 @@ import { ANPCalculatorView } from '../Views/ANPCalculatorView'
 import { ManageAgentView } from '../Views/ManageAgentView'
 import { AgentCommissionReportView } from '../Views/AgentCommissionReportView'
 import { CheckEligibleCommView } from '../Views/CheckEligibleCommView'
+import { GenerateMonthlyCommReportView } from '../Views/GenerateMonthlyCommReportView'
 
-type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices' | 'finance/anp-calculator' | 'finance/commissions' | 'finance/eligible-comm' | 'hr/manage-agent'
+type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices' | 'finance/anp-calculator' | 'finance/commissions' | 'finance/monthly-comm-report' | 'finance/eligible-comm' | 'hr/manage-agent'
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<ActiveView>('finance')
@@ -24,6 +25,9 @@ export function Dashboard() {
         break
       case '/finance/commissions':
         setActiveView('finance/commissions')
+        break
+      case '/finance/monthly-comm-report':
+        setActiveView('finance/monthly-comm-report')
         break
       case '/finance/eligible-comm':
         setActiveView('finance/eligible-comm')
@@ -52,6 +56,8 @@ export function Dashboard() {
         return <ANPCalculatorView />
       case 'finance/commissions':
         return <AgentCommissionReportView />
+      case 'finance/monthly-comm-report':
+        return <GenerateMonthlyCommReportView />
       case 'finance/eligible-comm':
         return <CheckEligibleCommView />
       case 'hr/manage-agent':

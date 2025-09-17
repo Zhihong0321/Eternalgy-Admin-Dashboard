@@ -33,6 +33,7 @@ const navigation: NavItem[] = [
       { title: 'Full Payment Invoice', icon: FileText, path: '/finance/invoices' },
       { title: 'ANP Calculator', icon: Calculator, path: '/finance/anp-calculator' },
       { title: 'Agent Commission Report', icon: TrendingUp, path: '/finance/commissions' },
+      { title: 'Generate Monthly Comm Report', icon: FileText, path: '/finance/monthly-comm-report' },
       { title: 'Check Eligible Amount for Comm', icon: DollarSign, path: '/finance/eligible-comm' }
     ]
   },

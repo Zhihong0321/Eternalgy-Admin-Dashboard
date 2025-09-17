@@ -4,7 +4,7 @@ import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
-import { RefreshCw, DollarSign, Calendar, User, Filter, Eye, X } from 'lucide-react'
+import { RefreshCw, DollarSign, Calendar, User, Filter, Eye, X, Edit } from 'lucide-react'
 
 interface EligibleCommInvoice {
   bubble_id: string
@@ -69,6 +69,9 @@ export function CheckEligibleCommView() {
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails | null>(null)
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false)
+
+  // Update eligible amount state
+  const [updatingInvoices, setUpdatingInvoices] = useState<Set<string>>(new Set())
 
   const fetchEligibleCommInvoices = async () => {
     try {
@@ -170,6 +173,43 @@ export function CheckEligibleCommView() {
     const amount = parseFloat(invoice.amount || '0')
     const eligibleAmount = parseFloat(invoice.amount_eligible_for_comm || '0')
     return eligibleAmount - amount
+  }
+
+  const handleUpdateEligibleAmount = async (invoice: EligibleCommInvoice) => {
+    if (!confirm(`Are you sure you want to update the eligible amount for Invoice ${invoice.invoice_id}?\n\nThis will:\n1. Set eligible_amount_for_comm to RM${formatCurrency(invoice.amount)}\n2. Add adjustment note to description`)) {
+      return
+    }
+
+    const invoiceId = invoice.bubble_id
+    setUpdatingInvoices(prev => new Set(prev).add(invoiceId))
+
+    try {
+      const response = await fetch(`/api/invoices/${invoiceId}/update-eligible-comm`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert(`Successfully updated invoice ${invoice.invoice_id}!\n\nAdjustment: RM${data.adjustment_amount.toFixed(2)}\nNew eligible amount: RM${data.new_eligible_amount.toFixed(2)}`)
+        // Refresh the list to show updated data
+        fetchEligibleCommInvoices()
+      } else {
+        alert(`Failed to update invoice: ${data.message}`)
+      }
+    } catch (error) {
+      console.error('Error updating eligible amount:', error)
+      alert('Failed to update invoice. Please try again.')
+    } finally {
+      setUpdatingInvoices(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(invoiceId)
+        return newSet
+      })
+    }
   }
 
   useEffect(() => {
@@ -333,15 +373,31 @@ export function CheckEligibleCommView() {
                       
                       {/* Actions */}
                       <td className="py-3 px-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="flex items-center gap-1 text-xs"
-                          onClick={() => handleViewDetails(invoice)}
-                        >
-                          <Eye className="h-3 w-3" />
-                          VIEW
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex items-center gap-1 text-xs"
+                            onClick={() => handleViewDetails(invoice)}
+                          >
+                            <Eye className="h-3 w-3" />
+                            VIEW
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleUpdateEligibleAmount(invoice)}
+                            disabled={updatingInvoices.has(invoice.bubble_id)}
+                          >
+                            {updatingInvoices.has(invoice.bubble_id) ? (
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Edit className="h-3 w-3" />
+                            )}
+                            {updatingInvoices.has(invoice.bubble_id) ? 'UPDATING' : 'UPDATE'}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -430,6 +486,27 @@ export function CheckEligibleCommView() {
                       {formatDate(detailModal.invoice.created_date)}
                     </p>
                   </div>
+                </div>
+
+                {/* Update Action */}
+                <div className="flex justify-center pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <Button
+                    onClick={() => detailModal.invoice && handleUpdateEligibleAmount(detailModal.invoice)}
+                    disabled={!detailModal.invoice || updatingInvoices.has(detailModal.invoice.bubble_id)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                  >
+                    {detailModal.invoice && updatingInvoices.has(detailModal.invoice.bubble_id) ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Updating Eligible Amount...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Update Eligible Amount for Comm
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
             </div>

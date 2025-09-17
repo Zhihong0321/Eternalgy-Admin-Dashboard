@@ -1559,6 +1559,70 @@ app.post('/api/invoices/update-anp', async (req, res) => {
   }
 });
 
+// Update eligible amount for comm - adjust eligible_amount_for_comm to match invoice amount
+app.put('/api/invoices/:invoiceId/update-eligible-comm', async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+    console.log(`[DEBUG] Updating eligible amount for comm for invoice: ${invoiceId}`);
+
+    // First, get the current invoice data
+    const invoice = await prisma.$queryRaw`
+      SELECT bubble_id, amount, amount_eligible_for_comm, eligible_amount_description
+      FROM invoice
+      WHERE bubble_id = ${invoiceId}
+    `;
+
+    if (!invoice || invoice.length === 0) {
+      return res.status(404).json({
+        error: 'Invoice not found',
+        message: `Invoice with ID ${invoiceId} does not exist`
+      });
+    }
+
+    const currentInvoice = invoice[0];
+    const invoiceAmount = parseFloat(currentInvoice.amount || 0);
+    const currentEligibleAmount = parseFloat(currentInvoice.amount_eligible_for_comm || 0);
+
+    // Calculate the adjustment amount
+    const adjustmentAmount = invoiceAmount - currentEligibleAmount;
+
+    // Create the adjustment description
+    const currentDescription = currentInvoice.eligible_amount_description || '';
+    const adjustmentDescription = `\nsystem price changed, adjust for RM${adjustmentAmount.toFixed(2)} - by v2.0`;
+    const newDescription = currentDescription + adjustmentDescription;
+
+    // Update the invoice
+    await prisma.$executeRaw`
+      UPDATE invoice
+      SET
+        amount_eligible_for_comm = ${invoiceAmount},
+        eligible_amount_description = ${newDescription}
+      WHERE bubble_id = ${invoiceId}
+    `;
+
+    console.log(`[DEBUG] Updated invoice ${invoiceId}:`);
+    console.log(`  - Original eligible amount: RM${currentEligibleAmount.toFixed(2)}`);
+    console.log(`  - New eligible amount: RM${invoiceAmount.toFixed(2)}`);
+    console.log(`  - Adjustment: RM${adjustmentAmount.toFixed(2)}`);
+
+    res.json({
+      message: 'Eligible amount updated successfully',
+      invoice_id: invoiceId,
+      original_eligible_amount: currentEligibleAmount,
+      new_eligible_amount: invoiceAmount,
+      adjustment_amount: adjustmentAmount,
+      updated_description: newDescription
+    });
+
+  } catch (error) {
+    console.error(`[ERROR] Failed to update eligible amount for invoice ${req.params.invoiceId}:`, error);
+    res.status(500).json({
+      error: 'Failed to update eligible amount',
+      message: error.message
+    });
+  }
+});
+
 // Get invoice details with customer and invoice items
 app.get('/api/invoice/details/:invoiceId', async (req, res) => {
   try {
@@ -1917,6 +1981,89 @@ app.get('/api/commission/report', async (req, res) => {
     res.status(500).json({ 
       error: 'Database error', 
       message: error.message 
+    });
+  }
+});
+
+// Get monthly commission report - group invoices by agent for selected month
+app.get('/api/commission/monthly-report', async (req, res) => {
+  try {
+    const { month } = req.query;
+    console.log(`[DEBUG] Monthly commission report request - month: ${month}`);
+
+    if (!month) {
+      return res.status(400).json({
+        error: 'Missing required parameter',
+        message: 'month parameter is required (format: YYYY-MM)'
+      });
+    }
+
+    // Validate month format
+    const monthPattern = /^\d{4}-\d{2}$/;
+    if (!monthPattern.test(month)) {
+      return res.status(400).json({
+        error: 'Invalid month format',
+        message: 'Month must be in YYYY-MM format'
+      });
+    }
+
+    const [year, monthNum] = month.split('-');
+
+    // Get all invoices with full payment date in the selected month, grouped by agent
+    const invoicesByAgent = await prisma.$queryRaw`
+      SELECT
+        a.bubble_id as agent_bubble_id,
+        a.name as agent_name,
+        a.agent_type,
+        COUNT(i.bubble_id) as invoice_count,
+        SUM(CAST(i.amount_eligible_for_comm AS DECIMAL)) as total_eligible_amount
+      FROM invoice i
+      INNER JOIN agent a ON i.linked_agent = a.bubble_id
+      WHERE i.paid = true
+        AND i.full_payment_date IS NOT NULL
+        AND EXTRACT(YEAR FROM i.full_payment_date) = ${parseInt(year)}
+        AND EXTRACT(MONTH FROM i.full_payment_date) = ${parseInt(monthNum)}
+        AND i.amount_eligible_for_comm IS NOT NULL
+      GROUP BY a.bubble_id, a.name, a.agent_type
+      ORDER BY total_eligible_amount DESC
+    `;
+
+    console.log(`[DEBUG] Found ${invoicesByAgent.length} agents with commission invoices`);
+
+    // Calculate totals
+    let totalInvoices = 0;
+    let totalEligibleAmount = 0;
+
+    const formattedAgents = invoicesByAgent.map(agent => {
+      const invoiceCount = parseInt(agent.invoice_count || 0);
+      const eligibleAmount = parseFloat(agent.total_eligible_amount || 0);
+
+      totalInvoices += invoiceCount;
+      totalEligibleAmount += eligibleAmount;
+
+      return {
+        agent_bubble_id: agent.agent_bubble_id,
+        agent_name: agent.agent_name || 'Unknown Agent',
+        agent_type: agent.agent_type || 'unknown',
+        invoice_count: invoiceCount,
+        total_eligible_amount: eligibleAmount
+      };
+    });
+
+    console.log(`[DEBUG] Monthly commission report completed - ${formattedAgents.length} agents, ${totalInvoices} invoices, RM ${totalEligibleAmount.toFixed(2)} total eligible`);
+
+    res.json({
+      agents: formattedAgents,
+      selected_month: month,
+      total_invoices: totalInvoices,
+      total_eligible_amount: totalEligibleAmount
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Monthly commission report API error:`, error.message);
+    res.status(500).json({
+      error: 'Database error',
+      message: error.message
     });
   }
 });
