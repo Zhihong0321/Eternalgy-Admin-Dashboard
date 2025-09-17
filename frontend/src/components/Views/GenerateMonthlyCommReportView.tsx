@@ -494,12 +494,21 @@ export function GenerateMonthlyCommReportView() {
                         <TableCell className="text-center">
                           <Button
                             size="sm"
-                            variant="default"
-                            className="flex items-center gap-1 text-xs bg-green-600 hover:bg-green-700"
+                            variant={agent.agent_type === 'unknown' ? 'outline' : 'default'}
+                            className={`flex items-center gap-1 text-xs ${
+                              agent.agent_type === 'unknown'
+                                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                : 'bg-green-600 hover:bg-green-700'
+                            }`}
                             onClick={() => handleViewAgent(agent)}
-                            disabled={generatingReports.has(agent.agent_bubble_id)}
+                            disabled={generatingReports.has(agent.agent_bubble_id) || agent.agent_type === 'unknown'}
                           >
-                            {generatingReports.has(agent.agent_bubble_id) ? (
+                            {agent.agent_type === 'unknown' ? (
+                              <>
+                                <X className="h-3 w-3" />
+                                AGENT TYPE UNKNOWN
+                              </>
+                            ) : generatingReports.has(agent.agent_bubble_id) ? (
                               <>
                                 <RefreshCw className="h-3 w-3 animate-spin" />
                                 GENERATING
