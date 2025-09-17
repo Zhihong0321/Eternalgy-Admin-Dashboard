@@ -409,3 +409,5 @@ model discovery_logs {
   discovered_at DateTime @default(now())
 }
 
+// Schema validated and cleaned - no Decimal precision syntax errors
+
