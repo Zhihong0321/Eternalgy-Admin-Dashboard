@@ -16,45 +16,87 @@ async function initializeCommissionTables() {
   try {
     console.log('[INIT] Checking commission tables...');
 
-    // Drop and recreate commission_adjustment table to ensure correct schema
-    await prisma.$executeRaw`DROP TABLE IF EXISTS commission_adjustment CASCADE`;
-    await prisma.$executeRaw`
-      CREATE TABLE commission_adjustment (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        agent_id TEXT NOT NULL,
-        agent_name TEXT NOT NULL,
-        amount DECIMAL(65,30) NOT NULL,
-        description TEXT NOT NULL,
-        created_by TEXT NOT NULL,
-        report_id TEXT,
-        adjustment_month TEXT
+    // Check if commission_adjustment table exists
+    const adjustmentTableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'commission_adjustment'
       )
     `;
 
-    // Drop and recreate generated_commission_report table
-    await prisma.$executeRaw`DROP TABLE IF EXISTS generated_commission_report CASCADE`;
-    await prisma.$executeRaw`
-      CREATE TABLE generated_commission_report (
-        report_id TEXT PRIMARY KEY,
-        agent_id TEXT NOT NULL,
-        agent_name TEXT NOT NULL,
-        month_period TEXT NOT NULL,
-        total_basic_commission DECIMAL(65,30) NOT NULL,
-        total_bonus_commission DECIMAL(65,30) NOT NULL,
-        total_adjustments DECIMAL(65,30) NOT NULL,
-        final_total_commission DECIMAL(65,30) NOT NULL,
-        commission_paid BOOLEAN NOT NULL,
-        invoice_bubble_ids JSONB NOT NULL,
-        created_at TIMESTAMP(3) NOT NULL,
-        created_by TEXT,
-        paid_at TIMESTAMP(3),
-        paid_by TEXT
+    if (!adjustmentTableExists[0].exists) {
+      console.log('[INIT] Creating commission_adjustment table...');
+      await prisma.$executeRaw`
+        CREATE TABLE commission_adjustment (
+          id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+          created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          agent_id TEXT NOT NULL,
+          agent_name TEXT NOT NULL,
+          amount DECIMAL(65,30) NOT NULL,
+          description TEXT NOT NULL,
+          created_by TEXT NOT NULL,
+          report_id TEXT,
+          adjustment_month TEXT
+        )
+      `;
+    } else {
+      console.log('[INIT] commission_adjustment table already exists');
+
+      // Check if all required columns exist, add missing ones
+      const columns = await prisma.$queryRaw`
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'commission_adjustment' AND table_schema = 'public'
+      `;
+
+      const columnNames = columns.map(col => col.column_name);
+
+      if (!columnNames.includes('created_at')) {
+        console.log('[INIT] Adding missing created_at column...');
+        await prisma.$executeRaw`ALTER TABLE commission_adjustment ADD COLUMN created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`;
+      }
+
+      if (!columnNames.includes('updated_at')) {
+        console.log('[INIT] Adding missing updated_at column...');
+        await prisma.$executeRaw`ALTER TABLE commission_adjustment ADD COLUMN updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP`;
+      }
+    }
+
+    // Check if generated_commission_report table exists
+    const reportTableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'generated_commission_report'
       )
     `;
 
-    console.log('[INIT] ✅ Commission tables recreated with correct schema');
+    if (!reportTableExists[0].exists) {
+      console.log('[INIT] Creating generated_commission_report table...');
+      await prisma.$executeRaw`
+        CREATE TABLE generated_commission_report (
+          report_id TEXT PRIMARY KEY,
+          agent_id TEXT NOT NULL,
+          agent_name TEXT NOT NULL,
+          month_period TEXT NOT NULL,
+          total_basic_commission DECIMAL(65,30) NOT NULL,
+          total_bonus_commission DECIMAL(65,30) NOT NULL,
+          total_adjustments DECIMAL(65,30) NOT NULL,
+          final_total_commission DECIMAL(65,30) NOT NULL,
+          commission_paid BOOLEAN NOT NULL,
+          invoice_bubble_ids JSONB NOT NULL,
+          created_at TIMESTAMP(3) NOT NULL,
+          created_by TEXT,
+          paid_at TIMESTAMP(3),
+          paid_by TEXT
+        )
+      `;
+    } else {
+      console.log('[INIT] generated_commission_report table already exists');
+    }
+
+    console.log('[INIT] ✅ Commission tables ready');
   } catch (error) {
     console.error('[INIT] ❌ Error creating commission tables:', error);
   }
