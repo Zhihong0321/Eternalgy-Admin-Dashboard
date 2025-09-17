@@ -8,7 +8,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "npx prisma generate && node server.js",
+    "start": "npx prisma migrate deploy && npx prisma generate && node server.js",
     "dev": "node --watch server.js",
     "build": "npx prisma generate && cd frontend && npm install && npm run build",
     "build:backend": "npx prisma generate",

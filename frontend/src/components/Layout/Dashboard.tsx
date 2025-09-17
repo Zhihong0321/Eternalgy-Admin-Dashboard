@@ -80,17 +80,14 @@ export function Dashboard() {
           <header className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold capitalize">{activeView} Dashboard</h1>
-                <p className="text-muted-foreground">
-                  Manage your {activeView} operations and analytics
-                </p>
+                <h1 className="text-3xl font-bold">Welcome to Eternalgy Admin Dashboard 2.0</h1>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setActiveView('finance')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeView === 'finance' 
-                      ? 'bg-primary text-primary-foreground' 
+                    activeView === 'finance'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
@@ -99,8 +96,8 @@ export function Dashboard() {
                 <button
                   onClick={() => setActiveView('project')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeView === 'project' 
-                      ? 'bg-primary text-primary-foreground' 
+                    activeView === 'project'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
@@ -109,8 +106,8 @@ export function Dashboard() {
                 <button
                   onClick={() => setActiveView('admin')}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeView === 'admin' 
-                      ? 'bg-primary text-primary-foreground' 
+                    activeView === 'admin'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >

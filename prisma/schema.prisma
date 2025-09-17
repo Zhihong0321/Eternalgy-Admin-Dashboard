@@ -231,6 +231,19 @@ model agent_monthly_commission {
   synced_at DateTime? @default(now())
 }
 
+model commission_adjustment {
+  id                  String    @id @default(cuid())
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  agent_id            String
+  agent_name          String
+  amount              Decimal
+  description         String
+  created_by          String
+  report_id           String?
+  generated_commission_report generated_commission_report? @relation(fields: [report_id], references: [report_id])
+}
+
 model generated_commission_report {
   report_id String @id
   agent_id String
@@ -246,6 +259,7 @@ model generated_commission_report {
   created_by String?
   paid_at DateTime?
   paid_by String?
+  linked_adjustment commission_adjustment[]
 }
 
 model package_model {
