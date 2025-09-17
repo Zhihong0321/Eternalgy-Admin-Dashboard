@@ -241,6 +241,7 @@ model commission_adjustment {
   description         String
   created_by          String
   report_id           String?
+  adjustment_month    String?
   generated_commission_report generated_commission_report? @relation(fields: [report_id], references: [report_id])
 }
 

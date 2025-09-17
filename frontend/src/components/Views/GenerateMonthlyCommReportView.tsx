@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
 import { RefreshCw, DollarSign, Calendar, User, Eye, X } from 'lucide-react'
+import { AddAdjustmentModal } from '../Modals/AddAdjustmentModal';
 
 interface AgentCommissionSummary {
   agent_bubble_id: string
@@ -36,16 +37,32 @@ interface CommissionInvoice {
 }
 
 interface DetailedCommissionReport {
-  success: boolean
-  report_id: string
-  agent_name: string
-  agent_type: string
-  month_period: string
-  invoices_count: number
-  total_basic_commission: number
-  total_bonus_commission: number
-  final_total_commission: number
-  invoices: CommissionInvoice[]
+  agent_id: string;
+  agent_name: string;
+  agent_type: 'internal' | 'outsource' | 'unknown';
+  month_period: string;
+  total_basic_commission: number;
+  total_bonus_commission: number;
+  final_total_commission: number;
+  invoices_count: number;
+  report_id: string;
+  invoices: any[];
+  total_adjustments: number;
+  adjustments: any[];
+}
+
+interface CommissionData {
+  bubble_id: string
+  invoice_id: number
+  customer_name: string
+  full_payment_date: string
+  amount: number
+  amount_eligible_for_comm: number
+  eligible_amount_description: string
+  achieved_monthly_anp: number
+  basic_commission: number
+  bonus_commission: number
+  total_commission: number
 }
 
 interface ANPRelatedInvoice {
@@ -95,6 +112,7 @@ export function GenerateMonthlyCommReportView() {
   // Detailed report modal state
   const [showDetailedReport, setShowDetailedReport] = useState(false)
   const [detailedReportData, setDetailedReportData] = useState<DetailedCommissionReport | null>(null)
+  const [showAddAdjustmentModal, setShowAddAdjustmentModal] = useState(false);
 
   // ANP Modal State (copied from AgentCommissionReportView)
   const [showANPModal, setShowANPModal] = useState(false)
@@ -215,6 +233,43 @@ export function GenerateMonthlyCommReportView() {
       })
     }
   }
+
+  const handleSaveAdjustment = async (adjustment: { amount: number; description: string }) => {
+    if (detailedReportData) {
+      try {
+        const response = await fetch('/api/commission/add-adjustment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agent_id: detailedReportData.agent_id,
+            agent_name: detailedReportData.agent_name,
+            amount: adjustment.amount,
+            description: adjustment.description,
+            created_by: 'Admin', // Placeholder, should be replaced with actual user
+            adjustment_month: detailedReportData.month_period,
+          }),
+        });
+
+        if (response.ok) {
+          // Refresh the data by re-fetching the report
+          const agentSummary = reportData?.agents.find(a => a.agent_bubble_id === detailedReportData.agent_id);
+          if (agentSummary) {
+            handleViewAgent(agentSummary);
+          }
+          setShowAddAdjustmentModal(false);
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || 'Failed to save adjustment';
+          alert(`Error: ${errorMessage}`);
+        }
+      } catch (error) {
+        console.error('Error saving adjustment:', error);
+        alert('Network error: Unable to save adjustment. Please check your connection and try again.');
+      }
+    }
+  };
 
   // Helper functions copied from AgentCommissionReportView
   const fetchANPRelatedInvoices = async (invoice: CommissionInvoice) => {
@@ -563,7 +618,7 @@ export function GenerateMonthlyCommReportView() {
           {detailedReportData && (
             <div className="space-y-6 p-6 bg-gray-50 dark:bg-gray-800">
               {/* Summary Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Basic Commission</h4>
                   <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{formatCurrency(detailedReportData.total_basic_commission)}</p>
@@ -571,6 +626,10 @@ export function GenerateMonthlyCommReportView() {
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
                   <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Bonus Commission</h4>
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(detailedReportData.total_bonus_commission)}</p>
+                </div>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <h4 className="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-1">Total Adjustments</h4>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{formatCurrency(detailedReportData.total_adjustments)}</p>
                 </div>
                 <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
                   <h4 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Final Total Commission</h4>
@@ -591,6 +650,32 @@ export function GenerateMonthlyCommReportView() {
                   </div>
                 </div>
               </div>
+
+              {/* Adjustments Table */}
+              {detailedReportData.adjustments && detailedReportData.adjustments.length > 0 && (
+                <div className="overflow-x-auto bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b border-gray-200 dark:border-gray-600">
+                        <TableHead>Adjustment Description</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Related Invoice</TableHead>
+                        <TableHead>Date Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detailedReportData.adjustments.map((adjustment) => (
+                        <TableRow key={adjustment.id}>
+                          <TableCell className="font-medium">{adjustment.description}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(adjustment.adjustment_amount)}</TableCell>
+                          <TableCell>{adjustment.related_invoice_id || 'N/A'}</TableCell>
+                          <TableCell>{formatDate(adjustment.created_at)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
 
               {/* Invoice Details Table */}
               {detailedReportData.invoices.length > 0 ? (
@@ -661,8 +746,22 @@ export function GenerateMonthlyCommReportView() {
               )}
             </div>
           )}
+          <DialogFooter>
+            <Button onClick={() => setShowDetailedReport(false)} variant="outline">Close</Button>
+            <Button onClick={() => setShowAddAdjustmentModal(true)} variant="default">Add Adjustment</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {showAddAdjustmentModal && detailedReportData && (
+        <AddAdjustmentModal
+          isOpen={showAddAdjustmentModal}
+          onClose={() => setShowAddAdjustmentModal(false)}
+          onSave={handleSaveAdjustment}
+          agentName={detailedReportData.agent_name}
+          monthPeriod={detailedReportData.month_period}
+        />
+      )}
 
       {/* ANP Modal */}
       {showANPModal && selectedInvoice && (

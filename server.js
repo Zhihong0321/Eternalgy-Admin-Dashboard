@@ -476,6 +476,73 @@ app.get('/api/invoices/eligible-comm', async (req, res) => {
   }
 });
 
+app.post('/api/commission-adjustments', async (req, res) => {
+  try {
+    const {
+      description,
+      amount,
+      reportId,
+      linked_invoice_id,
+    } = req.body;
+
+    console.log(`[INFO] Creating commission adjustment for report ${reportId}`);
+
+    // Validate input
+    if (!description || !amount || !reportId) {
+      return res.status(400).json({
+        error: 'Missing required fields: description, amount, reportId'
+      });
+    }
+
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat)) {
+      return res.status(400).json({
+        error: 'Invalid amount format'
+      });
+    }
+
+    // 1. Create the commission_adjustment record
+    const newAdjustment = await prisma.commission_adjustment.create({
+      data: {
+        description,
+        amount: amountFloat,
+        linked_invoice: linked_invoice_id,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    console.log(`[SUCCESS] Created commission adjustment with ID: ${newAdjustment.id}`);
+
+    // 2. Link it to the generated_commission_report
+    const updatedReport = await prisma.generated_commission_report.update({
+      where: {
+        id: reportId
+      },
+      data: {
+        linked_adjustment: {
+          push: newAdjustment.id,
+        },
+      },
+    });
+
+    console.log(`[SUCCESS] Linked adjustment ${newAdjustment.id} to report ${reportId}`);
+
+    res.json({
+      message: 'Commission adjustment created and linked successfully',
+      adjustment: newAdjustment,
+      report: updatedReport,
+    });
+
+  } catch (error) {
+    console.error('[ERROR] Failed to create commission adjustment:', error);
+    res.status(500).json({
+      error: 'Database error while creating commission adjustment',
+      message: error.message,
+    });
+  }
+});
+
 // Get invoices for ANP Calculator - where payment received > 0
 app.get('/api/invoices/anp-calculator', async (req, res) => {
   try {
@@ -2269,6 +2336,17 @@ app.post('/api/commission/generate-report', async (req, res) => {
     const finalTotalCommission = totalBasicCommission + totalBonusCommission;
     const reportId = `${agent_id}_${month_period}_${Date.now()}`;
 
+    // Fetch commission adjustments
+    const adjustments = await prisma.commission_adjustment.findMany({
+      where: {
+        agent_id: agent_id,
+        adjustment_month: month_period,
+      },
+    });
+
+    const totalAdjustments = adjustments.reduce((acc, adj) => acc + parseFloat(adj.amount), 0);
+    const finalCommissionWithAdjustments = finalTotalCommission + totalAdjustments;
+
     // Check if report already exists for this agent and month
     const existingReport = await prisma.$queryRaw`
       SELECT report_id FROM generated_commission_report
@@ -2282,8 +2360,8 @@ app.post('/api/commission/generate-report', async (req, res) => {
         SET
           total_basic_commission = ${totalBasicCommission},
           total_bonus_commission = ${totalBonusCommission},
-          total_adjustments = 0,
-          final_total_commission = ${finalTotalCommission},
+          total_adjustments = ${totalAdjustments},
+          final_total_commission = ${finalCommissionWithAdjustments},
           invoice_bubble_ids = ${JSON.stringify(invoiceBubbleIds)}::jsonb,
           created_at = NOW(),
           created_by = 'system_v2.0'
@@ -2314,8 +2392,8 @@ app.post('/api/commission/generate-report', async (req, res) => {
           ${month_period},
           ${totalBasicCommission},
           ${totalBonusCommission},
-          0,
-          ${finalTotalCommission},
+          ${totalAdjustments},
+          ${finalCommissionWithAdjustments},
           false,
           ${JSON.stringify(invoiceBubbleIds)}::jsonb,
           NOW(),
@@ -2326,7 +2404,7 @@ app.post('/api/commission/generate-report', async (req, res) => {
       console.log(`[DEBUG] Created new commission report for ${agent.name} - ${month_period}`);
     }
 
-    console.log(`[DEBUG] Commission report generated - Agent: ${agent.name}, Month: ${month_period}, Basic: ${totalBasicCommission}, Bonus: ${totalBonusCommission}, Final: ${finalTotalCommission}`);
+    console.log(`[DEBUG] Commission report generated - Agent: ${agent.name}, Month: ${month_period}, Basic: ${totalBasicCommission}, Bonus: ${totalBonusCommission}, Final: ${finalCommissionWithAdjustments}`);
 
     res.json({
       success: true,
@@ -2337,17 +2415,62 @@ app.post('/api/commission/generate-report', async (req, res) => {
       invoices_count: invoices.length,
       total_basic_commission: totalBasicCommission,
       total_bonus_commission: totalBonusCommission,
-      final_total_commission: finalTotalCommission,
+      total_adjustments: totalAdjustments,
+      final_total_commission: finalCommissionWithAdjustments,
       invoice_bubble_ids: invoiceBubbleIds,
       action: existingReport.length > 0 ? 'updated' : 'created',
       // Add detailed invoice breakdown for frontend display
-      invoices: processedInvoices
+      invoices: processedInvoices,
+      adjustments: adjustments,
     });
 
   } catch (error) {
     console.log(`[ERROR] Commission report generation error:`, error.message);
     res.status(500).json({
       error: 'Commission report generation failed',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/commission/add-adjustment', async (req, res) => {
+  try {
+    const {
+      agent_id,
+      agent_name,
+      amount,
+      description,
+      created_by,
+      month_period
+    } = req.body;
+
+    if (!agent_id || !agent_name || !amount || !description || !created_by || !month_period) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields for commission adjustment.'
+      });
+    }
+
+    const adjustment = await prisma.commission_adjustment.create({
+      data: {
+        agent_id,
+        agent_name,
+        amount: parseFloat(amount),
+        description,
+        created_by,
+        adjustment_month: month_period,
+      },
+    });
+
+    res.json({
+      success: true,
+      adjustment
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Add commission adjustment error:`, error.message);
+    res.status(500).json({
+      error: 'Failed to add commission adjustment',
       message: error.message
     });
   }
