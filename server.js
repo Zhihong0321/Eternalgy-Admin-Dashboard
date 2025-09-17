@@ -16,12 +16,13 @@ async function initializeCommissionTables() {
   try {
     console.log('[INIT] Checking commission tables...');
 
-    // Create commission_adjustment table if it doesn't exist
+    // Drop and recreate commission_adjustment table to ensure correct schema
+    await prisma.$executeRaw`DROP TABLE IF EXISTS commission_adjustment CASCADE`;
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS commission_adjustment (
-        id TEXT PRIMARY KEY,
-        created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+      CREATE TABLE commission_adjustment (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         agent_id TEXT NOT NULL,
         agent_name TEXT NOT NULL,
         amount DECIMAL(65,30) NOT NULL,
@@ -32,9 +33,10 @@ async function initializeCommissionTables() {
       )
     `;
 
-    // Create generated_commission_report table if it doesn't exist
+    // Drop and recreate generated_commission_report table
+    await prisma.$executeRaw`DROP TABLE IF EXISTS generated_commission_report CASCADE`;
     await prisma.$executeRaw`
-      CREATE TABLE IF NOT EXISTS generated_commission_report (
+      CREATE TABLE generated_commission_report (
         report_id TEXT PRIMARY KEY,
         agent_id TEXT NOT NULL,
         agent_name TEXT NOT NULL,
@@ -52,7 +54,7 @@ async function initializeCommissionTables() {
       )
     `;
 
-    console.log('[INIT] ✅ Commission tables ready');
+    console.log('[INIT] ✅ Commission tables recreated with correct schema');
   } catch (error) {
     console.error('[INIT] ❌ Error creating commission tables:', error);
   }
