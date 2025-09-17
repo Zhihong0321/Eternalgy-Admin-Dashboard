@@ -113,8 +113,6 @@ export function GenerateMonthlyCommReportView() {
   const [showDetailedReport, setShowDetailedReport] = useState(false)
   const [detailedReportData, setDetailedReportData] = useState<DetailedCommissionReport | null>(null)
   const [showAddAdjustmentModal, setShowAddAdjustmentModal] = useState(false);
-  const [showEditAdjustmentModal, setShowEditAdjustmentModal] = useState(false);
-  const [editingAdjustment, setEditingAdjustment] = useState<any | null>(null);
 
   // ANP Modal State (copied from AgentCommissionReportView)
   const [showANPModal, setShowANPModal] = useState(false)
@@ -270,45 +268,6 @@ export function GenerateMonthlyCommReportView() {
         console.error('Error saving adjustment:', error);
         alert('Network error: Unable to save adjustment. Please check your connection and try again.');
       }
-    }
-  };
-
-  const handleEditAdjustment = (adjustment: any) => {
-    setEditingAdjustment(adjustment);
-    setShowEditAdjustmentModal(true);
-  };
-
-  const handleSaveEditAdjustment = async (updatedAdjustment: { amount: number; description: string }) => {
-    if (!editingAdjustment || !detailedReportData) return;
-
-    try {
-      const response = await fetch(`/api/commission/edit-adjustment/${editingAdjustment.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: updatedAdjustment.amount,
-          description: updatedAdjustment.description,
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh the data by re-fetching the report
-        const agentSummary = reportData?.agents.find(a => a.agent_bubble_id === detailedReportData.agent_id);
-        if (agentSummary) {
-          handleViewAgent(agentSummary);
-        }
-        setShowEditAdjustmentModal(false);
-        setEditingAdjustment(null);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || 'Failed to update adjustment';
-        alert(`Error: ${errorMessage}`);
-      }
-    } catch (error) {
-      console.error('Error updating adjustment:', error);
-      alert('Network error: Unable to update adjustment. Please check your connection and try again.');
     }
   };
 
@@ -741,24 +700,14 @@ export function GenerateMonthlyCommReportView() {
                           <TableCell>{adjustment.related_invoice_id || 'N/A'}</TableCell>
                           <TableCell>{formatDate(adjustment.created_at)}</TableCell>
                           <TableCell className="text-center">
-                            <div className="flex gap-2 justify-center">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditAdjustment(adjustment)}
-                                className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteAdjustment(adjustment.id)}
-                                className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                              >
-                                Delete
-                              </Button>
-                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteAdjustment(adjustment.id)}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            >
+                              Delete
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -850,24 +799,6 @@ export function GenerateMonthlyCommReportView() {
           onSave={handleSaveAdjustment}
           agentName={detailedReportData.agent_name}
           monthPeriod={detailedReportData.month_period}
-        />
-      )}
-
-      {showEditAdjustmentModal && detailedReportData && editingAdjustment && (
-        <AddAdjustmentModal
-          isOpen={showEditAdjustmentModal}
-          onClose={() => {
-            setShowEditAdjustmentModal(false);
-            setEditingAdjustment(null);
-          }}
-          onSave={handleSaveEditAdjustment}
-          agentName={detailedReportData.agent_name}
-          monthPeriod={detailedReportData.month_period}
-          initialData={{
-            amount: editingAdjustment.adjustment_amount,
-            description: editingAdjustment.description
-          }}
-          mode="edit"
         />
       )}
 
