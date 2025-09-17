@@ -2284,7 +2284,7 @@ app.post('/api/commission/generate-report', async (req, res) => {
           total_bonus_commission = ${totalBonusCommission},
           total_adjustments = 0,
           final_total_commission = ${finalTotalCommission},
-          invoice_bubble_ids = ${JSON.stringify(invoiceBubbleIds)},
+          invoice_bubble_ids = ${JSON.stringify(invoiceBubbleIds)}::jsonb,
           created_at = NOW(),
           created_by = 'system_v2.0'
         WHERE agent_id = ${agent_id} AND month_period = ${month_period}
@@ -2317,7 +2317,7 @@ app.post('/api/commission/generate-report', async (req, res) => {
           0,
           ${finalTotalCommission},
           false,
-          ${JSON.stringify(invoiceBubbleIds)},
+          ${JSON.stringify(invoiceBubbleIds)}::jsonb,
           NOW(),
           'system_v2.0'
         )
