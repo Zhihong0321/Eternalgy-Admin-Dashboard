@@ -2503,6 +2503,7 @@ app.post('/api/commission/generate-report', async (req, res) => {
     res.json({
       success: true,
       report_id: existingReport.length > 0 ? existingReport[0].report_id : reportId,
+      agent_id: agent_id,
       agent_name: agent.name,
       agent_type: agent.agent_type,
       month_period: month_period,
@@ -2549,7 +2550,7 @@ app.post('/api/commission/add-adjustment', async (req, res) => {
       adjustment_month: !!adjustment_month
     });
 
-    if (!agent_id || !agent_name || !amount || !description || !created_by || !adjustment_month) {
+    if (!agent_id || !agent_name || amount === undefined || amount === null || !description || !created_by || !adjustment_month) {
       console.log('[ERROR] Missing fields - Full validation:', {
         agent_id,
         agent_name,
