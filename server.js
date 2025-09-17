@@ -2529,6 +2529,8 @@ app.post('/api/commission/generate-report', async (req, res) => {
 
 app.post('/api/commission/add-adjustment', async (req, res) => {
   try {
+    console.log('[DEBUG] Commission adjustment request body:', req.body);
+
     const {
       agent_id,
       agent_name,
@@ -2538,7 +2540,24 @@ app.post('/api/commission/add-adjustment', async (req, res) => {
       adjustment_month
     } = req.body;
 
+    console.log('[DEBUG] Extracted fields:', {
+      agent_id: !!agent_id,
+      agent_name: !!agent_name,
+      amount: !!amount,
+      description: !!description,
+      created_by: !!created_by,
+      adjustment_month: !!adjustment_month
+    });
+
     if (!agent_id || !agent_name || !amount || !description || !created_by || !adjustment_month) {
+      console.log('[ERROR] Missing fields - Full validation:', {
+        agent_id,
+        agent_name,
+        amount,
+        description,
+        created_by,
+        adjustment_month
+      });
       return res.status(400).json({
         success: false,
         message: 'Missing required fields for commission adjustment.'
