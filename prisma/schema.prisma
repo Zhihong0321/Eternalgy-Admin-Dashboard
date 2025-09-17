@@ -383,6 +383,163 @@ model sync_cursors {
   updated_at DateTime @default(now())
 }
 
+model agent_monthly_perf {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  agent_id String?
+  agent_name String?
+  month_year String?
+  total_sales Decimal?
+  performance_score Decimal?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model epp_gateway {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  gateway_name String?
+  gateway_url String?
+  api_key String?
+  active Boolean?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model epp_option {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  option_name String?
+  option_value String?
+  option_type String?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model eternalgy_agreement {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  agreement_type String?
+  content String?
+  version String?
+  active Boolean?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model invoice_item {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  invoice_id String?
+  description String?
+  amount Decimal?
+  unit_price Decimal?
+  qty Int?
+  sort Int?
+  item_type String?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model package {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  package_name String?
+  price Decimal?
+  description String?
+  benefits String?
+  active Boolean?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model package_item {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  package_id String?
+  item_name String?
+  item_description String?
+  item_price Decimal?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model payment {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  invoice_id String?
+  amount Decimal(65,30)?
+  payment_date DateTime?
+  payment_method String?
+  payment_status String?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model seda_registration {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  customer_id String?
+  registration_date DateTime?
+  registration_type String?
+  status String?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
+model voucher {
+  id Int @id @default(autoincrement())
+  bubble_id String @unique
+  last_synced_at DateTime? @default(now())
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  voucher_code String?
+  discount_amount Decimal?
+  discount_percentage Decimal?
+  valid_from DateTime?
+  valid_until DateTime?
+  used Boolean?
+  created_date DateTime?
+  modified_date DateTime?
+  synced_at DateTime? @default(now())
+}
+
 model relationship_discovery_status {
   id Int @id @default(autoincrement())
   source_table String
