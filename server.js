@@ -11,6 +11,56 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const prisma = new PrismaClient();
 
+// Initialize commission tables if they don't exist
+async function initializeCommissionTables() {
+  try {
+    console.log('[INIT] Checking commission tables...');
+
+    // Create commission_adjustment table if it doesn't exist
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS commission_adjustment (
+        id TEXT PRIMARY KEY,
+        created_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+        agent_id TEXT NOT NULL,
+        agent_name TEXT NOT NULL,
+        amount DECIMAL(65,30) NOT NULL,
+        description TEXT NOT NULL,
+        created_by TEXT NOT NULL,
+        report_id TEXT,
+        adjustment_month TEXT
+      )
+    `;
+
+    // Create generated_commission_report table if it doesn't exist
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS generated_commission_report (
+        report_id TEXT PRIMARY KEY,
+        agent_id TEXT NOT NULL,
+        agent_name TEXT NOT NULL,
+        month_period TEXT NOT NULL,
+        total_basic_commission DECIMAL(65,30) NOT NULL,
+        total_bonus_commission DECIMAL(65,30) NOT NULL,
+        total_adjustments DECIMAL(65,30) NOT NULL,
+        final_total_commission DECIMAL(65,30) NOT NULL,
+        commission_paid BOOLEAN NOT NULL,
+        invoice_bubble_ids JSONB NOT NULL,
+        created_at TIMESTAMP(3) NOT NULL,
+        created_by TEXT,
+        paid_at TIMESTAMP(3),
+        paid_by TEXT
+      )
+    `;
+
+    console.log('[INIT] ✅ Commission tables ready');
+  } catch (error) {
+    console.error('[INIT] ❌ Error creating commission tables:', error);
+  }
+}
+
+// Initialize tables on startup
+initializeCommissionTables();
+
 // Middleware
 app.use(express.json());
 
