@@ -20,7 +20,20 @@ RUN npx prisma generate
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
-COPY frontend/ .
+
+# Verify critical dependencies are installed
+RUN ls -la node_modules/@radix-ui/ || echo "Radix UI not found"
+RUN test -d node_modules/@radix-ui/react-label || npm install @radix-ui/react-label
+
+COPY frontend/src ./src
+COPY frontend/public ./public
+COPY frontend/index.html ./
+COPY frontend/vite.config.ts ./
+COPY frontend/tsconfig.json ./
+COPY frontend/tsconfig.*.json ./
+COPY frontend/tailwind.config.js ./
+COPY frontend/postcss.config.js ./
+COPY frontend/eslint.config.js ./
 RUN npm run build
 
 # Back to app root
