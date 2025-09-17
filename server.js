@@ -2535,10 +2535,10 @@ app.post('/api/commission/add-adjustment', async (req, res) => {
       amount,
       description,
       created_by,
-      month_period
+      adjustment_month
     } = req.body;
 
-    if (!agent_id || !agent_name || !amount || !description || !created_by || !month_period) {
+    if (!agent_id || !agent_name || !amount || !description || !created_by || !adjustment_month) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields for commission adjustment.'
@@ -2552,7 +2552,7 @@ app.post('/api/commission/add-adjustment', async (req, res) => {
         amount: parseFloat(amount),
         description,
         created_by,
-        adjustment_month: month_period,
+        adjustment_month: adjustment_month,
       },
     });
 
