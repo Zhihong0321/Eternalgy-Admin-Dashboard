@@ -537,62 +537,70 @@ export function GenerateMonthlyCommReportView() {
 
       {/* Detailed Commission Report Modal */}
       <Dialog open={showDetailedReport} onOpenChange={setShowDetailedReport}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Commission Report Details</DialogTitle>
-            <DialogDescription>
-              {detailedReportData ? `${detailedReportData.agent_name} - ${new Date(detailedReportData.month_period + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}` : 'Commission Report'}
-            </DialogDescription>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+          <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl text-gray-900 dark:text-white">Commission Report Details</DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-300">
+                  {detailedReportData ? `${detailedReportData.agent_name} - ${new Date(detailedReportData.month_period + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}` : 'Commission Report'}
+                </DialogDescription>
+              </div>
+              {detailedReportData && (
+                <div className="text-right">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Agent Type</span>
+                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
+                    detailedReportData.agent_type === 'internal'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      : detailedReportData.agent_type === 'outsource'
+                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                  }`}>
+                    {detailedReportData.agent_type.toUpperCase()}
+                  </div>
+                </div>
+              )}
+            </div>
           </DialogHeader>
 
           {detailedReportData && (
-            <div className="space-y-6 p-4">
+            <div className="space-y-6 p-6 bg-gray-50 dark:bg-gray-800">
               {/* Summary Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-blue-600 mb-1">Total Basic Commission</h4>
-                  <p className="text-2xl font-bold text-blue-700">{formatCurrency(detailedReportData.total_basic_commission)}</p>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Total Basic Commission</h4>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{formatCurrency(detailedReportData.total_basic_commission)}</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-green-600 mb-1">Total Bonus Commission</h4>
-                  <p className="text-2xl font-bold text-green-700">{formatCurrency(detailedReportData.total_bonus_commission)}</p>
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Total Bonus Commission</h4>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{formatCurrency(detailedReportData.total_bonus_commission)}</p>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-purple-600 mb-1">Final Total Commission</h4>
-                  <p className="text-2xl font-bold text-purple-700">{formatCurrency(detailedReportData.final_total_commission)}</p>
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h4 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Final Total Commission</h4>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{formatCurrency(detailedReportData.final_total_commission)}</p>
                 </div>
               </div>
 
               {/* Agent Info */}
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600">Agent Type:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                      detailedReportData.agent_type === 'internal'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-orange-100 text-orange-800'
-                    }`}>
-                      {detailedReportData.agent_type}
-                    </span>
+                    <span className="font-medium text-gray-600 dark:text-gray-300">Invoices Count:</span>
+                    <span className="ml-2 text-gray-900 dark:text-white">{detailedReportData.invoices_count}</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-600">Invoices Count:</span>
-                    <span className="ml-2">{detailedReportData.invoices_count}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Report ID:</span>
-                    <span className="ml-2 text-xs text-gray-500">{detailedReportData.report_id}</span>
+                    <span className="font-medium text-gray-600 dark:text-gray-300">Report ID:</span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{detailedReportData.report_id}</span>
                   </div>
                 </div>
               </div>
 
               {/* Invoice Details Table */}
               {detailedReportData.invoices.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="border-b border-gray-200 dark:border-gray-600">
                         <TableHead className="w-[180px]">Customer Name</TableHead>
                         <TableHead>Payment Date</TableHead>
                         <TableHead className="text-right">Eligible Amount</TableHead>
