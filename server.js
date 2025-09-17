@@ -2068,6 +2068,291 @@ app.get('/api/commission/monthly-report', async (req, res) => {
   }
 });
 
+// Debug endpoint to scan PostgreSQL schema for generated_commission_report table
+app.get('/api/debug/commission-report-schema', async (req, res) => {
+  try {
+    console.log(`[DEBUG] Scanning schema for generated_commission_report table`);
+
+    // Check if generated_commission_report table exists
+    const tableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'generated_commission_report'
+      ) as table_exists
+    `;
+
+    let schema = null;
+    if (tableExists[0]?.table_exists) {
+      // Get table schema
+      schema = await prisma.$queryRaw`
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_name = 'generated_commission_report'
+        ORDER BY ordinal_position
+      `;
+    }
+
+    // Also check related tables
+    const invoiceSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns
+      WHERE table_name = 'invoice'
+      AND column_name IN ('bubble_id', 'linked_agent', 'amount_eligible_for_comm', 'achieved_monthly_anp', 'full_payment_date', 'paid')
+      ORDER BY ordinal_position
+    `;
+
+    const agentSchema = await prisma.$queryRaw`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns
+      WHERE table_name = 'agent'
+      AND column_name IN ('bubble_id', 'name', 'agent_type')
+      ORDER BY ordinal_position
+    `;
+
+    console.log(`[DEBUG] Table exists: ${tableExists[0]?.table_exists}`);
+    console.log(`[DEBUG] Schema columns: ${schema?.length || 0}`);
+
+    res.json({
+      generated_commission_report: {
+        table_exists: tableExists[0]?.table_exists || false,
+        schema: schema || []
+      },
+      invoice_schema: invoiceSchema,
+      agent_schema: agentSchema
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Schema scan error:`, error.message);
+    res.status(500).json({
+      error: 'Schema scan error',
+      message: error.message
+    });
+  }
+});
+
+// Generate and store commission report for specific agent in monthly report
+app.post('/api/commission/generate-report', async (req, res) => {
+  try {
+    const { agent_id, month_period } = req.body;
+    console.log(`[DEBUG] Generating commission report - agent: ${agent_id}, month: ${month_period}`);
+
+    if (!agent_id || !month_period) {
+      return res.status(400).json({
+        error: 'Missing required parameters',
+        message: 'agent_id and month_period are required'
+      });
+    }
+
+    // Validate month format
+    const monthPattern = /^\d{4}-\d{2}$/;
+    if (!monthPattern.test(month_period)) {
+      return res.status(400).json({
+        error: 'Invalid month format',
+        message: 'month_period must be in YYYY-MM format'
+      });
+    }
+
+    const [year, monthNum] = month_period.split('-');
+
+    // Get agent details
+    const agentDetails = await prisma.$queryRaw`
+      SELECT bubble_id, name, agent_type
+      FROM agent
+      WHERE bubble_id = ${agent_id}
+    `;
+
+    if (agentDetails.length === 0) {
+      return res.status(404).json({
+        error: 'Agent not found',
+        message: `Agent with ID ${agent_id} not found`
+      });
+    }
+
+    const agent = agentDetails[0];
+
+    // Get invoices for this agent with full payment date in the selected month
+    const invoices = await prisma.$queryRaw`
+      SELECT
+        i.bubble_id,
+        i.invoice_id,
+        i.amount,
+        i.amount_eligible_for_comm,
+        i.achieved_monthly_anp,
+        i.full_payment_date,
+        i.eligible_amount_description,
+        cp.name as customer_name
+      FROM invoice i
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      WHERE i.linked_agent = ${agent_id}
+        AND i.paid = true
+        AND i.full_payment_date IS NOT NULL
+        AND EXTRACT(YEAR FROM i.full_payment_date) = ${parseInt(year)}
+        AND EXTRACT(MONTH FROM i.full_payment_date) = ${parseInt(monthNum)}
+        AND i.amount_eligible_for_comm IS NOT NULL
+      ORDER BY i.invoice_id ASC
+    `;
+
+    console.log(`[DEBUG] Found ${invoices.length} invoices for commission calculation`);
+
+    if (invoices.length === 0) {
+      return res.status(404).json({
+        error: 'No qualifying invoices found',
+        message: `No paid invoices found for agent ${agent.name} in ${month_period}`
+      });
+    }
+
+    let totalBasicCommission = 0;
+    let totalBonusCommission = 0;
+    const invoiceBubbleIds = [];
+    const processedInvoices = [];
+
+    // Calculate commission based on agent type
+    for (const invoice of invoices) {
+      const eligibleAmount = parseFloat(invoice.amount_eligible_for_comm || 0);
+      const monthlyANP = parseFloat(invoice.achieved_monthly_anp || 0);
+      const invoiceAmount = parseFloat(invoice.amount || 0);
+      invoiceBubbleIds.push(invoice.bubble_id);
+
+      let basicCommission = 0;
+      let bonusCommission = 0;
+
+      if (agent.agent_type === 'internal') {
+        // Internal agent calculation (same as existing Agent Commission Report)
+        basicCommission = eligibleAmount * 0.03; // 3%
+
+        // Bonus commission based on achieved_monthly_anp
+        if (monthlyANP >= 60000 && monthlyANP <= 179999) {
+          bonusCommission = 500;
+        } else if (monthlyANP >= 180000 && monthlyANP <= 359999) {
+          bonusCommission = 1000;
+        } else if (monthlyANP >= 360000) {
+          bonusCommission = 1500;
+        }
+
+      } else if (agent.agent_type === 'outsource') {
+        // Outsource agent calculation
+        if (monthlyANP < 180000) {
+          basicCommission = eligibleAmount * 0.045; // 4.5%
+        } else if (monthlyANP >= 180000 && monthlyANP <= 359999) {
+          basicCommission = eligibleAmount * 0.055; // 5.5%
+        } else if (monthlyANP >= 360000) {
+          basicCommission = eligibleAmount * 0.065; // 6.5%
+        }
+        // No bonus commission for outsource agents
+        bonusCommission = 0;
+      }
+
+      const totalCommissionForInvoice = basicCommission + bonusCommission;
+
+      totalBasicCommission += basicCommission;
+      totalBonusCommission += bonusCommission;
+
+      // Add detailed invoice data for frontend display
+      processedInvoices.push({
+        bubble_id: invoice.bubble_id,
+        invoice_id: invoice.invoice_id,
+        customer_name: invoice.customer_name || 'Unknown Customer',
+        full_payment_date: invoice.full_payment_date,
+        amount: invoiceAmount,
+        amount_eligible_for_comm: eligibleAmount,
+        achieved_monthly_anp: monthlyANP,
+        basic_commission: basicCommission,
+        bonus_commission: bonusCommission,
+        total_commission: totalCommissionForInvoice,
+        eligible_amount_description: invoice.eligible_amount_description || ''
+      });
+
+      console.log(`[DEBUG] Invoice ${invoice.invoice_id}: Eligible: ${eligibleAmount}, ANP: ${monthlyANP}, Basic: ${basicCommission}, Bonus: ${bonusCommission}`);
+    }
+
+    const finalTotalCommission = totalBasicCommission + totalBonusCommission;
+    const reportId = `${agent_id}_${month_period}_${Date.now()}`;
+
+    // Check if report already exists for this agent and month
+    const existingReport = await prisma.$queryRaw`
+      SELECT report_id FROM generated_commission_report
+      WHERE agent_id = ${agent_id} AND month_period = ${month_period}
+    `;
+
+    if (existingReport.length > 0) {
+      // Update existing report
+      await prisma.$executeRaw`
+        UPDATE generated_commission_report
+        SET
+          total_basic_commission = ${totalBasicCommission},
+          total_bonus_commission = ${totalBonusCommission},
+          total_adjustments = 0,
+          final_total_commission = ${finalTotalCommission},
+          invoice_bubble_ids = ${JSON.stringify(invoiceBubbleIds)},
+          created_at = NOW(),
+          created_by = 'system_v2.0'
+        WHERE agent_id = ${agent_id} AND month_period = ${month_period}
+      `;
+
+      console.log(`[DEBUG] Updated existing commission report for ${agent.name} - ${month_period}`);
+    } else {
+      // Create new report
+      await prisma.$executeRaw`
+        INSERT INTO generated_commission_report (
+          report_id,
+          agent_id,
+          agent_name,
+          month_period,
+          total_basic_commission,
+          total_bonus_commission,
+          total_adjustments,
+          final_total_commission,
+          commission_paid,
+          invoice_bubble_ids,
+          created_at,
+          created_by
+        ) VALUES (
+          ${reportId},
+          ${agent_id},
+          ${agent.name},
+          ${month_period},
+          ${totalBasicCommission},
+          ${totalBonusCommission},
+          0,
+          ${finalTotalCommission},
+          false,
+          ${JSON.stringify(invoiceBubbleIds)},
+          NOW(),
+          'system_v2.0'
+        )
+      `;
+
+      console.log(`[DEBUG] Created new commission report for ${agent.name} - ${month_period}`);
+    }
+
+    console.log(`[DEBUG] Commission report generated - Agent: ${agent.name}, Month: ${month_period}, Basic: ${totalBasicCommission}, Bonus: ${totalBonusCommission}, Final: ${finalTotalCommission}`);
+
+    res.json({
+      success: true,
+      report_id: existingReport.length > 0 ? existingReport[0].report_id : reportId,
+      agent_name: agent.name,
+      agent_type: agent.agent_type,
+      month_period: month_period,
+      invoices_count: invoices.length,
+      total_basic_commission: totalBasicCommission,
+      total_bonus_commission: totalBonusCommission,
+      final_total_commission: finalTotalCommission,
+      invoice_bubble_ids: invoiceBubbleIds,
+      action: existingReport.length > 0 ? 'updated' : 'created',
+      // Add detailed invoice breakdown for frontend display
+      invoices: processedInvoices
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Commission report generation error:`, error.message);
+    res.status(500).json({
+      error: 'Commission report generation failed',
+      message: error.message
+    });
+  }
+});
+
 // Get payment details for a specific invoice
 app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
   try {
