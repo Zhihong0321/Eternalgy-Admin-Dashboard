@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { 
-  DollarSign, 
-  FolderKanban, 
-  Settings, 
-  FileText, 
+import {
+  DollarSign,
+  FolderKanban,
+  Settings,
+  FileText,
   TrendingUp,
   Calculator,
   ChevronDown,
   ChevronRight,
-  Users
+  Users,
+  RefreshCw
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -23,41 +24,71 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
   children?: NavItem[]
   path?: string
+  action?: () => void
 }
-
-const navigation: NavItem[] = [
-  {
-    title: 'Finance',
-    icon: DollarSign,
-    children: [
-      { title: 'Full Payment Invoice', icon: FileText, path: '/finance/invoices' },
-      { title: 'ANP Calculator', icon: Calculator, path: '/finance/anp-calculator' },
-      { title: 'Agent Commission Report', icon: TrendingUp, path: '/finance/commissions' },
-      { title: 'Generate Monthly Comm Report', icon: FileText, path: '/finance/monthly-comm-report' },
-      { title: 'Check Eligible Amount for Comm', icon: DollarSign, path: '/finance/eligible-comm' }
-    ]
-  },
-  {
-    title: 'HR',
-    icon: Users,
-    children: [
-      { title: 'Manage Agent', icon: Users, path: '/hr/manage-agent' }
-    ]
-  },
-  {
-    title: 'Project',
-    icon: FolderKanban,
-    path: '/project'
-  },
-  {
-    title: 'Admin',
-    icon: Settings,
-    path: '/admin'
-  }
-]
 
 export function Sidebar({ className, onNavigate }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>(['Finance'])
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  const syncInvoices = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('https://eternalgy-erp-retry3-production.up.railway.app/api/sync/update-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Sync completed: ${result.message}`)
+      } else {
+        throw new Error(`HTTP ${response.status}`)
+      }
+    } catch (error) {
+      alert(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const navigation: NavItem[] = [
+    {
+      title: 'Finance',
+      icon: DollarSign,
+      children: [
+        { title: 'Full Payment Invoice', icon: FileText, path: '/finance/invoices' },
+        { title: 'ANP Calculator', icon: Calculator, path: '/finance/anp-calculator' },
+        { title: 'Agent Commission Report', icon: TrendingUp, path: '/finance/commissions' },
+        { title: 'Generate Monthly Comm Report', icon: FileText, path: '/finance/monthly-comm-report' },
+        { title: 'Check Eligible Amount for Comm', icon: DollarSign, path: '/finance/eligible-comm' }
+      ]
+    },
+    {
+      title: 'HR',
+      icon: Users,
+      children: [
+        { title: 'Manage Agent', icon: Users, path: '/hr/manage-agent' }
+      ]
+    },
+    {
+      title: 'Project',
+      icon: FolderKanban,
+      path: '/project'
+    },
+    {
+      title: 'Admin',
+      icon: Settings,
+      path: '/admin'
+    },
+    {
+      title: 'SYNC NEW INVOICE AND PAYMENT',
+      icon: RefreshCw,
+      action: syncInvoices
+    }
+  ]
 
   const toggleExpanded = (title: string) => {
     setExpandedItems(prev => 
@@ -75,6 +106,8 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     const handleClick = () => {
       if (hasChildren) {
         toggleExpanded(item.title)
+      } else if (item.action) {
+        item.action()
       } else if (item.path && onNavigate) {
         onNavigate(item.path)
       }
@@ -89,12 +122,13 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
             level > 0 && "ml-4 text-sm"
           )}
           onClick={handleClick}
+          disabled={item.action && isSyncing}
         >
-          <Icon className="mr-2 h-4 w-4" />
+          <Icon className={cn("mr-2 h-4 w-4", item.action && isSyncing && "animate-spin")} />
           <span className="flex-1">{item.title}</span>
           {hasChildren && (
-            isExpanded ? 
-              <ChevronDown className="h-4 w-4" /> : 
+            isExpanded ?
+              <ChevronDown className="h-4 w-4" /> :
               <ChevronRight className="h-4 w-4" />
           )}
         </Button>
