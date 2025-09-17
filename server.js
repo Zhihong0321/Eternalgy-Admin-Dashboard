@@ -2590,6 +2590,70 @@ app.post('/api/commission/add-adjustment', async (req, res) => {
   }
 });
 
+// Edit commission adjustment
+app.put('/api/commission/edit-adjustment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount, description } = req.body;
+
+    console.log(`[DEBUG] Editing commission adjustment ${id}:`, { amount, description });
+
+    if (amount === undefined || amount === null || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Amount and description are required.'
+      });
+    }
+
+    const updatedAdjustment = await prisma.commission_adjustment.update({
+      where: { id },
+      data: {
+        amount: parseFloat(amount),
+        description,
+        updated_at: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      adjustment: updatedAdjustment
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Edit commission adjustment error:`, error.message);
+    res.status(500).json({
+      error: 'Failed to edit commission adjustment',
+      message: error.message
+    });
+  }
+});
+
+// Delete commission adjustment
+app.delete('/api/commission/delete-adjustment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`[DEBUG] Deleting commission adjustment ${id}`);
+
+    const deletedAdjustment = await prisma.commission_adjustment.delete({
+      where: { id }
+    });
+
+    res.json({
+      success: true,
+      message: 'Commission adjustment deleted successfully',
+      adjustment: deletedAdjustment
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Delete commission adjustment error:`, error.message);
+    res.status(500).json({
+      error: 'Failed to delete commission adjustment',
+      message: error.message
+    });
+  }
+});
+
 // Get payment details for a specific invoice
 app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
   try {

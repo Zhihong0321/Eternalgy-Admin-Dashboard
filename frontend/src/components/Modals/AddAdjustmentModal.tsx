@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../ui/dialog';
 import { Input } from '../ui/input';
@@ -12,11 +12,31 @@ interface AddAdjustmentModalProps {
   onSave: (adjustment: { amount: number; description: string }) => void;
   agentName: string;
   monthPeriod: string;
+  initialData?: { amount: number; description: string };
+  mode?: 'add' | 'edit';
 }
 
-export function AddAdjustmentModal({ isOpen, onClose, onSave, agentName, monthPeriod }: AddAdjustmentModalProps) {
+export function AddAdjustmentModal({
+  isOpen,
+  onClose,
+  onSave,
+  agentName,
+  monthPeriod,
+  initialData,
+  mode = 'add'
+}: AddAdjustmentModalProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (initialData && mode === 'edit') {
+      setAmount(initialData.amount.toString());
+      setDescription(initialData.description);
+    } else {
+      setAmount('');
+      setDescription('');
+    }
+  }, [initialData, mode, isOpen]);
 
   const handleSave = () => {
     const parsedAmount = parseFloat(amount);
@@ -38,7 +58,7 @@ export function AddAdjustmentModal({ isOpen, onClose, onSave, agentName, monthPe
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Commission Adjustment</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? 'Edit Commission Adjustment' : 'Add Commission Adjustment'}</DialogTitle>
           <DialogDescription>
             For {agentName} - {monthPeriod}
           </DialogDescription>
@@ -70,7 +90,7 @@ export function AddAdjustmentModal({ isOpen, onClose, onSave, agentName, monthPe
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Adjustment</Button>
+          <Button onClick={handleSave}>{mode === 'edit' ? 'Update Adjustment' : 'Save Adjustment'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
