@@ -176,9 +176,6 @@ export function GenerateMonthlyCommReportView() {
       return
     }
 
-    if (!confirm(`Generate commission report for ${agent.agent_name} (${agent.agent_type}) for ${selectedMonth}?\n\nThis will:\n1. Calculate commission based on ${agent.agent_type} agent rules\n2. Store the report in the database\n3. Update existing report if one exists`)) {
-      return
-    }
 
     const agentId = agent.agent_bubble_id
     setGeneratingReports(prev => new Set(prev).add(agentId))
