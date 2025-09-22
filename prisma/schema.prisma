@@ -62,3 +62,4 @@ model generated_commission_report {
   paid_by String?
   linked_adjustment commission_adjustment[]
 }
+

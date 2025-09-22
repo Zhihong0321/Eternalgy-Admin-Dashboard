@@ -54,6 +54,13 @@ interface ActivityReportData {
   }
 }
 
+interface WeeklyMissedDays {
+  weekLabel: string
+  missedDays: number
+  weekStart: string
+  weekEnd: string
+}
+
 interface UserActivityReportProps {
   userId: string
   userName: string
@@ -65,6 +72,7 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [weeklyMissedDays, setWeeklyMissedDays] = useState<WeeklyMissedDays[]>([])
 
   useEffect(() => {
     fetchActivityReport(currentPage)
@@ -75,14 +83,99 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
       setLoading(true)
       const response = await fetch(`/api/user/${userId}/activity-report?page=${page}&limit=14`)
       if (!response.ok) throw new Error('Failed to fetch activity report')
-      
+
       const reportData = await response.json()
       setData(reportData)
+
+      // Calculate weekly missed days after getting the data
+      if (reportData.detailed_reports?.reports) {
+        const missedDaysData = calculateWeeklyMissedDays(reportData.detailed_reports.reports)
+        setWeeklyMissedDays(missedDaysData)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load activity report')
     } finally {
       setLoading(false)
     }
+  }
+
+  const calculateWeeklyMissedDays = (reports: DetailedReport[]): WeeklyMissedDays[] => {
+    // Get all report dates (only the date part)
+    const reportDates = new Set(
+      reports.map(report => report.report_date.split('T')[0])
+    )
+
+    // Get the date range from reports
+    if (reports.length === 0) return []
+
+    const allReportDates = reports.map(r => new Date(r.report_date.split('T')[0]))
+    const earliestDate = new Date(Math.min(...allReportDates.map(d => d.getTime())))
+    const latestDate = new Date(Math.max(...allReportDates.map(d => d.getTime())))
+
+    // Find the Monday of the week containing the earliest date
+    const firstMonday = new Date(earliestDate)
+    const daysToMonday = (firstMonday.getDay() + 6) % 7 // Convert Sunday=0 to Monday=0
+    firstMonday.setDate(firstMonday.getDate() - daysToMonday)
+
+    // Find the Sunday of the week containing the latest date
+    const lastSunday = new Date(latestDate)
+    const daysToSunday = latestDate.getDay() === 0 ? 0 : 7 - latestDate.getDay()
+    lastSunday.setDate(lastSunday.getDate() + daysToSunday)
+
+    const weeks: WeeklyMissedDays[] = []
+    let weekCounter = 1
+
+    // Iterate through each week
+    const currentWeekStart = new Date(firstMonday)
+    while (currentWeekStart <= lastSunday) {
+      const weekEnd = new Date(currentWeekStart)
+      weekEnd.setDate(weekEnd.getDate() + 6) // Sunday
+
+      // Count working days (Mon-Fri) in this week that have no reports
+      let missedWorkingDays = 0
+
+      for (let dayOffset = 0; dayOffset < 5; dayOffset++) { // Mon-Fri only
+        const workingDay = new Date(currentWeekStart)
+        workingDay.setDate(workingDay.getDate() + dayOffset)
+
+        const workingDayStr = workingDay.toISOString().split('T')[0]
+
+        // Only count if this working day is within our report date range
+        if (workingDay >= earliestDate && workingDay <= latestDate) {
+          if (!reportDates.has(workingDayStr)) {
+            missedWorkingDays++
+          }
+        }
+      }
+
+      // Only add weeks that have at least one working day in our date range
+      const weekHasWorkingDaysInRange = (() => {
+        for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
+          const workingDay = new Date(currentWeekStart)
+          workingDay.setDate(workingDay.getDate() + dayOffset)
+          if (workingDay >= earliestDate && workingDay <= latestDate) {
+            return true
+          }
+        }
+        return false
+      })()
+
+      if (weekHasWorkingDaysInRange) {
+        weeks.push({
+          weekLabel: `Week${weekCounter}`,
+          missedDays: missedWorkingDays,
+          weekStart: currentWeekStart.toISOString().split('T')[0],
+          weekEnd: weekEnd.toISOString().split('T')[0]
+        })
+        weekCounter++
+      }
+
+      // Move to next week
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7)
+    }
+
+    // Return most recent weeks first
+    return weeks.reverse()
   }
 
   const formatDate = (dateString: string) => {
@@ -349,6 +442,33 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
           <p className="text-sm text-gray-400">{userName}</p>
         </div>
       </div>
+
+      {/* Weekly Missed Days Indicator */}
+      {weeklyMissedDays.length > 0 && (
+        <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
+          <h3 className="text-sm font-medium text-gray-300 mb-3">Working Days Without Reports (Mon-Fri)</h3>
+          <div className="flex flex-wrap gap-2">
+            {weeklyMissedDays.map((week) => (
+              <div
+                key={week.weekLabel}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border ${
+                  week.missedDays === 0
+                    ? 'bg-green-900 border-green-700 text-green-300'
+                    : week.missedDays <= 2
+                    ? 'bg-yellow-900 border-yellow-700 text-yellow-300'
+                    : 'bg-red-900 border-red-700 text-red-300'
+                }`}
+                title={`${week.weekStart} to ${week.weekEnd}`}
+              >
+                [{week.weekLabel}={week.missedDays}]
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            =0 all reports written, numbers show missed working days
+          </p>
+        </Card>
+      )}
 
       {/* 7-Day Summary Card */}
       <Card className="p-4 mb-4 bg-gray-800 border-gray-700">
