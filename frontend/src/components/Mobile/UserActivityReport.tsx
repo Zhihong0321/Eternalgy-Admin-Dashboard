@@ -187,7 +187,9 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   }
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
+    // Use the same date string parsing as categorization to avoid timezone issues
+    const dateOnly = dateString.split('T')[0] // Get YYYY-MM-DD part
+    const date = new Date(dateOnly + 'T00:00:00') // Parse as local midnight
     const day = date.getDate().toString().padStart(2, '0')
     const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
     const year = date.getFullYear().toString().slice(-2)
@@ -195,10 +197,12 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
   }
 
   const formatDateCard = (dateString: string) => {
-    const date = new Date(dateString)
+    // Use consistent date parsing to avoid timezone issues
+    const dateOnly = dateString.split('T')[0] // Get YYYY-MM-DD part
+    const date = new Date(dateOnly + 'T00:00:00') // Parse as local midnight
     const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    
+
     return {
       day: date.toLocaleDateString('en-MY', { day: '2-digit' }),
       month: date.toLocaleDateString('en-MY', { month: 'short' }).toUpperCase(),
@@ -590,21 +594,25 @@ export function UserActivityReport({ userId, userName, onBack }: UserActivityRep
             // Generate all dates in the current page period (14 days from most recent report)
             const generateDateRange = () => {
               if (!data.detailed_reports.reports.length) return []
-              
-              // Get the date range from the reports
+
+              // Get the date range from the reports (using consistent date parsing)
               const reportDates = data.detailed_reports.reports.map(r => r.report_date.split('T')[0])
-              const earliestDate = new Date(Math.min(...reportDates.map(d => new Date(d).getTime())))
-              const latestDate = new Date(Math.max(...reportDates.map(d => new Date(d).getTime())))
-              
+              const earliestDateStr = reportDates.reduce((min, date) => date < min ? date : min)
+              const latestDateStr = reportDates.reduce((max, date) => date > max ? date : max)
+
+              // Parse dates consistently to avoid timezone issues
+              const earliestDate = new Date(earliestDateStr + 'T00:00:00')
+              const latestDate = new Date(latestDateStr + 'T00:00:00')
+
               // Generate all dates in range
               const allDates = []
               const currentDate = new Date(earliestDate)
-              
+
               while (currentDate <= latestDate) {
                 allDates.push(currentDate.toISOString().split('T')[0])
                 currentDate.setDate(currentDate.getDate() + 1)
               }
-              
+
               return allDates.reverse() // Show newest first
             }
 
