@@ -131,10 +131,10 @@ model invoice {
   linked_customer       String?
 
   customer_profile customer_profile? @relation(fields: [linked_customer], references: [bubble_id])
-  package package? @relation(fields: [linked_package], references: [bubble_id])
+  product_package product_package? @relation(fields: [linked_package], references: [bubble_id])
 }
 
-model package {
+model product_package {
   id                Int     @id @default(autoincrement())
   bubble_id         String? @unique
   max_discount      Decimal?
@@ -150,5 +150,7 @@ model package {
   special           Boolean?
 
   invoices invoice[]
+
+  @@map("package")
 }
 
