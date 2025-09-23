@@ -96,6 +96,15 @@ model customer_profile {
   contact     String?
   state       String?
   name        String?
+  address     String?
+  created_date DateTime?
+  modified_date DateTime?
+  whatsapp    String?
+  status      String?
+  created_by  String?
+  linked_agent String?
+  link_seda_reg String?
+  synced_at   DateTime?
 
   seda_registrations seda_registration[]
 }

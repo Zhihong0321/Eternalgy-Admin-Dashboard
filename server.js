@@ -2754,27 +2754,51 @@ app.get('/api/customers/search', async (req, res) => {
 
     console.log(`[SEARCH] Searching customers for: "${query}"`);
 
-    // Get all registrations with customer data using raw SQL for better control
-    const searchResults = await prisma.$queryRaw`
-      SELECT
-        sr.id,
-        sr.bubble_id as registration_id,
-        sr.installation_address,
-        sr.city,
-        sr.state,
-        sr.linked_customer,
-        cp.name as customer_name,
-        cp.contact as customer_contact
-      FROM seda_registration sr
-      LEFT JOIN customer_profile cp ON sr.linked_customer = cp.bubble_id
-      WHERE sr.installation_address IS NOT NULL
-      ORDER BY sr.id DESC
-      LIMIT 1000
-    `;
+    // Search both seda_registration.installation_address and customer_profile.address
+    const [sedaregResults, customerResults] = await Promise.all([
+      // Search in seda_registration.installation_address
+      prisma.$queryRaw`
+        SELECT
+          sr.id,
+          sr.bubble_id as registration_id,
+          sr.installation_address as search_address,
+          sr.city,
+          sr.state,
+          sr.linked_customer,
+          cp.name as customer_name,
+          cp.contact as customer_contact,
+          'seda_registration' as source_table
+        FROM seda_registration sr
+        LEFT JOIN customer_profile cp ON sr.linked_customer = cp.bubble_id
+        WHERE sr.installation_address IS NOT NULL
+        ORDER BY sr.id DESC
+        LIMIT 1000
+      `,
+      // Search in customer_profile.address
+      prisma.$queryRaw`
+        SELECT
+          cp.id,
+          cp.bubble_id as registration_id,
+          cp.address as search_address,
+          '' as city,
+          cp.state,
+          cp.bubble_id as linked_customer,
+          cp.name as customer_name,
+          cp.contact as customer_contact,
+          'customer_profile' as source_table
+        FROM customer_profile cp
+        WHERE cp.address IS NOT NULL
+        ORDER BY cp.id DESC
+        LIMIT 1000
+      `
+    ]);
 
-    console.log(`[SEARCH] Found ${searchResults.length} total registrations`);
+    // Combine results from both tables
+    const allResults = [...sedaregResults, ...customerResults];
 
-    if (searchResults.length === 0) {
+    console.log(`[SEARCH] Found ${sedaregResults.length} seda_registration + ${customerResults.length} customer_profile records`);
+
+    if (allResults.length === 0) {
       return res.json({ customers: [] });
     }
 
@@ -2819,28 +2843,29 @@ app.get('/api/customers/search', async (req, res) => {
       return Math.round((matchedWords / maxWords) * 100);
     };
 
-    // Filter and score results
-    const scoredResults = searchResults
+    // Filter and score results from both tables
+    const scoredResults = allResults
       .map(customer => ({
         ...customer,
-        similarity: calculateSimilarity(query, customer.installation_address)
+        similarity: calculateSimilarity(query, customer.search_address)
       }))
       .filter(customer => customer.similarity >= 80)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, 20); // Limit to top 20 results
 
-    console.log(`[SEARCH] Found ${scoredResults.length} customers with similarity >= 80%`);
+    console.log(`[SEARCH] Found ${scoredResults.length} customers with similarity >= 80% from both tables`);
 
     // Format results for frontend
     const formattedResults = scoredResults.map(customer => ({
       id: customer.id,
       registration_id: customer.registration_id,
       customer_name: customer.customer_name || 'Unknown Customer',
-      installation_address: customer.installation_address,
+      installation_address: customer.search_address, // This now contains address from either table
       city: customer.city,
       state: customer.state,
       customer_contact: customer.customer_contact,
-      similarity: customer.similarity
+      similarity: customer.similarity,
+      source_table: customer.source_table // Show which table the result came from
     }));
 
     res.json({

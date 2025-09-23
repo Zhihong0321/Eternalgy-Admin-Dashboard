@@ -13,6 +13,7 @@ interface CustomerResult {
   state: string
   customer_contact: string
   similarity: number
+  source_table: string
 }
 
 interface SearchResponse {
@@ -96,7 +97,7 @@ export function SearchCustomerView() {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Search uses fuzzy matching with 80%+ similarity. Case insensitive, ignores punctuation.
+            Search uses fuzzy matching with 80%+ similarity. Searches both SEDA registration and customer profile addresses.
           </p>
         </CardContent>
       </Card>
@@ -166,7 +167,7 @@ export function SearchCustomerView() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-4">
                             <div className="text-xs">
                               <span className="text-muted-foreground">Match: </span>
                               <span className={`font-medium ${
@@ -175,6 +176,15 @@ export function SearchCustomerView() {
                                 'text-orange-600'
                               }`}>
                                 {customer.similarity}%
+                              </span>
+                            </div>
+
+                            <div className="text-xs">
+                              <span className="text-muted-foreground">Source: </span>
+                              <span className={`font-medium px-2 py-1 rounded-full text-white text-xs ${
+                                customer.source_table === 'seda_registration' ? 'bg-blue-500' : 'bg-purple-500'
+                              }`}>
+                                {customer.source_table === 'seda_registration' ? 'SEDA Reg' : 'Customer'}
                               </span>
                             </div>
                           </div>
