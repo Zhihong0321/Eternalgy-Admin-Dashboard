@@ -1274,6 +1274,54 @@ app.get('/api/test/team-jb-users', async (req, res) => {
   }
 });
 
+// Test scheduler and manually trigger missing report check
+app.get('/api/test/scheduler', async (req, res) => {
+  try {
+    const now = new Date();
+    const malaysiaNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kuala_Lumpur"}));
+
+    res.json({
+      success: true,
+      message: 'Scheduler status and test endpoint',
+      scheduler_info: {
+        schedule: 'Tuesday to Saturday at 8:00 AM Malaysia time',
+        cron_expression: '0 8 * * 2-6',
+        timezone: 'Asia/Kuala_Lumpur'
+      },
+      current_time: {
+        utc: now.toISOString(),
+        malaysia: malaysiaNow.toISOString(),
+        day_of_week: malaysiaNow.getDay(), // 0=Sunday, 1=Monday, 2=Tuesday, etc.
+        will_run_today: malaysiaNow.getDay() >= 2 && malaysiaNow.getDay() <= 6
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Manually trigger missing report check for testing
+app.get('/api/test/missing-reports', async (req, res) => {
+  try {
+    console.log('[MANUAL TEST] Manually triggering missing report check...');
+    await checkMissingReports();
+
+    res.json({
+      success: true,
+      message: 'Missing report check triggered successfully. Check server logs for details.'
+    });
+  } catch (error) {
+    console.error('[MANUAL TEST ERROR]', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Get latest agent daily reports for mobile Daily Activity Report analysis
 app.get('/api/agent-daily-reports/latest', async (req, res) => {
   try {
@@ -3298,13 +3346,15 @@ const checkMissingReports = async () => {
   }
 };
 
-// Start the scheduler - every 5 minutes for testing
-cron.schedule('*/5 * * * *', () => {
-  console.log('[SCHEDULER] Running 5-minute test job...');
+// Start the scheduler - Tuesday to Saturday at 8am Malaysia time (GMT+8)
+cron.schedule('0 8 * * 2-6', () => {
+  console.log('[SCHEDULER] Running daily missing report check...');
   checkMissingReports();
+}, {
+  timezone: "Asia/Kuala_Lumpur"
 });
 
-console.log('[SCHEDULER] Test WhatsApp scheduler started - running every 5 minutes');
+console.log('[SCHEDULER] WhatsApp reminder scheduler started - Tuesday to Saturday at 8am Malaysia time');
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
