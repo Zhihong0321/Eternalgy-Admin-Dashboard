@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { PrismaClient, Prisma } from '@prisma/client';
 import fs from 'fs';
+import cron from 'node-cron';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -3183,6 +3184,127 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
+
+// WhatsApp Test Scheduler - Check for missing reports every 5 minutes
+const formatMalaysiaPhone = (contact) => {
+  if (!contact) return null;
+  const clean = contact.replace(/\D/g, ''); // Remove non-digits
+  if (clean.startsWith('0')) {
+    return '+6' + clean; // 0123456789 → +60123456789
+  }
+  return '+60' + clean; // 123456789 → +60123456789
+};
+
+const sendWhatsAppMessage = async (to, message) => {
+  try {
+    const response = await fetch('https://whatsapp-api-server-production-c15f.up.railway.app/api/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ to, message })
+    });
+
+    if (response.ok) {
+      console.log(`[WHATSAPP] Message sent successfully to ${to}`);
+      return { success: true };
+    } else {
+      const errorText = await response.text();
+      console.error(`[WHATSAPP] Failed to send message: ${response.status} - ${errorText}`);
+      return { success: false, error: errorText };
+    }
+  } catch (error) {
+    console.error(`[WHATSAPP] Error sending message: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+};
+
+const checkMissingReports = async () => {
+  try {
+    console.log('[SCHEDULER] Checking for missing reports...');
+
+    // Get yesterday's date
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    console.log(`[SCHEDULER] Checking reports for date: ${yesterdayStr}`);
+
+    // Get all users with "report" in access_level and their agent info
+    const usersWithReportAccess = await prisma.$queryRaw`
+      SELECT u.bubble_id as user_id, u.access_level, u.linked_agent_profile, a.name as agent_name, a.contact as agent_contact
+      FROM "user" u
+      LEFT JOIN agent a ON u.linked_agent_profile = a.bubble_id
+      WHERE EXISTS (
+        SELECT 1 FROM unnest(u.access_level) AS level
+        WHERE level = 'report'
+      )
+      AND a.name IS NOT NULL
+      AND a.contact IS NOT NULL
+    `;
+
+    console.log(`[SCHEDULER] Found ${usersWithReportAccess.length} users with report access`);
+
+    // Get users who DID submit reports yesterday
+    const usersWithReports = await prisma.$queryRaw`
+      SELECT DISTINCT linked_user
+      FROM agent_daily_report
+      WHERE DATE(report_date) = ${yesterdayStr}
+    `;
+
+    const reportedUserIds = new Set(usersWithReports.map(r => r.linked_user));
+    console.log(`[SCHEDULER] Found ${reportedUserIds.size} users who submitted reports yesterday`);
+
+    // Find users who DIDN'T submit reports
+    const missingReports = usersWithReportAccess.filter(user =>
+      !reportedUserIds.has(user.user_id)
+    );
+
+    console.log(`[SCHEDULER] Found ${missingReports.length} users with missing reports`);
+
+    if (missingReports.length > 0) {
+      // Format message with all missing agents
+      let message = `📋 Missing Reports Alert (${yesterdayStr}):\n\n`;
+
+      missingReports.forEach((user, index) => {
+        const formattedPhone = formatMalaysiaPhone(user.agent_contact);
+        message += `${index + 1}. ${user.agent_name}\n`;
+        message += `   WhatsApp: ${formattedPhone}\n\n`;
+      });
+
+      message += `Total: ${missingReports.length} agents did not submit reports yesterday.`;
+
+      // Send to your test WhatsApp
+      const result = await sendWhatsAppMessage('+601121000099', message);
+
+      if (result.success) {
+        console.log(`[SCHEDULER] Test message sent with ${missingReports.length} missing reports`);
+      } else {
+        console.error(`[SCHEDULER] Failed to send test message: ${result.error}`);
+      }
+    } else {
+      // Send confirmation that all reports are submitted
+      const message = `✅ All Reports Submitted (${yesterdayStr})\n\nAll ${usersWithReportAccess.length} agents with report access submitted their reports yesterday. Great job! 🎉`;
+      await sendWhatsAppMessage('+601121000099', message);
+      console.log(`[SCHEDULER] All reports submitted - confirmation sent`);
+    }
+
+  } catch (error) {
+    console.error(`[SCHEDULER] Error checking missing reports: ${error.message}`);
+
+    // Send error notification
+    const errorMessage = `❌ Scheduler Error\n\nFailed to check missing reports: ${error.message}`;
+    await sendWhatsAppMessage('+601121000099', errorMessage);
+  }
+};
+
+// Start the scheduler - every 5 minutes for testing
+cron.schedule('*/5 * * * *', () => {
+  console.log('[SCHEDULER] Running 5-minute test job...');
+  checkMissingReports();
+});
+
+console.log('[SCHEDULER] Test WhatsApp scheduler started - running every 5 minutes');
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
