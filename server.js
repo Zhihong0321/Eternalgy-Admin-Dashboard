@@ -3249,7 +3249,7 @@ const checkMissingReports = async () => {
     const usersWithReports = await prisma.$queryRaw`
       SELECT DISTINCT linked_user
       FROM agent_daily_report
-      WHERE DATE(report_date) = ${yesterdayStr}
+      WHERE report_date::date = ${yesterdayStr}::date
     `;
 
     const reportedUserIds = new Set(usersWithReports.map(r => r.linked_user));
