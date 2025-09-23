@@ -2743,6 +2743,122 @@ app.get('/api/payments/invoice/:invoiceId', async (req, res) => {
   }
 });
 
+// Customer search API with fuzzy matching for installation addresses
+app.get('/api/customers/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim().length < 2) {
+      return res.json({ customers: [] });
+    }
+
+    console.log(`[SEARCH] Searching customers for: "${query}"`);
+
+    // Get all registrations with customer data using raw SQL for better control
+    const searchResults = await prisma.$queryRaw`
+      SELECT
+        sr.id,
+        sr.bubble_id as registration_id,
+        sr.installation_address,
+        sr.city,
+        sr.state,
+        sr.linked_customer,
+        cp.name as customer_name,
+        cp.contact as customer_contact
+      FROM seda_registration sr
+      LEFT JOIN customer_profile cp ON sr.linked_customer = cp.bubble_id
+      WHERE sr.installation_address IS NOT NULL
+      ORDER BY sr.id DESC
+      LIMIT 1000
+    `;
+
+    console.log(`[SEARCH] Found ${searchResults.length} total registrations`);
+
+    if (searchResults.length === 0) {
+      return res.json({ customers: [] });
+    }
+
+    // Fuzzy matching function
+    const calculateSimilarity = (text1, text2) => {
+      if (!text1 || !text2) return 0;
+
+      // Normalize strings: lowercase, remove extra spaces, commas, periods
+      const normalize = (str) => str
+        .toLowerCase()
+        .replace(/[,.-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const normalized1 = normalize(text1);
+      const normalized2 = normalize(text2);
+
+      // If exact match after normalization
+      if (normalized1 === normalized2) return 100;
+
+      // Check if one contains the other
+      if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+        return 90;
+      }
+
+      // Word-by-word matching
+      const words1 = normalized1.split(' ');
+      const words2 = normalized2.split(' ');
+
+      let matchedWords = 0;
+      for (const word1 of words1) {
+        for (const word2 of words2) {
+          if (word1.includes(word2) || word2.includes(word1)) {
+            matchedWords++;
+            break;
+          }
+        }
+      }
+
+      // Calculate percentage based on matched words
+      const maxWords = Math.max(words1.length, words2.length);
+      return Math.round((matchedWords / maxWords) * 100);
+    };
+
+    // Filter and score results
+    const scoredResults = searchResults
+      .map(customer => ({
+        ...customer,
+        similarity: calculateSimilarity(query, customer.installation_address)
+      }))
+      .filter(customer => customer.similarity >= 80)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 20); // Limit to top 20 results
+
+    console.log(`[SEARCH] Found ${scoredResults.length} customers with similarity >= 80%`);
+
+    // Format results for frontend
+    const formattedResults = scoredResults.map(customer => ({
+      id: customer.id,
+      registration_id: customer.registration_id,
+      customer_name: customer.customer_name || 'Unknown Customer',
+      installation_address: customer.installation_address,
+      city: customer.city,
+      state: customer.state,
+      customer_contact: customer.customer_contact,
+      similarity: customer.similarity
+    }));
+
+    res.json({
+      customers: formattedResults,
+      total: formattedResults.length,
+      query: query
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Customer search API error:`, error.message);
+    console.log(`[ERROR] Full error:`, error);
+    res.status(500).json({
+      error: 'Database error',
+      message: error.message
+    });
+  }
+});
+
 // Quick test for specific invoice details API
 app.get('/api/test/invoice-details/:invoiceId', async (req, res) => {
   try {

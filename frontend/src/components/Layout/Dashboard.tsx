@@ -9,8 +9,9 @@ import { ManageAgentView } from '../Views/ManageAgentView'
 import { AgentCommissionReportView } from '../Views/AgentCommissionReportView'
 import { CheckEligibleCommView } from '../Views/CheckEligibleCommView'
 import { GenerateMonthlyCommReportView } from '../Views/GenerateMonthlyCommReportView'
+import { SearchCustomerView } from '../Views/SearchCustomerView'
 
-type ActiveView = 'finance' | 'project' | 'admin' | 'finance/invoices' | 'finance/anp-calculator' | 'finance/commissions' | 'finance/monthly-comm-report' | 'finance/eligible-comm' | 'hr/manage-agent'
+type ActiveView = 'finance' | 'project' | 'admin' | 'search-customer' | 'finance/invoices' | 'finance/anp-calculator' | 'finance/commissions' | 'finance/monthly-comm-report' | 'finance/eligible-comm' | 'hr/manage-agent'
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<ActiveView>('finance')
@@ -38,6 +39,9 @@ export function Dashboard() {
       case '/project':
         setActiveView('project')
         break
+      case '/search-customer':
+        setActiveView('search-customer')
+        break
       case '/admin':
         setActiveView('admin')
         break
@@ -64,6 +68,8 @@ export function Dashboard() {
         return <ManageAgentView />
       case 'project':
         return <ProjectView />
+      case 'search-customer':
+        return <SearchCustomerView />
       case 'admin':
         return <AdminView />
       default:

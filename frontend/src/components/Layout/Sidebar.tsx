@@ -11,7 +11,8 @@ import {
   ChevronDown,
   ChevronRight,
   Users,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -77,6 +78,11 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       title: 'Project',
       icon: FolderKanban,
       path: '/project'
+    },
+    {
+      title: 'Search Customer',
+      icon: Search,
+      path: '/search-customer'
     },
     {
       title: 'Admin',

@@ -63,3 +63,40 @@ model generated_commission_report {
   linked_adjustment commission_adjustment[]
 }
 
+// ========================================
+// SEDA REGISTRATION & CUSTOMER TABLES
+// ========================================
+
+model seda_registration {
+  id                    Int     @id @default(autoincrement())
+  bubble_id             String? @unique
+  city                  String?
+  drawing_system_submitted Boolean?
+  created_date          DateTime?
+  created_by            String?
+  roof_images           String?
+  system_size           String?
+  system_size_in_form_kwp Decimal?
+  project_price         Decimal?
+  agent                 String?
+  state                 String?
+  modified_date         DateTime?
+  reg_status            String?
+  linked_customer       String?
+  sunpeak_hours         Decimal?
+  redex_status          String?
+  installation_address  String?
+
+  customer_profile customer_profile? @relation(fields: [linked_customer], references: [bubble_id])
+}
+
+model customer_profile {
+  id          Int     @id @default(autoincrement())
+  bubble_id   String? @unique
+  contact     String?
+  state       String?
+  name        String?
+
+  seda_registrations seda_registration[]
+}
+
