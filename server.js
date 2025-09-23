@@ -2884,6 +2884,123 @@ app.get('/api/customers/search', async (req, res) => {
   }
 });
 
+// Customer search by name API - searches invoices by customer name
+app.get('/api/customers/search-by-name', async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim().length < 2) {
+      return res.json({ invoices: [] });
+    }
+
+    console.log(`[SEARCH BY NAME] Searching invoices by customer name: "${query}"`);
+
+    // Search invoices by customer name with package description
+    const invoiceResults = await prisma.$queryRaw`
+      SELECT
+        i.id,
+        i.bubble_id as invoice_id,
+        i.amount,
+        i.created_date,
+        i.linked_customer,
+        i.linked_package,
+        cp.name as customer_name,
+        cp.contact as customer_contact,
+        p.invoice_desc as package_description
+      FROM invoice i
+      LEFT JOIN customer_profile cp ON i.linked_customer = cp.bubble_id
+      LEFT JOIN package p ON i.linked_package = p.bubble_id
+      WHERE cp.name IS NOT NULL
+      ORDER BY i.created_date DESC
+      LIMIT 1000
+    `;
+
+    console.log(`[SEARCH BY NAME] Found ${invoiceResults.length} total invoices`);
+
+    if (invoiceResults.length === 0) {
+      return res.json({ invoices: [] });
+    }
+
+    // Fuzzy matching function (same as address search)
+    const calculateSimilarity = (text1, text2) => {
+      if (!text1 || !text2) return 0;
+
+      // Normalize strings: lowercase, remove extra spaces
+      const normalize = (str) => str
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const normalized1 = normalize(text1);
+      const normalized2 = normalize(text2);
+
+      // If exact match after normalization
+      if (normalized1 === normalized2) return 100;
+
+      // Check if one contains the other
+      if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
+        return 90;
+      }
+
+      // Word-by-word matching
+      const words1 = normalized1.split(' ');
+      const words2 = normalized2.split(' ');
+
+      let matchedWords = 0;
+      for (const word1 of words1) {
+        for (const word2 of words2) {
+          if (word1.includes(word2) || word2.includes(word1)) {
+            matchedWords++;
+            break;
+          }
+        }
+      }
+
+      // Calculate percentage based on matched words
+      const maxWords = Math.max(words1.length, words2.length);
+      return Math.round((matchedWords / maxWords) * 100);
+    };
+
+    // Filter and score results by customer name
+    const scoredResults = invoiceResults
+      .map(invoice => ({
+        ...invoice,
+        similarity: calculateSimilarity(query, invoice.customer_name)
+      }))
+      .filter(invoice => invoice.similarity >= 80)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 20); // Limit to top 20 results
+
+    console.log(`[SEARCH BY NAME] Found ${scoredResults.length} invoices with name similarity >= 80%`);
+
+    // Format results for frontend
+    const formattedResults = scoredResults.map(invoice => ({
+      id: invoice.id,
+      invoice_id: invoice.invoice_id,
+      customer_name: invoice.customer_name,
+      customer_contact: invoice.customer_contact,
+      package_description: invoice.package_description || 'No package description',
+      amount: invoice.amount,
+      created_date: invoice.created_date,
+      similarity: invoice.similarity
+    }));
+
+    res.json({
+      invoices: formattedResults,
+      total: formattedResults.length,
+      query: query
+    });
+
+  } catch (error) {
+    console.log(`[ERROR] Customer search by name API error:`, error.message);
+    console.log(`[ERROR] Full error:`, error);
+    res.status(500).json({
+      error: 'Database error',
+      message: error.message
+    });
+  }
+});
+
 // Quick test for specific invoice details API
 app.get('/api/test/invoice-details/:invoiceId', async (req, res) => {
   try {

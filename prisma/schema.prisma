@@ -107,5 +107,48 @@ model customer_profile {
   synced_at   DateTime?
 
   seda_registrations seda_registration[]
+  invoices invoice[]
+}
+
+model invoice {
+  id                    Int     @id @default(autoincrement())
+  bubble_id             String? @unique
+  stamp_cash_price      Decimal?
+  panel_qty             Int?
+  commission_paid       Boolean?
+  linked_package        String?
+  performance_tier_month String?
+  linked_invoice_item   String?
+  version               String?
+  modified_date         DateTime?
+  amount                Decimal?
+  type                  String?
+  created_by            String?
+  created_date          DateTime?
+  percent_of_total_amount Decimal?
+  linked_stock_transaction String?
+  dealercode            String?
+  linked_customer       String?
+
+  customer_profile customer_profile? @relation(fields: [linked_customer], references: [bubble_id])
+  package package? @relation(fields: [linked_package], references: [bubble_id])
+}
+
+model package {
+  id                Int     @id @default(autoincrement())
+  bubble_id         String? @unique
+  max_discount      Decimal?
+  linked_package_item String?
+  type              String?
+  created_by        String?
+  need_approval     Boolean?
+  panel             String?
+  created_date      DateTime?
+  panel_qty         Int?
+  modified_date     DateTime?
+  invoice_desc      String?
+  special           Boolean?
+
+  invoices invoice[]
 }
 
